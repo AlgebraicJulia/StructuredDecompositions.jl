@@ -1,0 +1,2 @@
+# StructuredDecompositions.jl
+Structured decompositions! 
