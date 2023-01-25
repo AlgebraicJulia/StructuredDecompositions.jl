@@ -1,5 +1,6 @@
 module StructuredDecompositions
 
-greet() = print("Hello World!")
+import .Decompositions
+import .DecidingSheaves
 
 end # module
