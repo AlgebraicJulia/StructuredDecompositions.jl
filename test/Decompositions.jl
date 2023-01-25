@@ -1,6 +1,7 @@
 module TestDecompositions
 
 using Test
+using PartialFunctions
 
 using ..Decompositions 
 using Catlab.Graphics
@@ -71,11 +72,24 @@ end
   ∫(G)
 )
 #the decomposition
-bigDecomp = StrDecomp(G, ∫(G), Γ)
+bigdecomp = StrDecomp(G, ∫(G), Γ)
+f = ACSetTransformation(Γ₀[4], Γ₀[1], V=[1, 3])
+ob_generators(bigdecomp.domain) == ob_generators((FinCat ∘ op_graph ∘ graph)(bigdecomp.domain))
+hom_generators(bigdecomp.domain) == hom_generators((FinCat ∘ op_graph ∘ graph)(bigdecomp.domain))
+codom(f)
+FinSet(length(vertices(dom(f)))) == dom(components(f)[1])
 
-@test H₁ ∈ bags(bigDecomp) && H₂ ∈ bags(bigDecomp) && !(H₁₂ ∈ bags(bigDecomp))
+@test H₁ ∈ bags(bigdecomp) && H₂ ∈ bags(bigdecomp) && !(H₁₂ ∈ bags(bigdecomp))
 
+#forgetful functor vs: Gr → Set taking G to VG
+function vs(X::Graph) FinSet(length(vertices(X))) end
+function vs(f::ACSetTransformation) components(f)[1] end
 
-#TODO: add test for 𝐃 as well
+𝐃ᵥ = 𝐃 $ vs
+bigdecomp_to_sets = 𝐃ᵥ(bigdecomp)
+@test all( 
+          s -> dom(s[1]) == dom(s[2]), 
+          adhesionSpans(bigdecomp_to_sets)
+        )
 
 end

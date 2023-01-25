@@ -1,6 +1,6 @@
 module Decompositions
 
-export StructuredDecomposition, StrDecomp, ∫, DecompType, 𝐃, bags, adhesions, adhesionSpans
+export StructuredDecomposition, StrDecomp, CoStrDecomp, ∫, DecompType, Decomposition, CoDecomposition, 𝐃, bags, adhesions, adhesionSpans, op_graph, codecomp
 
 using PartialFunctions
 using MLStyle
@@ -9,6 +9,7 @@ using Catlab
 using Catlab.CategoricalAlgebra
 using Catlab.Graphs
 using Catlab.ACSetInterface
+using Catlab.CategoricalAlgebra.Diagrams
 #=
 using Catlab.Theories
 using Catlab.CategoricalAlgebra.FinSets
@@ -47,6 +48,7 @@ struct StrDecomp{G, C, D} <: StructuredDecomposition{G, C, D}
   domain       ::C
   diagram      ::D
 end
+
 
 # BEGIN UTILS
 """Structured decomposition Utils"""
@@ -106,7 +108,16 @@ bags(d)          = get(Bag,          d)
 adhesions(d)     = get(AdhesionApex, d)
 adhesionSpans(d) = get(AdhesionSpan, d)
 
+
 # END UTILS
+
+
+#reverse direction of the edges
+function op_graph(g::Graph)::Graph
+  F = FinFunctor(Dict(:V => :V, :E => :E), Dict(:src => :tgt, :tgt => :src), SchGraph, SchGraph)
+  ΔF = DeltaMigration(F, Graph, Graph)
+  return ΔF(g)
+end
 
 @data DecompType begin
   Decomposition 
@@ -121,7 +132,7 @@ This is done by first lifting the sheaf to a functor 𝐃_f: 𝐃C → 𝐃(S^{o
 function 𝐃(f, d ::StructuredDecomposition, t::DecompType = Decomposition)::StructuredDecomposition 
   flip = @match t begin 
     Decomposition    => x -> x #nothing to do
-    CoDecomposition => op     #work with (∫G)^{op}
+    CoDecomposition => FinCat ∘ op_graph ∘ graph     #work with (∫G)^{op}
   end 
   δ   = d.diagram 
   X   = dom(δ)
@@ -131,7 +142,7 @@ function 𝐃(f, d ::StructuredDecomposition, t::DecompType = Decomposition)::St
           Dict(g => f(hom_map(δ, g)) for g ∈ hom_generators(X)), #the hom map Q₁
           flip(X)
         )
-  return StrDecomp(d.decomp_shape, flip(X), Q) #TODO - flip the graph shape as well! (data migration on schema)
+  return StrDecomp(d.decomp_shape, flip(X), Q) 
 end
 
 end

@@ -12,29 +12,8 @@ using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra
 
 ############################
-#     EXAMPLE INSTANCES
+#     EXAMPLE INSTANCE str decomp
 ############################
-"""
-An example: graph colorings
-"""
-#an H-coloring is a hom onto H
-codom_first_homs(target,source) = homomorphisms(source,target)
-
-struct Coloring <: Sheaf
-  n     #n-coloring
-  func  #the function mappgin opens to lists of homs from G to K_n
-end
-
-#construct an n-coloring
-Coloring(n) = Coloring(n, codom_first_homs $ (complete_graph(Graph, n)) )
-#make it callable
-(c::Coloring)(X::Graph) = FinSet(c.func(X))
-# given graph homos f: G → H get morphism col(H) → col(G) by precomposition: take each h ∈ col(H) to hf ∈ col(G)
-(c::Coloring)(f::ACSetTransformation) = FinFunction(Dict(ycol => compose(f, ycol) for ycol ∈ c(codom(f)) ) )
-
-#(c::Coloring)(f::ACSetTransformation) = ycol -> compose(f, ycol)
-#FinFunction(c::Coloring, f::ACSetTransformation) = FinFunction(c(f), c(codom(f)))
-
 H₁ = @acset Graph begin
   V = 3
   E = 2
@@ -77,23 +56,158 @@ end
 smallSD = StrDecomp(Gₛ, ∫(Gₛ), Γₛ)
 
 
+"""
+An example: graph colorings
+"""
+#an H-coloring is a hom onto H
+codom_first_homs(target,source) = homomorphisms(source,target)
+
+struct Coloring <: Sheaf
+  n     #n-coloring
+  func  #the function mappgin opens to lists of homs from G to K_n
+end
+
+#construct an n-coloring
+Coloring(n) = Coloring(n, codom_first_homs $ (complete_graph(Graph, n)) )
+#make it callable
+(c::Coloring)(X::Graph) = FinSet( c.func(X) )
+# given graph homos #f: G₁ → G₂ get morphism col(G₂) → col(G₁) by precomposition: take each λ₂ ∈ col(G₂) to hf ∈ col(G)
+function (c::Coloring)(f::ACSetTransformation)  
+  (G₁, G₂) = (dom(f), codom(f)) 
+  FinFunction( λ₂ -> compose(f, λ₂), c(G₂), c(G₁)) #note the contravariance
+end                                        
+
+#define the functor skeleton : Set → Skel(Set)
+function skeleton(s::FinSet)              FinSet(length(s)) end
+function skeleton(f::FinFunction) 
+  (dd, cc) = (dom(f), codom(f))
+  (skel_dom, skel_cod) = (skeleton(dd), skeleton(cc))
+  #make function from dictionary
+  zip_iso(xs, ys) = begin
+    my_dict = Dict(zip(collect(xs), collect(ys)))
+    x -> my_dict[x]
+  end 
+  left_iso  = FinFunction(zip_iso(skel_dom, dd), skel_dom, dd)
+  right_iso = FinFunction(zip_iso(cc, skel_cod), cc, skel_cod)
+  compose([left_iso, f, right_iso])
+end
+
+
+#(c::Coloring)(f::ACSetTransformation) = ycol -> compose(f, ycol)
+#FinFunction(c::Coloring, f::ACSetTransformation) = FinFunction(c(f), c(codom(f)))
+s
+#=
+adhesionSpans(smallSD)
+littlespan = adhesionSpans(smallSD)[1]
+colspan = map(Coloring(3), littlespan)
+codom(colspan[1]) == codom(colspan[2])
+=#
+#limit(colspan)
+
+#=
+c₁ = Coloring(3)(H₁) 
+c₁₂ = Coloring(3)(H₁₂) 
+ff = Coloring(3)(ACSetTransformation(H₁₂, H₁, V=[1, 3]))
+all(x -> ff(x) ∈  c₁₂, c₁)
+
+s₁  = FinSet(c₁)
+s₁₂ = FinSet(c₁₂)
+=#
 #lift the sheaf to a functor between categories of sructured decompositions 
-𝐃_f = 𝐃 $ Coloring(3)
+
+#=
+K₂ = @acset Graph begin
+  V = 2
+  E = 1
+  src = [1]
+  tgt = [2]
+end
+
+spanCat = ∫(K₂) #the category x <- e -> y
+
+function mk_span_functor(ℓ₁, ℓ₂)
+  FinDomFunctor(
+    Dict(1 => dom(ℓ₁), 2 => dom(ℓ₂), 3 => codom(ℓ₁)),
+    Dict(1 => ℓ₁, 2 => ℓ₂),
+    spanCat 
+  )
+end
+
+=#
+
+
+𝐃_col = d -> 𝐃(skeleton, 𝐃(Coloring(3), d, CoDecomposition))
 #Now you can use this functor to conert a structured decomposition of graphs into a structured decomposition of the solution spaces on those graphs. 
-three_d = 𝐃_f(smallSD)
+three_d = 𝐃_col(smallSD)
 
 as = adhesionSpans(three_d)
 #trial =  map(FinFunction, as[1])
-sp₁ = as[1] #map(FinFunction , as[1])
+sp = as[1] 
 #asd = FinFunction(sp₁[1]) 
-dom(sp₁[1]) == dom(sp₁[2])
-pushout(sp₁[1], sp₁[2])
+codom(sp[1]) == codom(sp[2])
+#Ψ = mk_span_functor( sp₁[1], sp₁[2] )
+pullback( sp[1], sp[2]  )
 
+
+end
+
+#=
+function myfunc(a,b) 
+  x -> @match x begin
+    1 => a
+    2 => b
+  end
+end 
+
+three = FinSet(3)
+two = FinSet(2)
+four = FinSet(4)
+f₁ = FinFunction(myfunc(2,3), two, three)
+f₂ = FinFunction(myfunc(2,4), two, four)
+pushout(f₁, f₂)
+
+s = FinSet(["a", "b", "d"])
+
+m = FinSet([1,2])
+
+t = FinSet(["c", "b", "d"])
+
+
+ms = FinFunction(myfunc("b", "d")  , m, s)
+mt = FinFunction(myfunc("b", "d") , m, t)
+
+length(s)
+dom(ms)
+skeleton(ms)
+
+pushout(skeleton(ms), skeleton(mt))
+=#
+
+#=
+
+#ms = FinFunction(Dict(1 => "b", 2 => "d"), sl)
+ms = FinFunction(α, m, s)
+dom(ms) == m
+
+codom(ms)
+dom(ms) == m
+mt = FinFunction(Dict(1 => "b'", 2 => "d'"))
+dom(ms)
+m
+dom(ms) == dom(mt)
+
+
+FinSet([1,2]) == FinSet([1,2])
+pushout([ms, mt])
+
+homomorphisms(H₁₂, H₁)
+homomorphisms(H₁₂, H₁)
+FinSet(homomorphisms(H₁₂, H₁)) == FinSet(homomorphisms(H₁₂, H₁))
 #pullback(trial)
 #pullback(s₁[1])
 #trying out pullbacks
 
-#=
+
 s₁ = FinSet(5)
 s₂ = FinSet(4)
 s  = FinSet(3)
@@ -101,6 +215,7 @@ f₁ = FinFunction([1,1,2,2,3], s₁, s)
 f₂ = FinFunction([2,3,1,2], s₂, s)
 #σ  = Span(f₁, f₂) 
 ℓ  = pullback([f₁,f₂])
+
 =#
 
 #the functor
@@ -115,6 +230,4 @@ D₁ = Dict(
 D = FinDomFunctor(D₀, D₁, ∫(G))
 =#
 #the structured decomposition
-############################# 
-
-end
+#####################
