@@ -14,15 +14,6 @@ abstract type Presheaf end
 abstract type Sheaf <: Presheaf end
 
 """
-When we know that the functor f is a sheaf (and hence contravariant) we default to buiding Co-decompositions
-"""
-#=
-function 𝐃(f::Sheaf, d::StructuredDecomposition)::StructuredDecomposition
-  𝐃(f, d ::StructuredDecomposition, CoDecomposition)
-end
-=#
-
-"""
 Filtering algorithm. 
 INPUT: a Finset^{op}-valued structured decomposition d : FG → Finset^{op} 
        and an edge e = xy in G
@@ -30,6 +21,7 @@ OUTPUT: a structured decomposition obtained by replacing the span de in d
         by the span obtained by projecting the pullback of de (i.e. taking images)
 """
 function adhesion_filter(d::StructuredDecomposition, x,y)
+  
 end
 
 #given a decomposition and a list Λ of edges of the decomposition shape

@@ -2,3 +2,6 @@ name = "StructuredDecompositions"
 uuid = "ba32925c-6e4c-4640-bed9-b00febeea19a"
 authors = ["benjaminmerlinbumpus <benjamin.merlin.bumpus@gmail.com>"]
 version = "0.1.0"
+
+[deps]
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
