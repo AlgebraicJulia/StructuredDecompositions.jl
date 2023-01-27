@@ -106,7 +106,7 @@ function get(c::StrDcmpCpt, d::StructuredDecomposition, indexing::Bool)
   el = elements(d.decomp_shape) 
   get_cat_cpt_of_flavor(sc::ShapeCpt) = getFromDom(sc, d, el)
 
-  map_ind(f, x) = indexing == true ? Dict(zip( x, map(f, x)) ) : map(f, x)
+  map_ind(f, x) = indexing == true ? collect(zip(x, map(f, x))) : map(f, x)
   # now just do the actual computation
   @match c begin 
     Bag          => map_ind(evalDiagr $ ObMap     , get_cat_cpt_of_flavor(ShapeVertex) ) 

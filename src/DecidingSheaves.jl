@@ -1,17 +1,13 @@
 module DecidingSheaves
 
-export Presheaf, Sheaf, decide, decide_tree_shape
+export Presheaf, Sheaf, decide_sheaf_tree_shape, adhesion_filter, list_adhesion_filter
 
 using ..Decompositions
 
-#####################
-#   COMPUTATION
-#####################
-"""(Pre)-Sheaves
-"""
-abstract type Presheaf end
+using PartialFunctions
 
-abstract type Sheaf <: Presheaf end
+using Catlab
+using Catlab.CategoricalAlgebra
 
 """
 Filtering algorithm. 
@@ -31,7 +27,7 @@ function adhesion_filter(tup, d::StructuredDecomposition)
   (csp, d_csp)      = tup  #unpack the tuple
   # the pullback cone dx₁ <-l₁-- p --l₂ --> dx₂ with legs l₁ and l₂
   p_cone            = pullback(d_csp)
-  p, p_legs         = ob(p_cone), legs(p_cone)
+  p_legs            = legs(p_cone)
   #for each leg lᵢ : p → xᵢ of the pullback cone, 
   #compute its image ιᵢ : im lᵢ → dxᵢ
   imgs              = map( f -> legs(image(f))[1], p_legs)
@@ -54,7 +50,7 @@ end
 
 #given a decomposition d and a list ℓ of indexed_spans of the decomposition,
 #run adhesion_filter for each indexed_span in ℓ
-function adhesion_filter(ℓ, d::StructuredDecomposition) foldr( ∘, reverse([adhesion_filter $ ll for ll ∈ ℓ])) end
+function list_adhesion_filter(ℓ, d::StructuredDecomposition) foldr( ∘, reverse([adhesion_filter $ ll for ll ∈ ℓ]))(d) end
 
 """Solve the decision problem encoded by a sheaf. 
 The algorithm is as follows: 
@@ -65,8 +61,8 @@ The algorithm is as follows:
     "no" if there is an empty bag; 
     "yes" otherwise.
 """
-function decide_tree_shape(f::Sheaf, d::StructuredDecomposition)::Bool
-  d_filtered = adhesion_filter(adhesionSpans(d, true), d)
+function decide_sheaf_tree_shape(f, d::StructuredDecomposition)::Bool
+  d_filtered = adhesion_filter(adhesionSpans(d, true), 𝐃(f,d))
   foldr(&, map( !isempty, bags(d_filtered)))
 end
 
