@@ -97,7 +97,7 @@ skeletalColoring(n) = skeleton ∘ Coloring(n)
 #Now you can use this functor to conert a structured decomposition of graphs into a structured decomposition of the solution spaces on those graphs. 
 #coloring_decomp = 𝐃_col(smallSD)
 three_d = 𝐃_col(smallSD)
-adhesion_filter(adhesionSpans(smallSD, true)[1], three_d)
+#adhesion_filter(adhesionSpans(smallSD, true)[1], three_d)
 #decide_sheaf_tree_shape(skeletalColoring(2), smallSD)
 
 end
