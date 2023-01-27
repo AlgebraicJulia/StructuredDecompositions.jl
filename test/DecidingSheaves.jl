@@ -73,7 +73,7 @@ K₂ = @acset Graph begin
   tgt = [2]
 end
 
-struct Coloring <: Sheaf
+struct Coloring
   n     #the target graph
   func  #the function mappgin opens to lists of homs from G to K_n
 end
@@ -88,6 +88,7 @@ function (c::Coloring)(f::ACSetTransformation)
   FinFunction( λ₂ -> compose(f,λ₂), cG₂, cG₁ ) #note the contravariance
 end
 
+skeletalColoring(n) = skeleton ∘ Coloring(n)
 #is_homomorphic(ob(colim_SD), complete_graph(Graph, 2))
 
 #skeletal_coloring(n) = skeleton ∘ (Coloring(n))
@@ -96,6 +97,7 @@ end
 #Now you can use this functor to conert a structured decomposition of graphs into a structured decomposition of the solution spaces on those graphs. 
 #coloring_decomp = 𝐃_col(smallSD)
 three_d = 𝐃_col(smallSD)
+adhesion_filter(adhesionSpans(smallSD, true)[1], three_d)
+#decide_sheaf_tree_shape(skeletalColoring(2), smallSD)
 
-decide_tree_shape(three_d)
 end
