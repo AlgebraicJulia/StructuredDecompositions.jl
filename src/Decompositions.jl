@@ -1,6 +1,9 @@
 module Decompositions
 
-export StructuredDecomposition, StrDecomp, CoStrDecomp, ∫, DecompType, Decomposition, CoDecomposition, 𝐃, bags, adhesions, adhesionSpans, op_graph, codecomp, GrCpt, Vertex, Edge
+export StructuredDecomposition, StrDecomp, 
+      DecompType, Decomposition, CoDecomposition, 
+      𝐃, bags, adhesions, adhesionSpans, 
+      ∫, op_graph, codecomp
 
 using PartialFunctions
 using MLStyle
@@ -45,6 +48,21 @@ end
 
 StrDecomp(the_decomp_shape, the_domain, the_diagram) = StrDecomp(the_decomp_shape, the_domain, the_diagram, Decomposition)
 
+#construct a structured decomposition and check whether the decomposition shape actually makes sense. 
+# TODO: check that the domain is also correct...
+StrDecomp(the_decomp_shape, the_domain, the_diagram, the_decomp_type) = begin
+  d = StrDecomp(the_decomp_shape, the_domain, the_diagram, the_decomp_type)
+  dc(s) = @match the_decomp_type begin
+    Decomposition   => dom(s[1])   == dom(s[2])
+    CoDecomposition => codom(s[1]) == codom(s[2])
+  end
+  if all(dc(s), adhesionSpans(d))
+   return d
+  else 
+    error(str(d) * " is not a " * string(the_decomp_type))
+  end
+end
+
 # BEGIN UTILS
 """Structured decomposition Utils"""
 # ShapeVertex is the "vertex-objects" of ∫G; i.e in the form (V, v)
@@ -79,12 +97,7 @@ end
   AdhesionSpan
 end
 
-@data Indexing begin
-  Indexed 
-  NotIndexed
-end
-
-function get(c::StrDcmpCpt, d::StructuredDecomposition, ind::Indexing)
+function get(c::StrDcmpCpt, d::StructuredDecomposition, indexing::Bool)
   # either apply the object- or the morphism component of the diagram of d
   evalDiagr(t::MapType, x) = @match t begin 
     ObMap  => ob_map( d.diagram, x) 
@@ -93,10 +106,7 @@ function get(c::StrDcmpCpt, d::StructuredDecomposition, ind::Indexing)
   el = elements(d.decomp_shape) 
   get_cat_cpt_of_flavor(sc::ShapeCpt) = getFromDom(sc, d, el)
 
-  map_ind(f, x) = @match ind begin
-    Indexed    => Dict(zip( map(f, x), x) )
-    NotIndexed =>           map(f, x)
-  end
+  map_ind(f, x) = indexing == true ? Dict(zip( x, map(f, x)) ) : map(f, x)
   # now just do the actual computation
   @match c begin 
     Bag          => map_ind(evalDiagr $ ObMap     , get_cat_cpt_of_flavor(ShapeVertex) ) 
@@ -105,25 +115,13 @@ function get(c::StrDcmpCpt, d::StructuredDecomposition, ind::Indexing)
   end
 end
 
-bags(d)          = get(Bag,          d, NotIndexed)
-adhesions(d)     = get(AdhesionApex, d, NotIndexed)
-adhesionSpans(d) = get(AdhesionSpan, d, NotIndexed)
+bags(d, ind)          = get(Bag, d, ind)
+bags(d)               = bags(d, false)
+adhesions(d, ind)     = get(AdhesionApex, d, ind)
+adhesions(d)          = adhesions(d, false)     
+adhesionSpans(d, ind) = get(AdhesionSpan, d, ind)
+adhesionSpans(d)      = adhesionSpans(d, false)
 
-#=
-@data GrCpt begin
-  Vertex
-  Edge
-end
-
-function (d::StrDecomp)(c::GrCpt, x)
-  str_dcmp_cpt = @match c begin
-    Vertex => Bag
-    Edge   => AdhesionSpan
-  end
-  d_dict = get(str_dcmp_cpt, d, Indexed)
-  haskey(d_dict, x) ? d_dict[x] : error(string(x) * " is not a " * string(c) )
-end
-=#
 function elements_graph(el::Elements)
   F = FinFunctor(Dict(:V => :El, :E => :Arr), Dict(:src => :src, :tgt => :tgt), SchGraph, SchElements)
   ΔF = DeltaMigration(F, Elements{Symbol}, Graph)
@@ -149,8 +147,8 @@ This is done by first lifting the sheaf to a functor 𝐃_f: 𝐃C → 𝐃(S^{o
 """
 function 𝐃(f, d ::StructuredDecomposition, t::DecompType = Decomposition)::StructuredDecomposition 
   flip = @match t begin 
-    Decomposition    => x -> x #nothing to do
-    CoDecomposition => FinCat ∘ op_graph ∘ graph     #work with (∫G)^{op}
+    Decomposition   => x -> x                    #nothing to do
+    CoDecomposition => FinCat ∘ op_graph ∘ graph #work with ( ∫G )^{op}
   end 
   δ   = d.diagram 
   X   = dom(δ)

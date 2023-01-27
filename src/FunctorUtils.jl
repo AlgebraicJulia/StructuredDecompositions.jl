@@ -1,6 +1,6 @@
 module FunctorUtils
 
-export vs, skeleton
+export vs, skeleton, restriction, ↓
 
 using ..Decompositions
 using ..DecidingSheaves
@@ -20,17 +20,25 @@ function skeleton(f::FinFunction)
   #(skel_dom, skel_cod) = (skeleton(dd), skeleton(cc))
   ℓ = [findfirst(item -> item == f(x), collect(cc)) for x ∈ collect(dd)]
   FinFunction(ℓ, skeleton(dd), skeleton(cc))
-  #=
-  #make function from dictionary
-  zip_iso(xs, ys) = begin
-    pairs = zip(collect(xs), collect(ys))
-    my_dict = Dict(pairs)
-    x -> my_dict[x]
-  end 
-  left_iso  = FinFunction(zip_iso(skel_dom, dd), skel_dom, dd)
-  right_iso = FinFunction(zip_iso(cc, skel_cod), cc, skel_cod)
-  left_iso ⋅ f ⋅ right_iso
-  =#
 end
+
+#=
+"""Given a function f: a → b, compute its image in b.
+"""
+function image(f::FinFunction)::FinSet
+  FinSet( map( x -> f(x) , collect(dom(f))) )
+end
+=#
+#=
+"""restrict a function f: a → b to the image of a function s: a' → a (s need not be monic...).
+"""
+function (restriction_to)(f::FinFunction, s::FinFunction)::FinFunction
+  (dom(f)== codom(s)) ? compose(legs(image(s))[1], f) : error("Domain Error: can only restrict a function to a subset of its domain")
+end
+
+
+(↓)(f,g) = restriction(f,g)
+
+=#
 
 end

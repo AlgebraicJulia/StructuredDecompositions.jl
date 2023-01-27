@@ -78,10 +78,7 @@ bigdecomp = StrDecomp(G, ∫(G), Γ)
 
 
 f = ACSetTransformation(Γ₀[4], Γ₀[1], V=[1, 3])
-ob_generators(bigdecomp.domain) == ob_generators((FinCat ∘ op_graph ∘ graph)(bigdecomp.domain))
-hom_generators(bigdecomp.domain) == hom_generators((FinCat ∘ op_graph ∘ graph)(bigdecomp.domain))
-codom(f)
-FinSet(length(vertices(dom(f)))) == dom(components(f)[1])
+
 
 @test H₁ ∈ bags(bigdecomp) && H₂ ∈ bags(bigdecomp) && !(H₁₂ ∈ bags(bigdecomp))
 
@@ -103,4 +100,6 @@ bigdecomp_skeleton = 𝐃ₛ(bigdecomp_to_sets)
           s -> dom(s[1]) == dom(s[2]), 
           adhesionSpans(bigdecomp_skeleton)
         )
+
+
 end
