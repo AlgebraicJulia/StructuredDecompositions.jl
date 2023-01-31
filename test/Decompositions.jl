@@ -3,8 +3,8 @@ module TestDecompositions
 using Test
 using PartialFunctions
 
-using ..Decompositions 
-using ..FunctorUtils
+using StructuredDecompositions.Decompositions 
+using StructuredDecompositions.FunctorUtils
 
 using Catlab.Graphics
 using Catlab.Graphs
@@ -74,11 +74,9 @@ end
   ∫(G)
 )
 #the decomposition
-bigdecomp = StrDecomp(G, ∫(G), Γ)
+bigdecomp = StrDecomp(G, Γ)
 
-
-f = ACSetTransformation(Γ₀[4], Γ₀[1], V=[1, 3])
-
+#f = ACSetTransformation(Γ₀[4], Γ₀[1], V=[1, 3])
 
 @test H₁ ∈ bags(bigdecomp) && H₂ ∈ bags(bigdecomp) && !(H₁₂ ∈ bags(bigdecomp))
 
@@ -100,6 +98,5 @@ bigdecomp_skeleton = 𝐃ₛ(bigdecomp_to_sets)
           s -> dom(s[1]) == dom(s[2]), 
           adhesionSpans(bigdecomp_skeleton)
         )
-
 
 end

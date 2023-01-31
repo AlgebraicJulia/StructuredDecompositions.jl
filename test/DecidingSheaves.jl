@@ -4,9 +4,9 @@ using Test
 using PartialFunctions
 using MLStyle
 
-using ..Decompositions
-using ..DecidingSheaves
-using ..FunctorUtils
+using StructuredDecompositions.Decompositions
+using StructuredDecompositions.DecidingSheaves
+using StructuredDecompositions.FunctorUtils
 
 using Catlab.Graphs
 using Catlab.ACSetInterface
@@ -54,7 +54,7 @@ end
   ∫(Gₛ)
 )
 
-my_decomp   = StrDecomp(Gₛ, ∫(Gₛ), Γₛ)
+my_decomp   = StrDecomp(Gₛ, Γₛ)
 
 """
 An example: graph colorings
@@ -66,7 +66,8 @@ struct Coloring
 end
 
 #construct an n-coloring
-Coloring(n) = Coloring(n, g -> homomorphisms(g, complete_graph(Graph, n)) )
+K(n) = complete_graph(Graph, n)
+Coloring(n) = Coloring(n, g -> homomorphisms(g, K(n) ))
 #make it callable
 (c::Coloring)(X::Graph) = FinSet(c.func(X)) # given graph homos #f: G₁ → G₂ get morphism col(G₂) → col(G₁) by precomposition: take each λ₂ ∈ col(G₂) to hf ∈ col(G)
 function (c::Coloring)(f::ACSetTransformation)  
@@ -77,7 +78,14 @@ end
 
 skeletalColoring(n) = skeleton ∘ Coloring(n)
 
-colorability_test(n, the_test_case) = is_homorphic decide_sheaf_tree_shape(skeletalColoring(n), the_test_case)
-@test decide_sheaf_tree_shape(skeletalColoring(2), my_decomp)
+colorability_test(n, the_test_case) = is_homomorphic(ob(colimit(the_test_case)), K(n)) == decide_sheaf_tree_shape(skeletalColoring(n), the_test_case)[1]
+
+is_homomorphic(ob(colimit(my_decomp)), K(2))
+
+@test decide_sheaf_tree_shape(skeletalColoring(2), my_decomp)[1] == false
+
+@test all(colorability_test(n, my_decomp) for n ∈ range(1,10))
+
+
 
 end

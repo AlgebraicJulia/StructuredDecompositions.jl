@@ -7,3 +7,7 @@ end
 @testset "DecidingSheaves" begin
   include("DecidingSheaves.jl")
 end
+
+@testset "FunctorUtils" begin
+  include("FunctorUtils.jl")
+end

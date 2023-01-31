@@ -1,9 +1,8 @@
 module FunctorUtils
 
-export vs, skeleton, restriction, ↓
+export vs, skeleton
 
 using ..Decompositions
-using ..DecidingSheaves
 
 using Catlab
 using Catlab.CategoricalAlgebra
@@ -22,25 +21,5 @@ function skeleton(f::FinFunction)
   FinFunction(ℓ, skeleton(dd), skeleton(cc))
 end
 
-
-
-#=
-"""Given a function f: a → b, compute its image in b.
-"""
-function image(f::FinFunction)::FinSet
-  FinSet( map( x -> f(x) , collect(dom(f))) )
-end
-=#
-#=
-"""restrict a function f: a → b to the image of a function s: a' → a (s need not be monic...).
-"""
-function (restriction_to)(f::FinFunction, s::FinFunction)::FinFunction
-  (dom(f)== codom(s)) ? compose(legs(image(s))[1], f) : error("Domain Error: can only restrict a function to a subset of its domain")
-end
-
-
-(↓)(f,g) = restriction(f,g)
-
-=#
 
 end

@@ -1,11 +1,9 @@
 module DecidingSheaves
 
-export Presheaf, Sheaf, decide_sheaf_tree_shape, adhesion_filter
+export Presheaf, Sheaf, decide_sheaf_tree_shape
 
 using ..Decompositions
 using ..FunctorUtils
-
-using PartialFunctions
 
 using Catlab
 using Catlab.CategoricalAlgebra
@@ -37,8 +35,7 @@ function adhesion_filter(tup::Tuple, d::StructuredDecomposition)
   imgs              = map( f -> legs(image(f))[1], p_legs)
   #now get the new desired cospan; 
   #i.e.  im l₁ --ι₁--> dx₁ --l₁--> de <--l₂--dx₂ <--ι₂-- im l₂
-  #note, you need to take the skeleton for good measure
-  new_d_csp         = map(t -> compose(t...), zip(imgs, d_csp))  # map(t -> (skeleton ∘ compose)(t...), zip(imgs, d_csp))
+  new_d_csp         = map(t -> compose(t...), zip(imgs, d_csp))  
   #get the domain of d 
   d_dom             = dom(d.diagram)
   #now make the new decomposition, call it δ
@@ -64,7 +61,7 @@ function adhesion_filter(tup::Tuple, d::StructuredDecomposition)
     end 
   end
   δ₁ = Dict( f => mor_replace(f) for f ∈ hom_generators(d_dom) )
-  StrDecomp(d.decomp_shape, d.domain, FinDomFunctor(δ₀, δ₁, d.domain), d.decomp_type)
+  StrDecomp(d.decomp_shape, FinDomFunctor(δ₀, δ₁, d.domain), d.decomp_type)
 end
 
 #for some reason PartialFunctions is giving me an error here 
@@ -82,11 +79,9 @@ The algorithm is as follows:
     "yes" otherwise.
 """
 function decide_sheaf_tree_shape(f, d::StructuredDecomposition, solution_space_decomp::StructuredDecomposition = 𝐃(f, d, CoDecomposition))
-  algorithm = foldl(∘, map(adhesion_filter, adhesionSpans(solution_space_decomp, true)))
-  witness   = algorithm(solution_space_decomp)
-  @show witness 
-  @show bags(witness)
+  witness = foldl(∘, map(adhesion_filter, adhesionSpans(solution_space_decomp, true)))(solution_space_decomp)
   (foldr(&, map( !isempty, bags(witness))), witness)
 end
+
 
 end

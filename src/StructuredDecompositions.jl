@@ -1,7 +1,9 @@
 module StructuredDecompositions
 
-import ..Decompositions
-import ..DecidingSheaves
-import ..FunctorUtils
 
-end # module
+include("Decompositions.jl")
+include("FunctorUtils.jl")
+include("DecidingSheaves.jl")
+
+
+end 
