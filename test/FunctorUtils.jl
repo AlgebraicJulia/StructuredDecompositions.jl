@@ -10,15 +10,24 @@ using Catlab
 using Catlab.CategoricalAlgebra
 
 isempty(FinSet(0))
-#=
-evens(i, j) = j ≥ 2i ? FinFunction(n -> 2n, FinSet(i), FinSet(j)) : error("try again")
 
+unique_initial = FinFunction(Int64[], FinSet(0), FinSet(4))
+unique_initial
+
+skeleton(unique_initial)
+
+evens(i, j) = j ≥ 2i ? FinFunction(n -> 2n, FinSet(i), FinSet(j)) : error("try again")
 
 f = evens(30, 60)
 g = evens(10, 30)
 
-f_restricted_to_g = f ↓ g
+#idempotence
+@test skeleton(skeleton(f)) == skeleton(f)
 
+t = (g,f)
+compose(t...)
+
+#=
 quadruplesList(i) = map(x -> 4x, collect(FinSet(i)))
 quadruplesList(10)
 

@@ -24,8 +24,6 @@ H₁ = @acset Graph begin
   tgt = [2, 3]
 end
 
-#to_graphviz(H₁)
-
 #adhesion 1,2
 H₁₂ = @acset Graph begin
   V = 2
@@ -38,7 +36,6 @@ H₂ = @acset Graph begin
   src = [1, 2, 3]
   tgt = [2, 3, 4]
 end
-
 
 Gₛ = @acset Graph begin
   V = 2
@@ -56,23 +53,13 @@ end
   ),
   ∫(Gₛ)
 )
-smallSD = StrDecomp(Gₛ, ∫(Gₛ), Γₛ)
-as_SD   = adhesionSpans(smallSD)
-length(as_SD)
-colim_SD = pushout(as_SD[1])
-to_graphviz(ob(colim_SD))
+
+my_decomp   = StrDecomp(Gₛ, ∫(Gₛ), Γₛ)
 
 """
 An example: graph colorings
 """
 #an H-coloring is a hom onto H
-K₂ = @acset Graph begin
-  V = 2
-  E = 1
-  src = [1]
-  tgt = [2]
-end
-
 struct Coloring
   n     #the target graph
   func  #the function mappgin opens to lists of homs from G to K_n
@@ -89,15 +76,8 @@ function (c::Coloring)(f::ACSetTransformation)
 end
 
 skeletalColoring(n) = skeleton ∘ Coloring(n)
-#is_homomorphic(ob(colim_SD), complete_graph(Graph, 2))
 
-#skeletal_coloring(n) = skeleton ∘ (Coloring(n))
-
-𝐃_col = (𝐃 $ skeleton) ∘ (x -> 𝐃(Coloring(3), x, CoDecomposition))
-#Now you can use this functor to conert a structured decomposition of graphs into a structured decomposition of the solution spaces on those graphs. 
-#coloring_decomp = 𝐃_col(smallSD)
-three_d = 𝐃_col(smallSD)
-#adhesion_filter(adhesionSpans(smallSD, true)[1], three_d)
-#decide_sheaf_tree_shape(skeletalColoring(2), smallSD)
+colorability_test(n, the_test_case) = is_homorphic decide_sheaf_tree_shape(skeletalColoring(n), the_test_case)
+@test decide_sheaf_tree_shape(skeletalColoring(2), my_decomp)
 
 end

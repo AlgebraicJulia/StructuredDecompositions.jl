@@ -13,6 +13,7 @@ using Catlab.CategoricalAlgebra
 using Catlab.Graphs
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra.Diagrams
+import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map
 #=
 using Catlab.Theories
 using Catlab.CategoricalAlgebra.FinSets
@@ -50,7 +51,7 @@ StrDecomp(the_decomp_shape, the_domain, the_diagram) = StrDecomp(the_decomp_shap
 
 #construct a structured decomposition and check whether the decomposition shape actually makes sense. 
 # TODO: check that the domain is also correct...
-StrDecomp(the_decomp_shape, the_domain, the_diagram, the_decomp_type) = begin
+function StrDecomp(the_decomp_shape, the_domain, the_diagram, the_decomp_type)
   d = StrDecomp(the_decomp_shape, the_domain, the_diagram, the_decomp_type)
   dc(s) = @match the_decomp_type begin
     Decomposition   => dom(s[1])   == dom(s[2])
@@ -62,6 +63,13 @@ StrDecomp(the_decomp_shape, the_domain, the_diagram, the_decomp_type) = begin
     error(str(d) * " is not a " * string(the_decomp_type))
   end
 end
+
+ob_map(d::StructuredDecomposition, x)  = ob_map(d.diagram, x)
+hom_map(d::StructuredDecomposition, f) = hom_map(d.diagram, f)
+
+function colim(d::StructuredDecomposition) colim(d.diagram) end
+function lim(  d::StructuredDecomposition) lim(d.diagram)   end
+
 
 # BEGIN UTILS
 """Structured decomposition Utils"""
@@ -145,11 +153,8 @@ we can make a structured decomposition valued in S^{op} which has the relevant d
 F ∘ d : FG → C → S^{op}.
 This is done by first lifting the sheaf to a functor 𝐃_f: 𝐃C → 𝐃(S^{op}) between categories of structured decompositions. 
 """
-function 𝐃(f, d ::StructuredDecomposition, t::DecompType = Decomposition)::StructuredDecomposition 
-  flip = @match t begin 
-    Decomposition   => x -> x                    #nothing to do
-    CoDecomposition => FinCat ∘ op_graph ∘ graph #work with ( ∫G )^{op}
-  end 
+function 𝐃(f, d ::StructuredDecomposition, t::DecompType = d.decomp_type)::StructuredDecomposition 
+  flip = t == d.decomp_type ?  x -> x : FinCat ∘ op_graph ∘ graph #work with ( ∫G )^{op}
   δ   = d.diagram 
   X   = dom(δ)
   #Q is the composite Q = F ∘ d : FG → C → S^{op}
@@ -158,7 +163,7 @@ function 𝐃(f, d ::StructuredDecomposition, t::DecompType = Decomposition)::St
           Dict(g => f(hom_map(δ, g)) for g ∈ hom_generators(X)), #the hom map Q₁
           flip(X)
         )
-  return StrDecomp(d.decomp_shape, flip(X), Q, t) 
+  StrDecomp(d.decomp_shape, flip(X), Q, t) 
 end
 
 end

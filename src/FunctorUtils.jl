@@ -15,12 +15,14 @@ function vs(f::ACSetTransformation) components(f)[1] end
 
 #define the functor skeleton : Set → Skel(Set)
 function skeleton(s::FinSet) FinSet(length(s)) end
-function skeleton(f::FinFunction) 
+function skeleton(f::FinFunction)
   (dd, cc) = (dom(f), codom(f))
   #(skel_dom, skel_cod) = (skeleton(dd), skeleton(cc))
-  ℓ = [findfirst(item -> item == f(x), collect(cc)) for x ∈ collect(dd)]
+  ℓ = isempty(dd) ? Int[] : [findfirst(item -> item == f(x), collect(cc)) for x ∈ collect(dd)]
   FinFunction(ℓ, skeleton(dd), skeleton(cc))
 end
+
+
 
 #=
 """Given a function f: a → b, compute its image in b.
