@@ -7,4 +7,9 @@ version = "0.1.0"
 Catlab = "134e5e36-593f-5add-ad60-77f754baafbe"
 MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
 PartialFunctions = "570af359-4316-4cb7-8c74-252c00c2016b"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+Catlab = "^0.14"
+MLStyle = "^0.4"
+PartialFunctions = "^1.1"
+julia = "^1.7"
