@@ -3,7 +3,7 @@ module Decompositions
 export StructuredDecomposition, StrDecomp, 
       DecompType, Decomposition, CoDecomposition, 
       𝐃, bags, adhesions, adhesionSpans, 
-      ∫ #, op_graph, codecomp
+      ∫
 
 using PartialFunctions
 using MLStyle
@@ -18,7 +18,7 @@ import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map, colimit, limit
 #####################
 #   DATA
 #####################
-"""Structured decompositions
+"""Structured decompositions are diagrams.
 """
 abstract type StructuredDecomposition{G, C, D} <: Diagram{id, C, D} end
 
@@ -38,8 +38,15 @@ struct StrDecomp{G, C, D} <: StructuredDecomposition{G, C, D}
   domain       ::C  
 end
 
-StrDecomp(the_decomp_shape, the_diagram) = StrDecomp(the_decomp_shape, the_diagram, Decomposition, dom(the_diagram))
+"""One can construct a structured decomposition by simply providing the graph representing the shape of the decompostion and the relevant diagram.
+This constructor will default to setting the Decompsotion Type to Decomposition (i.e. we default to viewing C-valued structured decompositions as diagrams into Span C)
+"""
+StrDecomp(the_decomp_shape, the_diagram) = StrDecomp(the_decomp_shape, the_diagram, Decomposition)
 
+"""If we want to explicitly specify the decomposition type of a structured decomposition, then this can be done by explicitly passing a some t::DecompType as an argument to the constructor.
+DecompType has two values: Decomposition and CoDecomposition. These are used to distinguish whether we think of a C-valued structured decomposition d: FG → Span C as a diagram into Span C or whether 
+we think of it as a diagram into Cospan C of the form d: FG → Cospan C^op. 
+"""
 #construct a structured decomposition and check whether the decomposition shape actually makes sense. 
 # TODO: check that the domain is also correct...
 function StrDecomp(the_decomp_shape, the_diagram, the_decomp_type)
@@ -64,7 +71,7 @@ function limit(  d::StructuredDecomposition) limit(FreeDiagram(d.diagram))   end
 
 
 # BEGIN UTILS
-"""Structured decomposition Utils"""
+#=Structured decomposition Utils=#
 # ShapeVertex is the "vertex-objects" of ∫G; i.e in the form (V, v)
 #  ShapeEdge is the "edge-objects" of ∫G; i.e in the form (E, e)
 #  ShapeSpan is the "span-objects" of ∫G; i.e. in the form (V,x) <-- (E,e=xy) --> (V,y)
@@ -115,11 +122,19 @@ function get(c::StrDcmpCpt, d::StructuredDecomposition, indexing::Bool)
   end
 end
 
+"""get a vector of indexed bags; i.e. a vector consisting of pairs (x, dx) where x ∈ FG and dx is the value mapped to x under the decompositon d"""
 bags(d, ind)          = get(Bag, d, ind)
+"""get a vector of the bags of a decomposition"""
 bags(d)               = bags(d, false)
+
+"""get a vector of indexed adhesions; i.e. a vector consisting of pairs (e, de) where e is an edge in ∫G and de is the value mapped to e under the decompositon d"""
 adhesions(d, ind)     = get(AdhesionApex, d, ind)
+"""get a vector of the adhesions of a decomposition"""
 adhesions(d)          = adhesions(d, false)     
+
+"""get a vector of indexed adhesion spans; i.e. a vector consisting of pairs (x₁ <- e -> x₂, dx₁ <- de -> dx₂) where x₁ <- e -> x₂ is span in ∫G and dx₁ <- de -> dx₂ is what its image under the decompositon d"""
 adhesionSpans(d, ind) = get(AdhesionSpan, d, ind)
+"""get a vector of the adhesion spans of a decomposition"""
 adhesionSpans(d)      = adhesionSpans(d, false)
 
 function elements_graph(el::Elements)
@@ -128,7 +143,8 @@ function elements_graph(el::Elements)
   return ΔF(el)
 end
 
-"""∫(G) has type Category whereas elements(G) has type Elements
+"""Syntactic sugar for costrucitng the category of elements of a graph. 
+Note that ∫(G) has type Category whereas elements(G) has type Elements
 """
 function ∫(G::T) where {T <: ACSet} ∫(elements(G))            end 
 function ∫(G::Elements)             FinCat(elements_graph(G)) end 
@@ -140,10 +156,16 @@ function op_graph(g::Graph)::Graph
   return ΔF(g)
 end
 
-"""Given a structured decomposition d: FG → C and a sheaf F: C → S^{op} w.r.t to the decompositon topology, 
-we can make a structured decomposition valued in S^{op} which has the relevant data by composition:
-F ∘ d : FG → C → S^{op}.
-This is done by first lifting the sheaf to a functor 𝐃_f: 𝐃C → 𝐃(S^{op}) between categories of structured decompositions. 
+"""
+The construction of categories of structured decompostions is functorial; 
+it consists of a functor 𝐃: Cat_{pullback} → Cat taking any category C with pullbacks to the category 
+𝐃C of C-values structured decompositions. The functoriality of this construction allows us to lift any functor 
+F : C → E to a functor 𝐃f : 𝐃 C → 𝐃 E which maps C-valued structured decompositions to E-valued structured decompositions. 
+When we think of the functor F as a computational problem (taking inputs in C to solution spaces in E), then 𝐃f should be thought
+of as lifting the global comuputation of F to local computation on the constituent parts of C-valued decompositions. 
+In particular, given a structured decomposition d: FG → C and a sheaf F: C → FinSet^{op} w.r.t to the decompositon topology, 
+we can make a structured decomposition valued in FinSet^{op} by lifting the sheaf to a functor 𝐃_f: 𝐃C → 𝐃(S^{op}) between 
+categories of structured decompositions. 
 """
 function 𝐃(f, d ::StructuredDecomposition, t::DecompType = d.decomp_type)::StructuredDecomposition 
   flip = t == d.decomp_type ?  x -> x : FinCat ∘ op_graph ∘ graph #work with ( ∫G )^{op}
