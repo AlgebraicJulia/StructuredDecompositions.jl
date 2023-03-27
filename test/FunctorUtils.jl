@@ -11,7 +11,7 @@ using Catlab.CategoricalAlgebra
 
 isempty(FinSet(0))
 
-unique_initial = FinFunction(Int64[], FinSet(0), FinSet(4))
+unique_initial = FinFunction(Int[], FinSet(0), FinSet(4))
 unique_initial
 
 skeleton(unique_initial)
