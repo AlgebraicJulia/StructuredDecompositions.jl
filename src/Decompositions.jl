@@ -139,8 +139,8 @@ adhesionSpans(d)      = adhesionSpans(d, false)
 
 function elements_graph(el::Elements)
   F = FinFunctor(Dict(:V => :El, :E => :Arr), Dict(:src => :src, :tgt => :tgt), SchGraph, SchElements)
-  ΔF = DeltaMigration(F, Elements{Symbol}, Graph)
-  return ΔF(el)
+  ΔF = DeltaMigration(F)
+  return migrate(Graph, el, ΔF)
 end
 
 """Syntactic sugar for costrucitng the category of elements of a graph. 
@@ -152,8 +152,8 @@ function ∫(G::Elements)             FinCat(elements_graph(G)) end
 #reverse direction of the edges
 function op_graph(g::Graph)::Graph
   F = FinFunctor(Dict(:V => :V, :E => :E), Dict(:src => :tgt, :tgt => :src), SchGraph, SchGraph)
-  ΔF = DeltaMigration(F, Graph, Graph)
-  return ΔF(g)
+  ΔF = DeltaMigration(F)
+  return migrate(Graph, g, ΔF)
 end
 
 """
