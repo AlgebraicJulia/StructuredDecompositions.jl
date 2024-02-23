@@ -11,3 +11,11 @@ end
 @testset "FunctorUtils" begin
   include("FunctorUtils.jl")
 end
+
+@testset "JunctionTrees" begin
+  include("JunctionTrees.jl")
+end
+
+@testset "NestedUWDs" begin
+  include("NestedUWDs.jl")
+end
