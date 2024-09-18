@@ -13,10 +13,18 @@ using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra
 using Catlab.Graphics
 
+K(n)=complete_graph(Graph, n)
+Gs = Dict([i => ∫(K(i)) for i in 1:7])
+
+# we can see that
+# ∫(K(1)) = *
+# ∫(K(2)) = 4 -> 2 <- 3 -> 1 <- 4
+
 ############################
 #     EXAMPLE INSTANCE str decomp
 ############################
 
+# bag 1
 H₁ = @acset Graph begin
   V = 3
   E = 2
@@ -24,12 +32,12 @@ H₁ = @acset Graph begin
   tgt = [2, 3]
 end
 
-#adhesion 1,2
+# adhesion 1,2
 H₁₂ = @acset Graph begin
   V = 2
 end
 
-#bag 2
+# bag 2
 H₂ = @acset Graph begin
   V = 4
   E = 3
@@ -37,13 +45,20 @@ H₂ = @acset Graph begin
   tgt = [2, 3, 4]
 end
 
+# the shape of the decomposition
 Gₛ = @acset Graph begin
   V = 2
   E = 1
   src = [1]
   tgt = [2]
 end
+# ∫(Gₛ) produces a finitely-presented category
+#  1:2 ⇉ 1:3
+#  -- it accepts an ACSet
+#  -- produces its Elements
+#  -- produces an elements_graph 
 
+# build a functor from ∫G --> FinSet
 Γₛ⁰ = Dict(1 => H₁, 2 => H₂, 3 => H₁₂)
 Γₛ = FinDomFunctor(
   Γₛ⁰,
@@ -85,7 +100,6 @@ is_homomorphic(ob(colimit(my_decomp)), K(2))
 @test decide_sheaf_tree_shape(skeletalColoring(2), my_decomp)[1] == false
 
 @test all(colorability_test(n, my_decomp) for n ∈ range(1,10))
-
 
 
 end
