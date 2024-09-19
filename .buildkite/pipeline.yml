@@ -7,7 +7,7 @@ steps:
   - label: ":hammer: Build Project"
     command: 
       - "module load julia"
-      - "julia --project=docs --color=yes -e 'using Pkg; Pkg.update(); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); Pkg.precompile()'"
+      - "julia --project=docs --color=yes -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); Pkg.precompile()'"
          
   - wait 
 
