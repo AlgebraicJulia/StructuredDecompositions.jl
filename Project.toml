@@ -16,8 +16,12 @@ PartialFunctions = "570af359-4316-4cb7-8c74-252c00c2016b"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
+AbstractTrees = "0.4"
 AMD = "0.5"
 Catlab = "0.16"
+CuthillMcKee = "0.1"
+DataStructures = "0.18"
 MLStyle = "0.4"
+Metis = "1"
 PartialFunctions = "1.1"
 julia = "1.7"
