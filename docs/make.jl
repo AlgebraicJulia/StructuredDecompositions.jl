@@ -40,7 +40,7 @@ makedocs(
     "Decompositions"=>"pages/decompositions.md",
     "Deciding Sheaves"=>"pages/decidingsheaves.md",
 #    "Junction Trees"=>"pages/junction_trees.md",
-#    "Functor Utils"=>"pages/functor_utils.md",
+    "Functor Utils"=>"pages/functor_utils.md",
 #    "Nested UWDs"=>"pages/nested_uwds.md",
     "Library Reference"=>"api.md",
   ]
