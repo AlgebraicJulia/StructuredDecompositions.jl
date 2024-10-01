@@ -4,6 +4,7 @@ authors = ["benjaminmerlinbumpus <benjamin.merlin.bumpus@gmail.com>"]
 version = "0.2.0"
 
 [deps]
+ACSets = "227ef7b5-1206-438b-ac65-934d6da304b8"
 AMD = "14f7f29c-3bd6-536c-9a0b-7339e30b5a3e"
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 Catlab = "134e5e36-593f-5add-ad60-77f754baafbe"
@@ -13,6 +14,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
 Metis = "2679e427-3c69-5b7f-982b-ece356f1e94b"
 PartialFunctions = "570af359-4316-4cb7-8c74-252c00c2016b"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]

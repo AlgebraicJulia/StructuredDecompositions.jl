@@ -78,9 +78,14 @@ The algorithm is as follows:
     "no" if there is an empty bag; 
     "yes" otherwise.
 """
-function decide_sheaf_tree_shape(f, d::StructuredDecomposition, solution_space_decomp::StructuredDecomposition = 𝐃(f, d, CoDecomposition))
+function decide_sheaf_tree_shape(f,
+        d::StructuredDecomposition,
+        solution_space_decomp::StructuredDecomposition = 𝐃(f, d, CoDecomposition))
+
   witness = foldl(∘, map(adhesion_filter, adhesionSpans(solution_space_decomp, true)))(solution_space_decomp)
-  (foldr(&, map( !isempty, bags(witness))), witness)
+  
+  # (foldr(&, map( !isempty, bags(witness))), witness)
+  (all(!isempty, bags(witness)), witness)
 end
 
 
