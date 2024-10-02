@@ -31,12 +31,10 @@ H₁ = @acset Graph begin
   src = [1, 2]
   tgt = [2, 3]
 end
-
 # adhesion 1,2
 H₁₂ = @acset Graph begin
   V = 2
 end
-
 # bag 2
 H₂ = @acset Graph begin
   V = 4
@@ -44,7 +42,6 @@ H₂ = @acset Graph begin
   src = [1, 2, 3]
   tgt = [2, 3, 4]
 end
-
 # the shape of the decomposition
 Gₛ = @acset Graph begin
   V = 2
@@ -69,7 +66,7 @@ end
   ∫(Gₛ)
 )
 
-my_decomp   = StrDecomp(Gₛ, Γₛ)
+my_decomp = StrDecomp(Gₛ, Γₛ)
 
 """
 An example: graph colorings
@@ -95,7 +92,14 @@ skeletalColoring(n) = skeleton ∘ Coloring(n)
 
 colorability_test(n, the_test_case) = is_homomorphic(ob(colimit(the_test_case)), K(n)) == decide_sheaf_tree_shape(skeletalColoring(n), the_test_case)[1]
 
-is_homomorphic(ob(colimit(my_decomp)), K(2))
+@test is_homomorphic(ob(colimit(my_decomp)), K(2)) == false
+
+# Verify that adhesionSpans, adhesionFilters work
+
+# solution space decomposition
+ssd = 𝐃(skeletalColoring(2), my_decomp, CoDecomposition)
+
+@test adhesionSpans(ssd, true) == [([1,2], [FinFunction([1,4],2,4), FinFunction([3,2],2,4)])]
 
 @test decide_sheaf_tree_shape(skeletalColoring(2), my_decomp)[1] == false
 

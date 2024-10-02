@@ -21,14 +21,10 @@ H₁ = @acset Graph begin
   src = [1, 2]
   tgt = [2, 3]
 end
-
-#to_graphviz(H₁)
-
 #adhesion 1,2
 H₁₂ = @acset Graph begin
   V = 2
 end
-
 #bag 2
 H₂ = @acset Graph begin
   V = 4
@@ -36,12 +32,10 @@ H₂ = @acset Graph begin
   src = [1, 2, 3]
   tgt = [2, 3, 4]
 end
-
 #adhesion 2,3
 H₂₃ = @acset Graph begin
   V = 1
 end
-
 #bag 3
 H₃ = @acset Graph begin
   V = 2
@@ -49,7 +43,6 @@ H₃ = @acset Graph begin
   src = [1]
   tgt = [2]
 end
-
 # Make the decomp ###########
 #The shape
 G = @acset Graph begin

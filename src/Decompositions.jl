@@ -29,14 +29,6 @@ export StructuredDecomposition
 end
 export DecompType
 
-# accepts elements from adhesion spans
-function dc(decomp_type::DecompType, s)
-    @match decomp_type begin
-        Decomposition => dom(s[1]) == dom(s[2])
-        CoDecomposition => codom(s[1]) == codom(s[2])
-    end
-end
-
 """    Structrured decompositions
 
 Think of these are graphs whose vertices are labeled by the objects of some category and whose edges are labeled by SPANS in this category
@@ -63,7 +55,11 @@ If we want to explicitly specify the decomposition type of a structured decompos
 """
 function StrDecomp(decomp_shape, diagram, decomp_type)
     d  = StrDecomp(decomp_shape, diagram, decomp_type, dom(diagram))
-    all(j -> dc(decomp_type, j), adhesionSpans(d)) ? d : throw(StrDecompError(d)) 
+    dc = s -> @match decomp_type begin
+        Decomposition => dom(s[1]) == dom(s[2])
+        CoDecomposition => codom(s[1]) == codom(s[2])
+    end
+    all(dc, adhesionSpans(d)) ? d : throw(StrDecompError(d)) 
 end
 #construct a structured decomposition and check whether the decomposition shape actually makes sense. 
 # TODO: check that the domain is also correct...
