@@ -1,5 +1,5 @@
 # Library Reference
 
 ```@autodocs
-Modules = [StructuredDecompositions, StructuredDecompositions.Decompositions, StructuredDecompositions.FunctorUtils, StructuredDecompositions.DecidingSheaves]
+Modules = [StructuredDecompositions, StructuredDecompositions.Decompositions, StructuredDecompositions.FunctorUtils, StructuredDecompositions.DecidingSheaves, StructuredDecompositions.JunctionTrees, StructuredDecompositions.NestedUWDs]
 ```
