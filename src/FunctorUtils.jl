@@ -16,7 +16,6 @@ function vs(f::ACSetTransformation) components(f)[1] end
 function skeleton(s::FinSet) FinSet(length(s)) end
 function skeleton(f::FinFunction)
   (dd, cc) = (dom(f), codom(f))
-  #(skel_dom, skel_cod) = (skeleton(dd), skeleton(cc))
   ℓ = isempty(dd) ? Int[] : [findfirst(item -> item == f(x), collect(cc)) for x ∈ collect(dd)]
   FinFunction(ℓ, skeleton(dd), skeleton(cc))
 end
