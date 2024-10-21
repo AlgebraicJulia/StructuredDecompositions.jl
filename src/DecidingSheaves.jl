@@ -88,6 +88,8 @@ function decide_sheaf_tree_shape(f,
 
     # witness = foldl(∘, map(adhesion_filter, adhesionSpans(solution_space_decomp, true)))(solution_space_decomp)
 
+    @info "Structured Space Decomposition: $solution_space_decomp"
+    @info "Adhesion Spans: $(adhesionSpans(solution_space_decomp, true))"
     witness = 
     ∘((adhesion_filter.(adhesionSpans(solution_space_decomp, true)))...)(solution_space_decomp)
   

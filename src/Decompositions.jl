@@ -1,7 +1,6 @@
 module Decompositions
 
-export Decomposition, CoDecomposition, 
-      𝐃, adhesionSpans, ∫
+export Decomposition, CoDecomposition, 𝐃, adhesionSpans, ∫
 
 using PartialFunctions
 using MLStyle
@@ -96,23 +95,27 @@ function get_components(el::Elements, j::Int)
     filter(part -> el[part, :πₑ] == j, parts(el, :El))
 end
 
-"""
+"""    get_cat_components(d;:StructuredDecomposition, el::Elements, j::Int)
+
 Get the points in el::Elements into actual objects of the category ∫G, where G is the decomposition shape.
 """
 function get_cat_components(d::StructuredDecomposition, el::Elements, j::Int)
+    obgen = ob_generators(d.domain)
     map(get_components(el, j)) do component
-        ob_generators(d.domain)[component]
+        obgen[component]
     end
 end
 
+"""    getFromDom(c::ShapeCpt, d::StructuredDecomposition, el::Elements)
+
+For a given shape component, get the corresponding components in the category of elements 
+"""
 function getFromDom(c::ShapeCpt, d::StructuredDecomposition, el::Elements = elements(d.decomp_shape))
   @match c begin
     ShapeVertex => get_cat_components(d,el,1)
     ShapeEdge   => get_cat_components(d,el,2)
-    ShapeSpan   => map(get_components(el, 2)) do epart
-        filter(part -> el[part, :src] == epart, parts(el, :Arr))
-    end
-    # TODO map and filter. can we simplify
+    ShapeSpan   => el[parts(el, :Arr) .∈ Ref(get_components(el, 2)), :src]
+    # get all arrow components in the edge-objects for the given category of elements
   end
 end
 
@@ -122,52 +125,54 @@ end
     HomMap
 end
 
-function evalDiagram(t::MapType, d::StructuredDecomposition, x)
-    @match t begin
-        ObMap => ob_map(d.diagram, x)
-        HomMap => hom_map(d.diagram, x)
-    end
-end
-
 @data StrDcmpCpt begin
     Bag
     AdhesionApex
     AdhesionSpan
 end
 
+"""    map_index(f::Function, x, is_indexing::Bool=true)
+
+If indexing, return a list of tuples (x, f.x), where x 
+
+"""
 function map_index(f::Function, x, is_indexing::Bool=true)
     is_indexing ? collect(zip(x, map(f, x))) : map(f, x)
 end
 
+"""    get(c::StrDcmpCpt, d::StructuredDecomposition, is_indexing::Bool)
+
+Given an SD and type of component, 
+
+`c` may be Bag, AdhesionApex, or AdhesionFoot
+"""
 function get(c::StrDcmpCpt, d::StructuredDecomposition, is_indexing::Bool)
+    # get the category of elements from the decomposition shape
     el = elements(d.decomp_shape) 
-    get_cat_cpt_of_flavor(sc::ShapeCpt) = getFromDom(sc, d, el)
+    # cache a function for getting the component from SD and its elements
+    get_cat_cpt(sc::ShapeCpt) = getFromDom(sc, d, el)
     # now just do the actual computation
-    ed(t::MapType, x) = @match t begin
-        ObMap => ob_map(d.diagram, x)
-        HomMap => hom_map(d.diagram, x)
-    end # TODO delete this
     @match c begin 
-        Bag          => map_index(ed $ ObMap, get_cat_cpt_of_flavor(ShapeVertex), is_indexing) 
-        AdhesionApex => map_index(ed $ ObMap, get_cat_cpt_of_flavor(ShapeEdge), is_indexing) 
-        AdhesionSpan => map_index(map $ (ed $ HomMap), get_cat_cpt_of_flavor(ShapeSpan), is_indexing) 
+        Bag          => map_index(x -> ob_map(d.diagram, x), get_cat_cpt(ShapeVertex), is_indexing) 
+        AdhesionApex => map_index(x -> ob_map(d.diagram, x), get_cat_cpt(ShapeEdge), is_indexing) 
+        AdhesionSpan => map_index(x -> hom_map.(Ref(d.diagram), x), get_cat_cpt(ShapeSpan), is_indexing) 
     end
 end
 
 """    bags(d, index)
 get a vector of indexed bags; i.e. a vector consisting of pairs (x, dx) where x ∈ FG and dx is the value mapped to x under the decompositon d
 """
-bags(d, index) = get(Bag, d, index)
+bags(d::StructuredDecomposition, is_indexing) = get(Bag, d, is_indexing)
 
 """    bags(d)
 get a vector of the bags of a decomposition
 """
-bags(d) = bags(d, false)
+bags(d::StructuredDecomposition) = bags(d, false)
 
 """
 get a vector of indexed adhesions; i.e. a vector consisting of pairs (e, de) where e is an edge in ∫G and de is the value mapped to e under the decompositon d
 """
-adhesions(d, index) = get(AdhesionApex, d, index)
+adhesions(d::StructuredDecomposition, is_indexing) = get(AdhesionApex, d, is_indexing)
 
 """
 get a vector of the adhesions of a decomposition
@@ -178,7 +183,7 @@ adhesions(d) = adhesions(d, false)
 
 get a vector of indexed adhesion spans; i.e. a vector consisting of pairs (x₁ <- e -> x₂, dx₁ <- de -> dx₂) where x₁ <- e -> x₂ is span in ∫G and dx₁ <- de -> dx₂ is what its image under the decompositon d
 """
-adhesionSpans(d, index) = get(AdhesionSpan, d, index)
+adhesionSpans(d, is_indexing) = get(AdhesionSpan, d, is_indexing)
 
 """  adhesionSpans(d)
 
@@ -211,7 +216,7 @@ function op_graph(g::Graph)::Graph
 end
 # TODO upstream?
 
-"""
+"""    ∫(G)
 Syntactic sugar for constructing the category of elements of a graph. 
 Note that ∫(G) has type Category whereas elements(G) has type Elements
 """
