@@ -13,10 +13,12 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
 Metis = "2679e427-3c69-5b7f-982b-ece356f1e94b"
 PartialFunctions = "570af359-4316-4cb7-8c74-252c00c2016b"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 Catlab = "0.16"
 MLStyle = "0.4"
 PartialFunctions = "1.1"
+Reexport = "1.2.2"
 julia = "1.7"
