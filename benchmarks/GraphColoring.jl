@@ -7,6 +7,7 @@ import Graphs as GraphsPkg
 
 using BenchmarkTools
 using PkgBenchmark
+using Profile
 
 using StructuredDecompositions.Decompositions
 using StructuredDecompositions.DecidingSheaves
@@ -25,7 +26,7 @@ struct Coloring
 end
 
 K(n) = complete_graph(Graph, n)
-Coloring(n) = Coloring(n, g -> homomorphisms(g, K(n) ))
+Coloring(n) = Coloring(n, g -> homomorphisms(g, K(n)))
 (c::Coloring)(X::Graph) = FinSet(c.func(X))
 function (c::Coloring)(f::ACSetTransformation)  
     (G₁, G₂)   = (dom(f), codom(f)) 
@@ -35,8 +36,146 @@ end
   
 skeletalColoring(n) = skeleton ∘ Coloring(n)
   
-colorability_test(n, the_test_case) = is_homomorphic(ob(colimit(the_test_case)), K(n)) == decide_sheaf_tree_shape(skeletalColoring(n), the_test_case)[1]
+function colorability_test(n, the_test_case)
+  hom = is_homomorphic(ob(colimit(the_test_case)), K(n))
+  dec = decide_sheaf_tree_shape(skeletalColoring(n), the_test_case)[1]
+  if hom == dec
+    return hom
+  else
+    error("is_homomorphic != decide_sheaf_tree_shape")
+  end
+end
 
+# colorability_test(n, the_test_case) = is_homomorphic(ob(colimit(the_test_case)), K(n)) == decide_sheaf_tree_shape(skeletalColoring(n), the_test_case)[1]
+
+function adhesion_filter(tup::Tuple, d::StructuredDecomposition)
+  # if d.decomp_type == Decomposition
+  #   error("expecting ", CoDecomposition, " given ", Decomposition)
+  # end
+  # # d_csp is the cospan dx₁ -> de <- dx₂ corresp to some edge e = x₁x₂ in shape(d)
+  # (csp, d_csp)      = tup  #unpack the tuple
+  # # the pullback cone dx₁ <-l₁-- p --l₂ --> dx₂ with legs l₁ and l₂
+  # p_cone            = pullback(d_csp)
+  # p_legs            = legs(p_cone)
+  # #for each leg lᵢ : p → xᵢ of the pullback cone, 
+  # #compute its image ιᵢ : im lᵢ → dxᵢ
+  # imgs              = map( f -> legs(image(f))[1], p_legs)
+  # #now get the new desired cospan; 
+  # #i.e.  im l₁ --ι₁--> dx₁ --l₁--> de <--l₂--dx₂ <--ι₂-- im l₂
+  # new_d_csp         = map(t -> compose(t...), zip(imgs, d_csp))  
+  # #get the domain of d 
+  # d_dom             = dom(d.diagram)
+  # #now make the new decomposition, call it δ
+  # #start with the object map δ₀
+  # function ob_replace(x)
+  #   if x == dom(d_dom, csp[1])
+  #     dom(new_d_csp[1])
+  #   elseif x == dom(d_dom, csp[2])
+  #     dom(new_d_csp[2])
+  #   else 
+  #     ob_map(d,x) 
+  #   end
+  # end
+  # δ₀ = Dict( x => ob_replace(x) for x ∈ ob_generators(d_dom) )
+  # #now do the same thing with the morphism map
+  # function mor_replace(f) 
+  #   if f == csp[1]
+  #     return new_d_csp[1]
+  #   elseif f == csp[2]
+  #     return new_d_csp[2]
+  #   else
+  #     return hom_map(d,f)
+  #   end 
+  # end
+  # δ₁ = Dict( f => mor_replace(f) for f ∈ hom_generators(d_dom) )
+  # StrDecomp(d.decomp_shape, FinDomFunctor(δ₀, δ₁, d.domain), d.decomp_type)
+
+  #attempt 3
+
+  if d.decomp_type == Decomposition
+    error("expecting ", CoDecomposition, " given ", Decomposition)
+  end
+
+  #unpack
+  (csp, d_csp) = tup
+  
+  p_cone = pullback(d_csp)
+
+  if isempty(p_cone)
+    d_dom = FinSet(0)
+  else
+    p_legs = legs(p_cone)
+    imgs = map(f->legs(image(f))[1], p_legs)
+    new_d_csp = map(t->compose(t...), zip(imgs, d_csp))
+  end
+
+  d_dom = dom(d.diagram)
+
+  function ob_replace(x)
+    if x == dom(d_dom, csp[1])
+      dom(new_d_csp[1])
+    elseif x == dom(d_dom, csp[2])
+      dom(new_d_csp[2])
+    else
+      ob_map(d,x)
+    end
+  end
+
+  function mor_replace(f)
+    if f == csp[1]
+      return new_d_csp[1]
+    elseif f == csp[2]
+      return new_d_csp[2]
+    else
+      return hom_map(d,f)
+    end
+  end
+  
+  δ₀ = Dict( x => ob_replace(x) for x ∈ ob_generators(d_dom))
+  δ₁ = Dict( f => mor_replace(f) for f ∈ hom_generators(d_dom))
+
+  StrDecomp(d.decomp_shape, FinDomFunctor(δ₀, δ₁, d.domain), d.decomp_type)
+end
+
+#for some reason PartialFunctions is giving me an error here 
+#and we have to explicitly Curry adhesion_filter.. 
+# adhesion_filter(tup::Tuple) = d -> adhesion_filter(tup, d) 
+#fixed adhesion_filter so no longer needed
+
+"""Solve the decision problem encoded by a sheaf. 
+The algorithm is as follows: 
+  compute on each bag (optionally, if the decomposition of the solution space
+                        is already known, then it can be passed as an argument),
+  compute composites on edges, 
+  project back down to bags
+  answer (providing a witness)
+    "no" if there is an empty bag; 
+    "yes" otherwise.
+"""
+function decide_sheaf_tree_shape(f, d::StructuredDecomposition, solution_space_decomp::StructuredDecomposition = 𝐃(f, d, CoDecomposition))
+  # witness = foldl(∘, map(adhesion_filter, adhesionSpans(solution_space_decomp, true)))(solution_space_decomp)
+
+  # # witness = 
+  # # ∘((adhesion_filter.(adhesionSpans(solution_space_decomp, true)))...)(solution_space_decomp)
+
+  # # (foldr(&, map( !isempty, bags(witness))), witness)
+
+  # (all(!isempty, bags(witness)), witness)
+
+  witness = solution_space_decomp
+  adhesion_spans = adhesionSpans(solution_space_decomp, true)
+  # println(adhesion_spans)
+  # count = 0
+  for adhesion in adhesion_spans
+    # count = count + 1
+    witness = adhesion_filter(adhesion, witness)
+    if any(isempty, bags(witness))
+      return (false, witness)
+    end
+  end
+  # println(count)
+  return (true, witness)
+end
 
 # Benchmark 1 (small n per bag(4) and small bags k(2), 3 coloring)
 
@@ -73,7 +212,7 @@ end
 Γₛ = FinDomFunctor(
   Γₛ⁰,
   Dict(
-   1 => ACSetTransformation(Γₛ⁰[3], Γₛ⁰[1], V=[1, 3]),
+   1 => ACSetTransformation(Γₛ⁰[3], Γₛ⁰[1], V=[3, 4]),
    2 => ACSetTransformation(Γₛ⁰[3], Γₛ⁰[2], V=[2, 1]),
  ),
  ∫(Gₛ)
@@ -92,6 +231,7 @@ is_homomorphic(ob(colimit(my_decomp1)), K(4)) == true
 
 decide_sheaf_tree_shape(skeletalColoring(2), my_decomp1)[1] == false
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), my_decomp1)[1]
+@time decide_sheaf_tree_shape(skeletalColoring(2), my_decomp1)[1]
 
 decide_sheaf_tree_shape(skeletalColoring(3), my_decomp1)[1] == true
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), my_decomp1)[1]
@@ -99,6 +239,14 @@ decide_sheaf_tree_shape(skeletalColoring(3), my_decomp1)[1] == true
 decide_sheaf_tree_shape(skeletalColoring(4), my_decomp1)[1] == true
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), my_decomp1)[1]
 
+colorability_test(2, my_decomp1) == false
+@benchmark colorability_test(2, my_decomp1)
+
+colorability_test(3, my_decomp1) == true
+@benchmark colorability_test(3, my_decomp1)
+
+colorability_test(4, my_decomp1) == true
+@benchmark colorability_test(4, my_decomp1)
 
 # Benchmark 2 (medium n per bag(10) and small bags k(2), 3 coloring)
 
