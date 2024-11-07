@@ -271,6 +271,10 @@ decide_sheaf_tree_shape(skeletalColoring(2), my_decomp4)[1] == false
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), my_decomp2)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), my_decomp3)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), my_decomp4)[1]
+@benchmark colorability_test(2, my_decomp1)
+@benchmark colorability_test(2, my_decomp2)
+@benchmark colorability_test(2, my_decomp3)
+@benchmark colorability_test(2, my_decomp4)
 
 decide_sheaf_tree_shape(skeletalColoring(3), my_decomp1)[1] == true
 decide_sheaf_tree_shape(skeletalColoring(3), my_decomp2)[1] == true
@@ -280,6 +284,10 @@ decide_sheaf_tree_shape(skeletalColoring(3), my_decomp4)[1] == true
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), my_decomp2)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), my_decomp3)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), my_decomp4)[1]
+@benchmark colorability_test(3, my_decomp1)
+@benchmark colorability_test(3, my_decomp2)
+@benchmark colorability_test(3, my_decomp3)
+@benchmark colorability_test(3, my_decomp4)
 
 decide_sheaf_tree_shape(skeletalColoring(4), my_decomp1)[1] == true
 decide_sheaf_tree_shape(skeletalColoring(4), my_decomp2)[1] == true
@@ -289,3 +297,7 @@ decide_sheaf_tree_shape(skeletalColoring(4), my_decomp4)[1] == true
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), my_decomp2)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), my_decomp3)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), my_decomp4)[1]
+@benchmark colorability_test(4, my_decomp1)
+@benchmark colorability_test(4, my_decomp2)
+@benchmark colorability_test(4, my_decomp3)
+@benchmark colorability_test(4, my_decomp4)

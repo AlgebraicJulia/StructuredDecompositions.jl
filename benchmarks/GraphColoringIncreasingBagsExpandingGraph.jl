@@ -366,6 +366,10 @@ decide_sheaf_tree_shape(skeletalColoring(2), bags8size4)[1] == false
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), bags3size4)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), bags4size4)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), bags8size4)[1]
+@benchmark colorability_test(2, bags2size4)
+@benchmark colorability_test(2, bags3size4)
+@benchmark colorability_test(2, bags4size4)
+@benchmark colorability_test(2, bags8size4)
 
 decide_sheaf_tree_shape(skeletalColoring(3), bags2size4)[1] == true
 decide_sheaf_tree_shape(skeletalColoring(3), bags3size4)[1] == true
@@ -375,6 +379,10 @@ decide_sheaf_tree_shape(skeletalColoring(3), bags8size4)[1] == true
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), bags3size4)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), bags4size4)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), bags8size4)[1]
+@benchmark colorability_test(3, bags2size4)
+@benchmark colorability_test(3, bags3size4)
+@benchmark colorability_test(3, bags4size4)
+@benchmark colorability_test(3, bags8size4)
 
 decide_sheaf_tree_shape(skeletalColoring(4), bags2size4)[1] == true
 decide_sheaf_tree_shape(skeletalColoring(4), bags3size4)[1] == true
@@ -384,6 +392,10 @@ decide_sheaf_tree_shape(skeletalColoring(4), bags8size4)[1] == true
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), bags3size4)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), bags4size4)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), bags8size4)[1]
+@benchmark colorability_test(4, bags2size4)
+@benchmark colorability_test(4, bags3size4)
+@benchmark colorability_test(4, bags4size4)
+@benchmark colorability_test(4, bags8size4)
 
 # 2 bags size 8
 
@@ -702,6 +714,10 @@ decide_sheaf_tree_shape(skeletalColoring(2), bags8size8)[1] == false
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), bags3size8)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), bags4size8)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(2), bags8size8)[1]
+@benchmark colorability_test(2, bags2size8)
+@benchmark colorability_test(2, bags3size8)
+@benchmark colorability_test(2, bags4size8)
+@benchmark colorability_test(2, bags8size8)
 
 decide_sheaf_tree_shape(skeletalColoring(3), bags2size8)[1] == true
 decide_sheaf_tree_shape(skeletalColoring(3), bags3size8)[1] == true
@@ -711,6 +727,10 @@ decide_sheaf_tree_shape(skeletalColoring(3), bags8size8)[1] == true
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), bags3size8)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), bags4size8)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(3), bags8size8)[1]
+@benchmark colorability_test(3, bags2size8)
+@benchmark colorability_test(3, bags3size8)
+@benchmark colorability_test(3, bags4size8)
+@benchmark colorability_test(3, bags8size8)
 
 decide_sheaf_tree_shape(skeletalColoring(4), bags2size8)[1] == true
 decide_sheaf_tree_shape(skeletalColoring(4), bags3size8)[1] == true
@@ -720,3 +740,7 @@ decide_sheaf_tree_shape(skeletalColoring(4), bags8size8)[1] == true
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), bags3size8)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), bags4size8)[1]
 @benchmark decide_sheaf_tree_shape(skeletalColoring(4), bags8size8)[1]
+@benchmark colorability_test(4, bags2size8)
+@benchmark colorability_test(4, bags3size8)
+@benchmark colorability_test(4, bags4size8)
+@benchmark colorability_test(4, bags8size8)
