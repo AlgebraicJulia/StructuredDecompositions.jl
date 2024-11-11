@@ -60,7 +60,7 @@ end
 # 1 bag case (40 nodes, no adhesions)
 
 #bag 1
-bags1decomp = @acset Graph begin
+bags1 = @acset Graph begin
   V = 40
   E = 63
   src = [1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 7, 7, 8, 8, 9, 10, 10, 10, 10, 10, 10, 11, 11, 12, 13, 13, 14, 14, 15, 16, 16, 17, 17, 18, 19,
@@ -68,6 +68,46 @@ bags1decomp = @acset Graph begin
   tgt = [2, 3, 3, 4, 4, 5, 6, 6, 7, 7, 8, 9, 9, 10, 10, 11, 12, 21, 22, 31, 32, 12, 13, 13, 14, 15, 15, 16, 16, 17, 18, 18, 19, 19, 20,
         22, 23, 23, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 32, 33, 33, 34, 35, 35, 36, 36, 37, 38, 38, 39, 39, 40]
 end
+
+bags2 = @acset Graph begin
+  V = 1
+  E = 0
+  src = []
+  tgt = []
+end
+
+bagsad = @acset Graph begin
+  V = 1
+  E = 0
+  src = []
+  tgt = []
+end
+
+Gₛ = @acset Graph begin
+  V = 2
+  E = 1
+  src = [1]
+  tgt = [1]
+end
+
+#transformations
+Γₛ⁰ = Dict(1 => bags1, 2 => bags2, 3 => bagsad)
+Γₛ = FinDomFunctor(
+  Γₛ⁰,
+  Dict(
+   1 => ACSetTransformation(Γₛ⁰[3], Γₛ⁰[1], V=[1]),
+   2 => ACSetTransformation(Γₛ⁰[3], Γₛ⁰[2], V=[1]),
+ ),
+ ∫(Gₛ)
+)
+
+bags1decomp  = StrDecomp(Gₛ, Γₛ)
+
+@benchmark decide_sheaf_tree_shape(skeletalColoring(2), bags1decomp)[1]
+@benchmark decide_sheaf_tree_shape(skeletalColoring(3), bags1decomp)[1]
+@benchmark is_homomorphic(K(2), bag1)
+@benchmark is_homomorphic(K(3), bag1)
+@benchmark is_homomorphic(K(4), bag1)
 
 # 2 bag case (21 nodes each, 1 node adhesion)
 
