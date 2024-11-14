@@ -220,7 +220,7 @@ end
   
 my_decomp2  = StrDecomp(Gₛ, Γₛ)
 
-# We now consider the 2 bag, 12 vertices graph
+# We now consider the 2 bag, 16 vertices graph
 
 #bag 1
 H₁ = @acset Graph begin
