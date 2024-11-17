@@ -207,10 +207,9 @@ const MTYPE = StructTightACSetTransformation{
             (nothing, :E, :E, ((:inv, :inv), ())),
             (nothing, :E, :V, ((:inv, :src), (:tgt,))),
             (nothing, :E, :V, ((:inv, :tgt), (:src,)))}},
-    @NamedTuple{V::FinDomFunctionVector{Int64, Vector{Int64}, FinSetInt}, E::FinDomFunctionVector{Int64, Vector{Int64}, FinSetInt}},
+    @NamedTuple{V::FinDomFunctionVector{Int, Vector{Int}, FinSetInt}, E::FinDomFunctionVector{Int, Vector{Int}, FinSetInt}},
     SymmetricGraph,
     SymmetricGraph}
-
 
 
 # Construct a tree decomposition of a graph.

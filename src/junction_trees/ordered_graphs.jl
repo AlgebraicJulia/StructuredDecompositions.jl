@@ -52,6 +52,35 @@ function OrderedGraph(ograph::OrderedGraph, order::Order)
     OrderedGraph(graph, compose(order, ograph.order))
 end
 
+
+# A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
+# Liu
+# Algorithm 4.2: Elimination Tree by Path Compression.
+function etree(graph::OrderedGraph)
+    n = nv(graph)
+    parent = collect(1:n)
+    ancestor = collect(1:n)
+
+    for i in 1:n
+        for k in inneighbors(graph, i)
+            r = k
+
+            while ancestor[r] != r && ancestor[r] != i
+                t = ancestor[r]
+                ancestor[r] = i
+                r = t
+            end
+
+            if ancestor[r] == r
+                ancestor[r] = i
+                parent[r] = i
+            end
+        end
+    end
+
+    parent
+end
+
     
 function Base.deepcopy(ograph::OrderedGraph)
     order = deepcopy(ograph.order)
@@ -61,7 +90,7 @@ end
 
 
 # Get the vertex σ(i).
-function order(ograph::OrderedGraph, i)
+function permutation(ograph::OrderedGraph, i)
     ograph.order[i]
 end
 

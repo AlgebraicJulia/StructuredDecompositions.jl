@@ -5,7 +5,7 @@ struct SupernodeTree
     representative::Vector{Int} # representative vertex
     cardinality::Vector{Int}    # supernode cardinality
     ancestor::Vector{Int}       # first ancestor
-    degrees::Vector{Int}        # higher degrees
+    degree::Vector{Int}         # higher degrees
 end
 
 
@@ -30,64 +30,25 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
     order = Order(vcat(snode[sorder]...))
     graph = OrderedGraph(etree.graph, order)
 
+    permute!(snode, sorder)
+    permute!(ancestor, sorder)
+    permute!(degree, order)
+
     n = length(tree)
     representative = zeros(Int, n)
     cardinality = zeros(Int, n)
-    _ancestor = zeros(Int, n)
-    _degree = zeros(Int, n)
-    
+
     for i in 1:n - 1
-        j = sorder[i]
-        representative[i] = inverse(order, snode[j][1])
-        cardinality[i] = length(snode[j])
-        _degree[i] = degree[j]
-        _ancestor[i] = inverse(order, ancestor[j])
+        representative[i] = inverse(order, snode[i][1])
+        cardinality[i] = length(snode[i])
+        ancestor[i] = inverse(order, ancestor[i])
     end
 
     representative[n] = inverse(order, snode[n][1])
     cardinality[n] = length(snode[n])
-    _degree[n] = degree[n]
-    _ancestor[n] = ancestor[n]
-    
-    SupernodeTree(tree, graph, representative, cardinality, _ancestor, _degree)
-end
+    ancestor[n] = ancestor[n]
 
-    
-# Chordal Graphs and Semidefinite Optimization
-# Vanderberghe and Andersen
-# Algorithm 4.1: Maximal supernodes and supernodal elimination tree.
-function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeType)
-    n = length(etree.tree)
-    index = zeros(Int, n)
-    snd = Vector{Int}[]
-    q = Int[]
-    a = Int[]
-
-    for v in 1:n
-        ww = findchild(etree, degree, stype, v)
-        
-        if isnothing(ww)
-            i = length(snd) + 1
-            index[v] = i
-            push!(snd, [v])
-            push!(q, length(snd))
-            push!(a, n + 1)
-        else
-            i = index[ww]
-            index[v] = i
-            push!(snd[i], v)
-        end
-
-        for w in childindices(etree.tree, v)
-            if w !== ww
-                j = index[w]
-                q[j] = i
-                a[j] = v
-            end
-        end
-    end
-
-    snd, q, a
+    SupernodeTree(tree, graph, representative, cardinality, ancestor, degree)
 end
 
 

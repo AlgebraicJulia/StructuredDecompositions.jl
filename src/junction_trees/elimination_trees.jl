@@ -26,35 +26,6 @@ function EliminationTree{PostorderTree}(etree::EliminationTree, order::Order)
 end
 
 
-# A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
-# Liu
-# Algorithm 4.2: Elimination Tree by Path Compression.
-function etree(graph::OrderedGraph)
-    n = nv(graph)
-    parent = collect(1:n)
-    ancestor = collect(1:n)
-
-    for i in 1:n
-        for k in inneighbors(graph, i)
-            r = k
-
-            while ancestor[r] != r && ancestor[r] != i
-                t = ancestor[r]
-                ancestor[r] = i
-                r = t
-            end
-
-            if ancestor[r] == r
-                ancestor[r] = i
-                parent[r] = i
-            end
-        end
-    end
-
-    parent
-end
-
-
 # An Efficient Algorithm to Compute Row and Column Counts for Sparse Cholesky Factorization
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.

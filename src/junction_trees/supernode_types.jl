@@ -33,6 +33,44 @@ A fundamental supernode.
 struct Fundamental <: SupernodeType end
 
 
+# Chordal Graphs and Semidefinite Optimization
+# Vanderberghe and Andersen
+# Algorithm 4.1: Maximal supernodes and supernodal elimination tree.
+function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeType)
+    n = length(etree.tree)
+    index = zeros(Int, n)
+    snd = Vector{Int}[]
+    q = Int[]
+    a = Int[]
+
+    for v in 1:n
+        ww = findchild(etree, degree, stype, v)
+        
+        if isnothing(ww)
+            i = length(snd) + 1
+            index[v] = i
+            push!(snd, [v])
+            push!(q, length(snd))
+            push!(a, n + 1)
+        else
+            i = index[ww]
+            index[v] = i
+            push!(snd[i], v)
+        end
+
+        for w in childindices(etree.tree, v)
+            if w !== ww
+                j = index[w]
+                q[j] = i
+                a[j] = v
+            end
+        end
+    end
+
+    snd, q, a
+end
+
+
 # Find a child w of v such that
 # v ∈ snd(w).
 # If no such child exists, return nothing.

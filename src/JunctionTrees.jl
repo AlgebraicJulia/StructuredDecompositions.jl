@@ -24,7 +24,7 @@ export Node, Maximal, Fundamental
 
 
 # Supernode Trees
-export SupernodeTree, width, height, seperators, supernode, order, inverse
+export SupernodeTree, width, height, seperators, supernode, permutation, inverse
 
 
 include("junction_trees/orders.jl")
