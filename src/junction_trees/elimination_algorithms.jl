@@ -34,9 +34,15 @@ The nested dissection heuristic. Uses Metis.jl.
 struct MetisJL_ND <: EliminationAlgorithm end
 
 
+# Construct an order using the default graph elimination algorithm.
+function Order(graph::AbstractSymmetricGraph)
+    Order(graph, DEFAULT_ELIMINATION_ALGORITHM)
+end
+
+
 # Construct an order using the reverse Cuthill-McKee algorithm. Uses
 # CuthillMcKee.jl.
-function Order(graph::AbstractSymmetricGraph, ::CuthillMcKeeJL_RCM)
+function Order(graph::AbstractSymmetricGraph, ealg::CuthillMcKeeJL_RCM)
     order = CuthillMcKee.symrcm(adjacencymatrix(graph))
     Order(order)
 end
@@ -44,14 +50,14 @@ end
 
 # Construct an order using the approximate minimum degree algorithm. Uses
 # AMD.jl.
-function Order(graph::AbstractSymmetricGraph, ::AMDJL_AMD)
+function Order(graph::AbstractSymmetricGraph, ealg::AMDJL_AMD)
     order = AMD.symamd(adjacencymatrix(graph))
     Order(order)
 end
 
 
 # Construct an order using the nested dissection heuristic. Uses Metis.jl.
-function Order(graph::AbstractSymmetricGraph, ::MetisJL_ND)
+function Order(graph::AbstractSymmetricGraph, ealg::MetisJL_ND)
     order, index = Metis.permutation(adjacencymatrix(graph))
     Order(order, index)
 end

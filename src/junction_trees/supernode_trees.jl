@@ -110,3 +110,34 @@ function seperators(stree::SupernodeTree)
     
     seperator
 end
+
+
+# Compute the (unsorted) seperators of every node in T.
+function _seperators(stree::SupernodeTree)
+    n = length(stree.tree)
+    seperator = Vector{SparseIntSet}(undef, n)
+
+    for i in 1:n - 1
+        seperator[i] = SparseIntSet(stree.ancestor[i])
+    end
+
+    seperator[n] = SparseIntSet()
+
+    for i in 1:n - 1
+        for v in outneighbors(stree.graph, stree.representative[i])
+            if stree.ancestor[i] < v
+                push!(seperator[i], v)
+            end
+        end
+
+        j = parentindex(stree.tree, i)
+
+        for v in seperator[i]
+            if stree.ancestor[j] < v
+                push!(seperator[j], v)
+            end
+        end
+    end
+
+    map(collect, seperator)
+end
