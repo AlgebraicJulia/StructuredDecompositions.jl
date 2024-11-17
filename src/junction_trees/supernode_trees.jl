@@ -1,7 +1,7 @@
 # An ordered graph (G, σ) equipped with a supernodal elimination tree T.
 struct SupernodeTree
     tree::PostorderTree         # supernodal elimination tree
-    ograph::OrderedGraph        # ordered graph
+    graph::OrderedGraph        # ordered graph
     representative::Vector{Int} # representative vertex
     cardinality::Vector{Int}    # supernode cardinality
     ancestor::Vector{Int}       # first ancestor
@@ -28,7 +28,7 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
     tree = PostorderTree(tree, sorder)
     
     order = Order(vcat(snode[sorder]...))
-    ograph = OrderedGraph(etree.ograph, order)
+    graph = OrderedGraph(etree.graph, order)
 
     n = length(tree)
     representative = zeros(Int, n)
@@ -49,7 +49,7 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
     _degree[n] = degree[n]
     _ancestor[n] = ancestor[n]
     
-    SupernodeTree(tree, ograph, representative, cardinality, _ancestor, _degree)
+    SupernodeTree(tree, graph, representative, cardinality, _ancestor, _degree)
 end
 
     
@@ -93,16 +93,16 @@ end
 
 # Construct an elimination graph.
 function eliminationgraph(stree::SupernodeTree)
-    ograph = deepcopy(stree.ograph)
+    graph = deepcopy(stree.graph)
     n = length(stree.tree)
 
     for i in 1:n - 1
         for u in supernode(stree, i)[1:end - 1]
             v = u + 1
 
-            for w in outneighbors(ograph, u)
+            for w in outneighbors(graph, u)
                 if v < w
-                    add_edge!(ograph, v, w)
+                    add_edge!(graph, v, w)
                 end
             end
         end
@@ -110,14 +110,14 @@ function eliminationgraph(stree::SupernodeTree)
         u = last(supernode(stree, i))
         v = first(supernode(stree, parentindex(stree.tree, i)))
         
-        for w in outneighbors(ograph, u)
+        for w in outneighbors(graph, u)
             if v < w
-                add_edge!(ograph, v, w)
+                add_edge!(graph, v, w)
             end
         end
     end
 
-    ograph
+    graph
 end
 
 
@@ -139,10 +139,10 @@ end
 function seperators(stree::SupernodeTree)
     n = length(stree.tree)
     seperator = Vector{Vector{Int}}(undef, n)
-    ograph = eliminationgraph(stree)
+    graph = eliminationgraph(stree)
     
     for i in 1:n
-        clique = collect(outneighbors(ograph, stree.representative[i]))
+        clique = collect(outneighbors(graph, stree.representative[i]))
         filter!(j -> stree.ancestor[i] <= j, clique)
         seperator[i] = clique
     end

@@ -2,7 +2,7 @@
 # Nodes i in T correspond to vertices σ(i) in G.
 struct EliminationTree{T <: Union{Tree, PostorderTree}}
     tree::T              # elimination tree
-    ograph::OrderedGraph # ordered graph
+    graph::OrderedGraph # ordered graph
 end
 
 
@@ -15,27 +15,27 @@ end
 
 
 # Construct the elimination tree of an ordered graph.
-function EliminationTree(ograph::OrderedGraph)
-    EliminationTree(Tree(etree(ograph)), ograph)
+function EliminationTree(graph::OrderedGraph)
+    EliminationTree(Tree(etree(graph)), graph)
 end
 
 
 # Postorder an elimination tree.
 function EliminationTree{PostorderTree}(etree::EliminationTree, order::Order)
-    EliminationTree(PostorderTree(etree.tree, order), OrderedGraph(etree.ograph, order))
+    EliminationTree(PostorderTree(etree.tree, order), OrderedGraph(etree.graph, order))
 end
 
 
 # A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
 # Liu
 # Algorithm 4.2: Elimination Tree by Path Compression.
-function etree(ograph::OrderedGraph)
-    n = nv(ograph)
+function etree(graph::OrderedGraph)
+    n = nv(graph)
     parent = collect(1:n)
     ancestor = collect(1:n)
 
     for i in 1:n
-        for k in inneighbors(ograph, i)
+        for k in inneighbors(graph, i)
             r = k
 
             while ancestor[r] != r && ancestor[r] != i
@@ -102,7 +102,7 @@ function supcnt(etree::EliminationTree{PostorderTree})
     for p in 1:n - 1
         wt[parentindex(etree.tree, p)] -= 1
 
-        for u in outneighbors(etree.ograph, p)
+        for u in outneighbors(etree.graph, p)
             if firstdescendant(etree.tree, p) > prev_nbr[u]
                 wt[p] += 1
                 pp = prev_p[u]

@@ -236,12 +236,12 @@ function Decompositions.StrDecomp(sgraph::AbstractSymmetricGraph, stree::Superno
     for i in 1:n       
         snd = supernode(stree, i)
         sep = seperator[i]
-        objects[i] = induced_subgraph(sgraph, order(stree.ograph, [snd; sep]))
+        objects[i] = induced_subgraph(sgraph, order(stree.graph, [snd; sep]))
     end    
     
     for i in 1:n - 1
         sep = seperator[i]
-        objects[n + i] = induced_subgraph(sgraph, order(stree.ograph, sep))
+        objects[n + i] = induced_subgraph(sgraph, order(stree.graph, sep))
     end
     
     for i in 1:n - 1
