@@ -1,6 +1,6 @@
 # An ordered graph (G, σ) equipped with a supernodal elimination tree T.
 struct SupernodeTree <: AbstractTree
-    tree::PostorderTree         # tree
+    tree::PostorderTree         # supernodal elimination tree
     ograph::OrderedGraph        # ordered graph
     representative::Vector{Int} # representative vertex
     cardinality::Vector{Int}    # supernode cardinality

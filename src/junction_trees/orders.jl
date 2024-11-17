@@ -1,7 +1,7 @@
 # A permutation σ of the set {1, ..., n}.
 struct Order <: AbstractVector{Int}
-    order::Vector{Int}
-    index::Vector{Int}
+    order::Vector{Int} # permutation
+    index::Vector{Int} # inverse permutation
 end
 
 

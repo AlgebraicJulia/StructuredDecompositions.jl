@@ -1,8 +1,8 @@
 # A rooted tree.
 struct Tree <: AbstractTree
-    root::Int
-    parent::Vector{Int}
-    children::Vector{Vector{Int}}
+    root::Int                     # root
+    parent::Vector{Int}           # parent
+    children::Vector{Vector{Int}} # children
 end
 
 

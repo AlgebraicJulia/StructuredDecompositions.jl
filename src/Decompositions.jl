@@ -5,15 +5,21 @@ export StructuredDecomposition, StrDecomp,
       𝐃, bags, adhesions, adhesionSpans, 
       ∫
 
+using ..JunctionTrees
+
 using PartialFunctions
 using MLStyle
 
+using AbstractTrees
 using Catlab
 using Catlab.CategoricalAlgebra
 using Catlab.Graphs
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra.Diagrams
 import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map, colimit, limit
+using Catlab.FinSets: FinSetInt, FinDomFunctionVector
+
+
 
 #####################
 #   DATA
@@ -179,5 +185,98 @@ function 𝐃(f, d ::StructuredDecomposition, t::DecompType = d.decomp_type)::St
         )
   StrDecomp(d.decomp_shape, Q, t) 
 end
+
+
+##################################
+# Integration with JunctionTrees #
+##################################
+
+
+const OTYPE = SymmetricGraph
+
+
+const MTYPE = StructTightACSetTransformation{
+    TypeLevelBasicSchema{
+        Symbol,
+        Tuple{:V, :E},
+        Tuple{(:src, :E, :V), (:tgt, :E, :V), (:inv, :E, :E)},
+        Tuple{},
+        Tuple{},
+        Tuple{
+            (nothing, :E, :E, ((:inv, :inv), ())),
+            (nothing, :E, :V, ((:inv, :src), (:tgt,))),
+            (nothing, :E, :V, ((:inv, :tgt), (:src,)))}},
+    @NamedTuple{V::FinDomFunctionVector{Int64, Vector{Int64}, FinSetInt}, E::FinDomFunctionVector{Int64, Vector{Int64}, FinSetInt}},
+    SymmetricGraph,
+    SymmetricGraph}
+
+
+function Decompositions.StrDecomp(sgraph::AbstractSymmetricGraph, stree::SupernodeTree, seperator::AbstractVector)    
+    n = length(stree)
+    graph = Graph(n)
+    objects = Vector{OTYPE}(undef, 2n - 1)
+    morphisms = Vector{MTYPE}(undef, 2n - 2)
+    
+    for i in 1:n       
+        snd = supernode(stree, i)
+        sep = seperator[i]
+        objects[i] = induced_subgraph(sgraph, order(stree, [snd; sep]))
+    end    
+    
+    for i in 1:n - 1
+        sep = seperator[i]
+        objects[n + i] = induced_subgraph(sgraph, order(stree, sep))
+    end
+    
+    for i in 1:n - 1
+        j = parentindex(stree, i)
+        add_edge!(graph, i, j)
+        
+        sep_i = seperator[i]
+        sep_j = seperator[j]
+        snd_i = supernode(stree, i)
+        snd_j = supernode(stree, j)
+        
+        rep_j = first(snd_j)
+        len_j = length(snd_j)
+        
+        mapping =  map(sep_i) do v
+            if v in snd_j
+                v - rep_j + 1
+            else
+                len_j + searchsortedfirst(sep_j, v)
+            end
+        end
+        
+        morphisms[i] = induced_homomorphism(mapping, objects[n + i], objects[j])
+    end
+    
+    for i in 1:n - 1
+        sep = seperator[i]
+        snd = supernode(stree, i)
+        
+        mapping = length(snd) + 1:length(snd) + length(sep)
+        morphisms[n + i - 1] = induced_homomorphism(mapping, objects[n + i], objects[i])
+    end
+
+    StrDecomp(graph, FinDomFunctor(objects, morphisms, ∫(graph)))
+end
+
+
+function induced_homomorphism(vmapping, domain, codomain)
+    emapping = Vector{Int}(undef, ne(domain))
+    index = Dict{Tuple{Int, Int}, Int}()
+    
+    for e in edges(codomain)
+        index[src(codomain, e), tgt(codomain, e)] = e
+    end
+    
+    for e in edges(domain)
+        emapping[e] = index[vmapping[src(domain, e)], vmapping[tgt(domain, e)]]
+    end
+    
+    ACSetTransformation(domain, codomain, V=vmapping, E=emapping)
+end
+
 
 end

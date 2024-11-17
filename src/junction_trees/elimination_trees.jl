@@ -1,8 +1,8 @@
 # An ordered graph (G, σ) equipped with the elimination tree T of its elimination graph.
 # Nodes i in T correspond to vertices σ(i) in G.
 struct EliminationTree{T <: AbstractTree} <: AbstractTree
-    tree::T
-    ograph::OrderedGraph
+    tree::T              # elimination tree
+    ograph::OrderedGraph # ordered graph
 end
 
 
@@ -30,7 +30,7 @@ end
 # Liu
 # Algorithm 4.2: Elimination Tree by Path Compression.
 function etree(ograph::OrderedGraph)
-    n = nv(graph)
+    n = nv(ograph)
     parent = collect(1:n)
     ancestor = collect(1:n)
 

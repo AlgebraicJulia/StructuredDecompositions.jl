@@ -1,7 +1,7 @@
 # An ordered graph (G, σ).
 struct OrderedGraph
-    graph::Graph
-    order::Order
+    graph::Graph # graph
+    order::Order # permutation
 end
 
 
