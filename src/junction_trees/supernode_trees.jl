@@ -24,29 +24,29 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
     degree = outdegrees(etree)
     snode, parent, ancestor = stree(etree, degree, stype)
     tree = Tree(parent)
-    sorder = postorder(tree)
-    tree = PostorderTree(tree, sorder)
-    
-    order = Order(vcat(snode[sorder]...))
-    graph = OrderedGraph(etree.graph, order)
 
-    permute!(snode, sorder)
-    permute!(ancestor, sorder)
-    permute!(degree, order)
+    treeorder = postorder(tree)
+    graphorder = Order(vcat(snode[treeorder]...))
+
+    tree = PostorderTree(tree, treeorder)
+    graph = OrderedGraph(etree.graph, graphorder)
+
+    permute!(snode, treeorder)
+    permute!(ancestor, treeorder)
+    permute!(degree, graphorder)
 
     n = length(tree)
     representative = zeros(Int, n)
     cardinality = zeros(Int, n)
 
     for i in 1:n - 1
-        representative[i] = inverse(order, snode[i][1])
+        representative[i] = inverse(graphorder, snode[i][1])
         cardinality[i] = length(snode[i])
-        ancestor[i] = inverse(order, ancestor[i])
+        ancestor[i] = inverse(graphorder, ancestor[i])
     end
 
-    representative[n] = inverse(order, snode[n][1])
+    representative[n] = inverse(graphorder, snode[n][1])
     cardinality[n] = length(snode[n])
-    ancestor[n] = ancestor[n]
 
     SupernodeTree(tree, graph, representative, cardinality, ancestor, degree)
 end
