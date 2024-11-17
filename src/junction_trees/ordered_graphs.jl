@@ -52,25 +52,6 @@ function OrderedGraph(ograph::OrderedGraph, order::Order)
     OrderedGraph(graph, compose(order, ograph.order))
 end
 
-
-# Construct the elimination graph of an ordered graph.
-function eliminationgraph(ograph::OrderedGraph)
-    ograph = deepcopy(ograph)
-    
-    for i in vertices(ograph)
-        ns = collect(outneighbors(ograph, i))
-        n = length(ns)
-        
-        for j in 1:n
-            for k in j + 1:n
-                add_edge!(ograph, ns[j], ns[k])
-            end
-        end    
-    end
-    
-    ograph
-end
-
     
 function Base.deepcopy(ograph::OrderedGraph)
     order = deepcopy(ograph.order)
@@ -113,13 +94,6 @@ end
 
 function BasicGraphs.edges(ograph::OrderedGraph)
     edges(ograph.graph)
-end
-
-
-function BasicGraphs.has_edge(ograph::OrderedGraph, i, j)
-    u = min(i, j)
-    v = max(i, j)
-    has_edge(ograph.graph, u, v)
 end
 
 
