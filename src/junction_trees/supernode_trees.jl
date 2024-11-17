@@ -52,36 +52,6 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
 end
 
 
-# Construct an elimination graph.
-function eliminationgraph(stree::SupernodeTree)
-    graph = deepcopy(stree.graph)
-    n = length(stree.tree)
-
-    for i in 1:n - 1
-        for u in supernode(stree, i)[1:end - 1]
-            v = u + 1
-
-            for w in outneighbors(graph, u)
-                if v < w
-                    add_edge!(graph, v, w)
-                end
-            end
-        end
-
-        u = last(supernode(stree, i))
-        v = first(supernode(stree, parentindex(stree.tree, i)))
-        
-        for w in outneighbors(graph, u)
-            if v < w
-                add_edge!(graph, v, w)
-            end
-        end
-    end
-
-    graph
-end
-
-
 # Compute the width of a supernodal elimination tree.
 function width(stree::SupernodeTree)
     maximum(stree.degree[stree.representative])
@@ -99,37 +69,19 @@ end
 # Compute the (unsorted) seperators of every node in T.
 function seperators(stree::SupernodeTree)
     n = length(stree.tree)
-    seperator = Vector{Vector{Int}}(undef, n)
-    graph = eliminationgraph(stree)
-    
-    for i in 1:n
-        clique = collect(outneighbors(graph, stree.representative[i]))
-        filter!(j -> stree.ancestor[i] <= j, clique)
-        seperator[i] = clique
-    end
-    
-    seperator
-end
-
-
-# Compute the (unsorted) seperators of every node in T.
-function _seperators(stree::SupernodeTree)
-    n = length(stree.tree)
-    seperator = Vector{SparseIntSet}(undef, n)
+    seperator = Vector{Set{Int}}(undef, n)
 
     for i in 1:n - 1
-        seperator[i] = SparseIntSet(stree.ancestor[i])
-    end
+        seperator[i] = Set(stree.ancestor[i])
 
-    seperator[n] = SparseIntSet()
-
-    for i in 1:n - 1
         for v in outneighbors(stree.graph, stree.representative[i])
             if stree.ancestor[i] < v
                 push!(seperator[i], v)
             end
         end
+    end
 
+    for i in 1:n - 2
         j = parentindex(stree.tree, i)
 
         for v in seperator[i]
@@ -137,7 +89,9 @@ function _seperators(stree::SupernodeTree)
                 push!(seperator[j], v)
             end
         end
+        
     end
 
-    map(collect, seperator)
+    seperator[n] = Set()
+    seperator
 end

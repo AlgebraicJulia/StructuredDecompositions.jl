@@ -114,7 +114,7 @@ stree = SupernodeTree(graph, order, Node())
     [17], # q
 ]
 
-@test map(sort, seperators(stree)) == [
+@test map(sort ∘ collect, seperators(stree)) == [
     [2, 9, 10],       # h i o
     [9, 10],          # i o
     [9, 16],          # i p
@@ -194,7 +194,7 @@ stree = SupernodeTree(graph, order, Maximal())
     [13, 14, 15, 16, 17], # l m n p q
 ]
 
-@test map(sort, seperators(stree)) == [
+@test map(sort ∘ collect, seperators(stree)) == [
     [9, 10],      # i o
     [9, 16],      # i p
     [6, 7],       # c d
@@ -277,7 +277,7 @@ stree = SupernodeTree(graph, order, Fundamental())
     [16, 17], # p q
 ]
 
-@test map(sort, seperators(stree)) == [
+@test map(sort ∘ collect, seperators(stree)) == [
     [9, 10],          # i o
     [9, 16],          # i p
     [6, 7],           # c d
