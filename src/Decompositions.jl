@@ -6,6 +6,7 @@ export StructuredDecomposition, StrDecomp,
       ∫
 
 using ..JunctionTrees
+using ..JunctionTrees: EliminationAlgorithm, SupernodeType, DEFAULT_ELIMINATION_ALGORITHM, DEFAULT_SUPERNODE_TYPE
 
 using PartialFunctions
 using MLStyle
@@ -211,7 +212,22 @@ const MTYPE = StructTightACSetTransformation{
     SymmetricGraph}
 
 
-function Decompositions.StrDecomp(sgraph::AbstractSymmetricGraph, stree::SupernodeTree, seperator::AbstractVector)    
+
+# Construct a tree decomposition of a graph.
+function Decompositions.StrDecomp(
+    sgraph::AbstractSymmetricGraph,
+    ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
+    stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+
+    StrDecomp(sgraph, SupernodeTree(sgraph, ealg, stype))
+end
+
+
+# Construct a tree decomposition of a graph.
+function Decompositions.StrDecomp(sgraph::AbstractSymmetricGraph, stree::SupernodeTree)
+    seperator = seperators(stree)
+    foreach(sort!, seperator)
+ 
     n = length(stree)
     graph = Graph(n)
     objects = Vector{OTYPE}(undef, 2n - 1)

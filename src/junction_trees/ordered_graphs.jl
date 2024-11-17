@@ -5,6 +5,14 @@ struct OrderedGraph
 end
 
 
+# Given a graph G, construct the ordered graph
+#    (G, σ),
+# where the permutation σ is computed using an elimination algorithm.
+function OrderedGraph(sgraph::AbstractSymmetricGraph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    OrderedGraph(sgraph, Order(sgraph, ealg))
+end
+
+
 # Given a graph G and permutation σ, construct the ordered graph
 #    (G, σ).
 function OrderedGraph(sgraph::AbstractSymmetricGraph, order::Order)
