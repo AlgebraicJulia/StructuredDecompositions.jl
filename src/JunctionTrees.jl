@@ -12,11 +12,11 @@ using SparseArrays
 
 
 # Orders
-export Order
+export Order, inverse
 
 
 # Elimination Algorithms
-export AMDJL_AMD, CuthillMcKeeJL_RCM, MetisJL_ND
+export AMDJL_AMD, CuthillMcKeeJL_RCM, MetisJL_ND, MCS
 
 
 # Supernode Types
@@ -24,7 +24,7 @@ export Node, Maximal, Fundamental
 
 
 # Supernode Trees
-export SupernodeTree, width, height, seperators, supernode, permutation, inverse
+export SupernodeTree, width, height, seperators, supernode, permutation
 
 
 include("junction_trees/orders.jl")
