@@ -224,8 +224,7 @@ end
 
 # Construct a tree decomposition of a graph.
 function Decompositions.StrDecomp(sgraph::AbstractSymmetricGraph, stree::SupernodeTree)
-    seperator = seperators(stree)
-    foreach(sort!, seperator)
+    seperator = map(sort ∘ collect, seperators(stree))
  
     n = length(stree.tree)
     graph = Graph(n)
