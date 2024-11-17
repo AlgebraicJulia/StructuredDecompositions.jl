@@ -1,7 +1,7 @@
 # An ordered graph (G, σ) equipped with a supernodal elimination tree T.
 struct SupernodeTree
     tree::PostorderTree         # supernodal elimination tree
-    graph::OrderedGraph        # ordered graph
+    graph::OrderedGraph         # ordered graph
     representative::Vector{Int} # representative vertex
     cardinality::Vector{Int}    # supernode cardinality
     ancestor::Vector{Int}       # first ancestor

@@ -1,7 +1,7 @@
 # An ordered graph (G, σ) equipped with the elimination tree T of its elimination graph.
 # Nodes i in T correspond to vertices σ(i) in G.
 struct EliminationTree{T <: Union{Tree, PostorderTree}}
-    tree::T              # elimination tree
+    tree::T             # elimination tree
     graph::OrderedGraph # ordered graph
 end
 
