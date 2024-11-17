@@ -214,11 +214,11 @@ const MTYPE = StructTightACSetTransformation{
 
 # Construct a tree decomposition of a graph.
 function Decompositions.StrDecomp(
-    sgraph::AbstractSymmetricGraph,
+    graph::AbstractSymmetricGraph,
     ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
     stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-    StrDecomp(sgraph, SupernodeTree(sgraph, ealg, stype))
+    StrDecomp(graph, SupernodeTree(graph, ealg, stype))
 end
 
 
@@ -235,12 +235,12 @@ function Decompositions.StrDecomp(sgraph::AbstractSymmetricGraph, stree::Superno
     for i in 1:n       
         snd = supernode(stree, i)
         sep = seperator[i]
-        objects[i] = induced_subgraph(sgraph, order(stree.graph, [snd; sep]))
+        objects[i] = induced_subgraph(sgraph, permutation(stree.graph, [snd; sep]))
     end    
     
     for i in 1:n - 1
         sep = seperator[i]
-        objects[n + i] = induced_subgraph(sgraph, order(stree.graph, sep))
+        objects[n + i] = induced_subgraph(sgraph, permutation(stree.graph, sep))
     end
     
     for i in 1:n - 1
