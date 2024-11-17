@@ -1,5 +1,5 @@
 # A postordered rooted tree.
-struct PostorderTree <: AbstractTree
+struct PostorderTree
     parent::Vector{Int}           # parent
     children::Vector{Vector{Int}} # children
     level::Vector{Int}            # level
@@ -36,7 +36,7 @@ end
 
 
 # Postorder a tree.
-function PostorderTree(tree::AbstractTree, order::Order)
+function PostorderTree(tree::Tree, order::Order)
     n = length(tree)
     parent = collect(1:n)
     
@@ -69,6 +69,12 @@ end
 # Determine whether the node i is a descendant of the node j.
 function isdescendant(tree::PostorderTree, i::Integer, j::Integer)
     getdescendant(tree, j) <= i < j
+end
+
+
+# Get the height of a tree.
+function height(tree::PostorderTree)
+    maximum(tree.level)
 end
 
 

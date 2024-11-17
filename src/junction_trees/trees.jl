@@ -1,5 +1,5 @@
 # A rooted tree.
-struct Tree <: AbstractTree
+struct Tree
     root::Int                     # root
     parent::Vector{Int}           # parent
     children::Vector{Vector{Int}} # children
@@ -32,6 +32,22 @@ end
 # Get the number of nodes in a tree.
 function Base.length(tree::Tree)
     length(tree.parent)
+end
+
+
+# Compute a postordering of tree's vertices.
+function postorder(tree::Tree)
+    n = length(tree)
+    order = Vector{Int}(undef, n)
+    index = Vector{Int}(undef, n)
+    
+    for node in PreOrderDFS(IndexNode(tree))
+        order[n] = node.index
+        index[node.index] = n
+        n -= 1
+    end
+    
+    Order(order, index)
 end
 
 

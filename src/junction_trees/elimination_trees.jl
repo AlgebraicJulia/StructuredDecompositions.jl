@@ -1,6 +1,6 @@
 # An ordered graph (G, σ) equipped with the elimination tree T of its elimination graph.
 # Nodes i in T correspond to vertices σ(i) in G.
-struct EliminationTree{T <: AbstractTree}
+struct EliminationTree{T <: Union{Tree, PostorderTree}}
     tree::T              # elimination tree
     ograph::OrderedGraph # ordered graph
 end
