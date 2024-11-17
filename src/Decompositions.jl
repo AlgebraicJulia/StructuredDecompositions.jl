@@ -228,7 +228,7 @@ function Decompositions.StrDecomp(sgraph::AbstractSymmetricGraph, stree::Superno
     seperator = seperators(stree)
     foreach(sort!, seperator)
  
-    n = length(stree)
+    n = length(stree.tree)
     graph = Graph(n)
     objects = Vector{OTYPE}(undef, 2n - 1)
     morphisms = Vector{MTYPE}(undef, 2n - 2)
@@ -236,16 +236,16 @@ function Decompositions.StrDecomp(sgraph::AbstractSymmetricGraph, stree::Superno
     for i in 1:n       
         snd = supernode(stree, i)
         sep = seperator[i]
-        objects[i] = induced_subgraph(sgraph, order(stree, [snd; sep]))
+        objects[i] = induced_subgraph(sgraph, order(stree.ograph, [snd; sep]))
     end    
     
     for i in 1:n - 1
         sep = seperator[i]
-        objects[n + i] = induced_subgraph(sgraph, order(stree, sep))
+        objects[n + i] = induced_subgraph(sgraph, order(stree.ograph, sep))
     end
     
     for i in 1:n - 1
-        j = parentindex(stree, i)
+        j = parentindex(stree.tree, i)
         add_edge!(graph, i, j)
         
         sep_i = seperator[i]

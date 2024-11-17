@@ -1,6 +1,6 @@
 # An ordered graph (G, σ) equipped with the elimination tree T of its elimination graph.
 # Nodes i in T correspond to vertices σ(i) in G.
-struct EliminationTree{T <: AbstractTree} <: AbstractTree
+struct EliminationTree{T <: AbstractTree}
     tree::T              # elimination tree
     ograph::OrderedGraph # ordered graph
 end
@@ -59,7 +59,7 @@ end
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
 function supcnt(etree::EliminationTree)
-    order = postorder(etree)
+    order = postorder(etree.tree)
     index = inverse(order)
     rc, cc = supcnt(EliminationTree{PostorderTree}(etree, order))
     rc[index], cc[index]
@@ -70,7 +70,7 @@ end
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
 function supcnt(etree::EliminationTree{PostorderTree})
-    n = length(etree)
+    n = length(etree.tree)
     
     #### Disjoint Set Union ####
     
@@ -96,22 +96,22 @@ function supcnt(etree::EliminationTree{PostorderTree})
     wt = ones(Int, n)
 
     for u in 1:n - 1
-        wt[parentindex(etree, u)] = 0
+        wt[parentindex(etree.tree, u)] = 0
     end
     
     for p in 1:n - 1
-        wt[parentindex(etree, p)] -= 1
+        wt[parentindex(etree.tree, p)] -= 1
 
-        for u in outneighbors(etree, p)
-            if firstdescendant(etree, p) > prev_nbr[u]
+        for u in outneighbors(etree.ograph, p)
+            if firstdescendant(etree.tree, p) > prev_nbr[u]
                 wt[p] += 1
                 pp = prev_p[u]
                 
                 if iszero(pp)
-                    rc[u] += level(etree, p) - level(etree, u)
+                    rc[u] += level(etree.tree, p) - level(etree.tree, u)
                 else
                     q = find(pp)
-                    rc[u] += level(etree, p) - level(etree, q)
+                    rc[u] += level(etree.tree, p) - level(etree.tree, q)
                     wt[q] -= 1
                 end
     
@@ -121,13 +121,13 @@ function supcnt(etree::EliminationTree{PostorderTree})
             prev_nbr[u] = p
         end
 
-        union(p, parentindex(etree, p))
+        union(p, parentindex(etree.tree, p))
     end
 
     cc = wt
 
     for v in 1:n - 1
-        cc[parentindex(etree, v)] += cc[v]
+        cc[parentindex(etree.tree, v)] += cc[v]
     end
 
     rc, cc
@@ -139,85 +139,4 @@ end
 function outdegrees(etree::EliminationTree)
     rc, cc = supcnt(etree)
     cc .- 1
-end
-
-
-# Get the number of nodes in T.
-function Base.length(etree::EliminationTree)
-    length(etree.tree)
-end
-
-
-# Get the level of a node i.
-function level(etree::EliminationTree, i::Integer)
-    level(etree.tree, i)
-end
-
-
-# Get the first descendant of a node i.
-function firstdescendant(etree::EliminationTree, i::Integer)
-    firstdescendant(etree.tree, i)
-end
-
-
-# Determine whether a vertex i is a descendant of a node j.
-function isdescendant(etree::EliminationTree, i::Integer, j::Integer)
-    isdescendant(etree.tree, i, j)
-end
-
-
-# Get the vertex σ(i).
-function order(etree::EliminationTree, i)
-    order(etree.ograph, i)
-end
-
-
-# Get the index σ⁻¹(v),
-function inverse(etree::EliminationTree, i)
-    inverse(etree.ograph, i)
-end
-
-
-##########################
-# Indexed Tree Interface #
-##########################
-
-
-function AbstractTrees.rootindex(etree::EliminationTree)
-    rootindex(etree.tree)
-end
-
-
-function AbstractTrees.parentindex(etree::EliminationTree, i::Integer)
-    parentindex(etree.tree, i)
-end
-
-
-function AbstractTrees.childindices(etree::EliminationTree, i::Integer)
-    childindices(etree.tree, i)
-end
-
-
-function AbstractTrees.NodeType(::Type{IndexNode{EliminationTree, Int}})
-    HasNodeType()
-end
-
-
-function AbstractTrees.nodetype(::Type{IndexNode{EliminationTree{T}, Int}}) where T
-    IndexNode{EliminationTree{T}, Int}
-end
-
-
-############################
-# Abstract Graph Interface #
-############################
-
-
-function BasicGraphs.inneighbors(etree::EliminationTree, i::Integer)
-    inneighbors(etree.ograph, i)
-end
-
-
-function BasicGraphs.outneighbors(etree::EliminationTree, i::Integer)
-    outneighbors(etree.ograph, i)
 end

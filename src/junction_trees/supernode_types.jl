@@ -43,7 +43,7 @@ function findchild(etree::EliminationTree, degree::AbstractVector, stype::Node, 
 # v ∈ snd(w).
 # If no such child exists, return nothing.
 function findchild(etree::EliminationTree, degree::AbstractVector, stype::Maximal, v::Integer)
-    for w in childindices(etree, v)
+    for w in childindices(etree.tree, v)
         if degree[w] == degree[v] + 1
             return w
         end
@@ -55,7 +55,7 @@ end
 # v ∈ snd(w).
 # If no such child exists, return nothing.
 function findchild(etree::EliminationTree, degree::AbstractVector, stype::Fundamental, v::Integer)
-    ws = childindices(etree, v)
+    ws = childindices(etree.tree, v)
 
     if length(ws) == 1
         w = only(ws)

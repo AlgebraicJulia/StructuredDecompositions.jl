@@ -1,5 +1,5 @@
 # An ordered graph (G, σ) equipped with a supernodal elimination tree T.
-struct SupernodeTree <: AbstractTree
+struct SupernodeTree
     tree::PostorderTree         # supernodal elimination tree
     ograph::OrderedGraph        # ordered graph
     representative::Vector{Int} # representative vertex
@@ -57,7 +57,7 @@ end
 # Vanderberghe and Andersen
 # Algorithm 4.1: Maximal supernodes and supernodal elimination tree.
 function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeType)
-    n = length(etree)
+    n = length(etree.tree)
     index = zeros(Int, n)
     snd = Vector{Int}[]
     q = Int[]
@@ -78,7 +78,7 @@ function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeT
             push!(snd[i], v)
         end
 
-        for w in childindices(etree, v)
+        for w in childindices(etree.tree, v)
             if w !== ww
                 j = index[w]
                 q[j] = i
@@ -94,7 +94,7 @@ end
 # Construct an elimination graph.
 function eliminationgraph(stree::SupernodeTree)
     ograph = deepcopy(stree.ograph)
-    n = length(stree)
+    n = length(stree.tree)
 
     for i in 1:n - 1
         for u in supernode(stree, i)[1:end - 1]
@@ -108,7 +108,7 @@ function eliminationgraph(stree::SupernodeTree)
         end
 
         u = last(supernode(stree, i))
-        v = first(supernode(stree, parentindex(stree, i)))
+        v = first(supernode(stree, parentindex(stree.tree, i)))
         
         for w in outneighbors(ograph, u)
             if v < w
@@ -137,7 +137,7 @@ end
 
 # Compute the (unsorted) seperators of every node in T.
 function seperators(stree::SupernodeTree)
-    n = length(stree)
+    n = length(stree.tree)
     seperator = Vector{Vector{Int}}(undef, n)
     ograph = eliminationgraph(stree)
     
@@ -148,58 +148,4 @@ function seperators(stree::SupernodeTree)
     end
     
     seperator
-end
-
-
-# Get the number of nodes in T.
-function Base.length(stree::SupernodeTree)
-    length(stree.tree)
-end
-
-
-# Get the level of node i.
-function level(stree::SupernodeTree, i)
-    level(stree.tree, i)
-end
-
-
-# Get the vertex σ(i).
-function order(stree::SupernodeTree, i)
-    order(stree.ograph, i)
-end
-
-
-# Get the index σ⁻¹(v),
-function inverse(stree::SupernodeTree, i)
-    inverse(stree.ograph, i)
-end
-
-
-##########################
-# Indexed Tree Interface #
-##########################
-
-
-function AbstractTrees.rootindex(stree::SupernodeTree)
-    rootindex(stree.tree)
-end
-
-
-function AbstractTrees.parentindex(stree::SupernodeTree, i)
-    parentindex(stree.tree, i)
-end
-
-
-function AbstractTrees.childindices(stree::SupernodeTree, i)
-    childindices(stree.tree, i)
-end
-
-
-function AbstractTrees.NodeType(::Type{IndexNode{SupernodeTree, Int}})
-    HasNodeType()
-end
-
-
-function AbstractTrees.nodetype(::Type{IndexNode{SupernodeTree, Int}})
-    IndexNode{SupernodeTree, Int}
 end
