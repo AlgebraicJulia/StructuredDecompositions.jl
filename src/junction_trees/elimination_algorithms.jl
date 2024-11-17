@@ -146,4 +146,5 @@ function mcs(graph::AbstractSymmetricGraph)
     α⁻¹, α
 end
 
+
 const DEFAULT_ELIMINATION_ALGORITHM = AMDJL_AMD()
