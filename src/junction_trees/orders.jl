@@ -1,151 +1,63 @@
-# A total ordering of the numbers {1, ..., n}.
+# A permutation σ of the set {1, ..., n}.
 struct Order <: AbstractVector{Int}
     order::Vector{Int}
     index::Vector{Int}
 end
 
 
-# Given a vector σ, construct the order ≺, where
-#   σ(i₁) ≺ σ(i₂)
-# if
-#   i₁ < i₂.
+# Construct an permutation σ from a vector
+#    (σ(1), ..., σ(n)).
 function Order(order::AbstractVector)
     n = length(order)
     index = Vector{Int}(undef, n)
 
     for i in 1:n
         index[order[i]] = i
-    end    
-
-    Order(order, index)
-end
-
-
-# Construct an empty order of length n.
-function Order(n::Integer)
-    order = Vector{Int}(undef, n)
-    index = Vector{Int}(undef, n)
-    Order(order, index)
-end
-
-
-# Construct an elimination order using the reverse Cuthill-McKee algorithm. Uses
-# CuthillMcKee.jl.
-function Order(graph::AbstractSymmetricGraph, ::CuthillMcKeeJL_RCM)
-    order = CuthillMcKee.symrcm(adjacencymatrix(graph))
-    Order(order)
-end
-
-
-# Construct an elimination order using the approximate minimum degree algorithm. Uses
-# AMD.jl.
-function Order(graph::AbstractSymmetricGraph, ::AMDJL_AMD)
-    order = AMD.symamd(adjacencymatrix(graph))
-    Order(order)
-end
-
-
-# Construct an elimination order using the nested dissection heuristic. Uses Metis.jl.
-function Order(graph::AbstractSymmetricGraph, ::MetisJL_ND)
-    order, index = Metis.permutation(adjacencymatrix(graph))
-    Order(order, index)
-end
-
-
-# Construct an elimination order using the maximum cardinality search algorithm.
-function Order(graph::AbstractSymmetricGraph, ::MCS)
-    order, index = mcs(graph)
-    Order(order, index)
-end
-
-
-# Compose as permutations.
-function compose(order₁::Order, order₂::Order)
-    order = order₂.order[order₁.order]
-    index = order₁.index[order₂.index]
-    Order(order, index)
-end
-
-
-# Evaluate whether
-# n₁ < n₂
-# in the given order.
-function Base.isless(order::Order, n₁::Integer, n₂::Integer)
-    order.index[n₁] < order.index[n₂]
-end
-
-
-# Compute a vertex elimination order using the maximum cardinality search algorithm.
-#
-# The complexity is
-# 𝒪(m + n),
-# where m = |E| and n = |V|. 
-#
-# https://doi.org/10.1137/0213035
-# Maximum cardinality search
-function mcs(graph::AbstractSymmetricGraph)
-    n = nv(graph)
-    α = Vector{Int}(undef, n)
-    α⁻¹ = Vector{Int}(undef, n)
-    size = Vector{Int}(undef, n)
-    set = Vector{Vector{Int}}(undef, n)
-
-    set .= [[]]
-    size .= 1
-    append!(set[1], vertices(graph))
-
-    i = n
-    j = 1
-
-    while i >= 1
-        v = pop!(set[j])
-        α[v] = i
-        α⁻¹[i] = v
-        size[v] = 0
-
-        for w in neighbors(graph, v)
-            if size[w] >= 1
-                deletesorted!(set[size[w]], w)
-                size[w] += 1
-                insertsorted!(set[size[w]], w)
-            end
-        end
-
-        i -= 1
-        j += 1
-
-        while j >= 1 && isempty(set[j])
-            j -= 1
-        end
     end
-
-    α⁻¹, α
+    
+    Order(order, index)
 end
 
 
-# Construct the adjacency matrix of a graph.
-function adjacencymatrix(graph::AbstractSymmetricGraph)
-    m = ne(graph)
-    n = nv(graph)
-
-    colptr = ones(Int, n + 1)
-    rowval = sizehint!(Vector{Int}(), 2m)
-
-    for j in 1:n
-        ns = collect(neighbors(graph, j))
-        sort!(ns)
-        colptr[j + 1] = colptr[j] + length(ns)
-        append!(rowval, ns)
-    end
-
-    nzval = ones(Int, length(rowval))
-    SparseMatrixCSC(n, n, colptr, rowval, nzval)
+# Determine if i < j, where
+#    u = σ(i)
+#    v = σ(j)
+function (order::Order)(u, v)
+    inverse(order, u) < inverse(order, v)
 end
 
 
-############################
-# AbstractVector Interface #
-############################
+# Compose two permutations.
+function compose(left::Order, right::Order)
+    Order(right.order[left.order], left.index[right.index])
+end
+
+
+# Construct the inverse permutation.
+function inverse(order::Order)
+    Order(order.index, order.order)
+end
+
+
+# Get the index σ⁻¹(v),
+function inverse(order::Order, v)
+    order.index[v]
+end
+
+
+#############################
+# Abstract Vector Interface #
+#############################
+
+
+function Base.getindex(order::Order, i)
+    order.order[i]
+end
+
+
+function Base.IndexStyle(::Type{Order})
+    IndexLinear()
+end
 
 
 function Base.size(order::Order)
@@ -153,18 +65,6 @@ function Base.size(order::Order)
 end
 
 
-function Base.getindex(order::Order, i::Integer)
-    order.order[i]
-end
-
-
-function Base.setindex!(order::Order, v::Integer, i::Integer)
-    order.order[i] = v
-    order.index[v] = i
-    v
-end
-
-
-function Base.IndexStyle(::Type{Order})
-    IndexLinear()
+function Base.deepcopy(order::Order)
+    Order(copy(order.order), copy(order.index))
 end

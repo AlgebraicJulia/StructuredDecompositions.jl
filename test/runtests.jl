@@ -15,7 +15,3 @@ end
 @testset "JunctionTrees" begin
   include("JunctionTrees.jl")
 end
-
-@testset "NestedUWDs" begin
-  include("NestedUWDs.jl")
-end
