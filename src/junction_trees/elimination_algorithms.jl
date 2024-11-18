@@ -98,11 +98,8 @@ function adjacencymatrix(graph::AbstractSymmetricGraph)
 end
 
 
-# Simple Linear-Time Algorithms to Test Chordality of Graphs, Test Acyclicity
-# of Hypergraphs, and Selectively Reduce Acyclic Hypergraphs
-#
+# Simple Linear-Time Algorithms to Test Chordality of Graphs, Test Acyclicity of Hypergraphs, and Selectively Reduce Acyclic Hypergraphs
 # Tarjan and Yannakakis
-#
 # Maximum Cardinality Search
 function mcs(graph::AbstractSymmetricGraph)
     n = nv(graph)
