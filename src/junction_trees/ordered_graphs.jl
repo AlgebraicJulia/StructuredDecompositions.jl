@@ -110,6 +110,11 @@ end
 ############################
 
 
+function BasicGraphs.ne(ograph::OrderedGraph)
+    ne(ograph.graph)
+end
+
+
 function BasicGraphs.nv(ograph::OrderedGraph)
     nv(ograph.graph)
 end
