@@ -223,40 +223,27 @@ function mappings(stree::SupernodeTree)
     mapping = Vector{Vector{Int}}(undef, 2n - 2)
 
     for i in 1:n
+        # clique(i)
         set[i] = permutation(stree.graph, [supernode(stree, i); seperator[i]])
     end
 
     for i in 1:n - 1
+        # seperator(i)
         set[n + i] = permutation(stree.graph, seperator[i])
     end
 
     for i in 1:n - 1
+        # seperator(i) → clique(parent(i))
         j = parentindex(stree.tree, i)
         mapping[i] = induced_mapping(seperator[i], supernode(stree, j), seperator[j])
     end
 
     for i in 1:n - 1
+        # seperator(i) → clique(i)
         mapping[n + i - 1] = (1:length(seperator[i])) .+ length(supernode(stree, i))
     end
 
     set, mapping
-end
-
-
-function induced_mapping(sep::AbstractVector, psnd::AbstractUnitRange, psep::AbstractVector)
-    i = 0
-    mapping = Vector{Int}(undef, length(sep))
-    
-    for (j, v) in enumerate(sep)        
-        if v in psnd
-            mapping[j] = v - first(psnd) + 1
-        else
-            i += searchsortedfirst(view(psep, i + 1:length(psep)), v)
-            mapping[j] = length(psnd) + i
-        end
-    end
-    
-    mapping
 end
 
 
@@ -267,15 +254,23 @@ function homomorphisms(graph::AbstractSymmetricGraph, stree::SupernodeTree)
     subgraph = Vector{Any}(undef, 2n - 1)
     homomorphism = Vector{Any}(undef, 2n - 2)
     
-    for i in 1:2n - 1
+    for i in 1:n
+        # clique(i)
         subgraph[i] = induced_subgraph(graph, set[i])
     end
-    
+  
     for i in 1:n - 1
+        # seperator(i)
+        subgraph[n + i] = induced_subgraph(graph, set[n + i])
+    end
+  
+    for i in 1:n - 1
+        # seperator(i) → clique(parent(i))
         homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[parentindex(stree.tree, i)], mapping[i])
     end
     
     for i in 1:n - 1
+        # seperator(i) → clique(i)
         homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], mapping[n + i - 1])
     end
     
@@ -283,7 +278,24 @@ function homomorphisms(graph::AbstractSymmetricGraph, stree::SupernodeTree)
 end
 
 
-function induced_homomorphism(domain::AbstractSymmetricGraph, codomain::AbstractSymmetricGraph, vmap::AbstractVector)
+function induced_mapping(domain::AbstractVector, codomain_left::AbstractUnitRange, codomain_right::AbstractVector)
+    i = 0
+    mapping = Vector{Int}(undef, length(domain))
+    
+    for (j, v) in enumerate(domain)
+        if v in codomain_left
+            mapping[j] = v - first(codomain_left) + 1
+        else
+            i += searchsortedfirst(view(codomain_right, i + 1:length(codomain_right)), v)
+            mapping[j] = length(codomain_left) + i
+        end
+    end
+    
+    mapping
+end
+
+
+function induced_homomorphism(domain::AbstractSymmetricGraph, codomain::AbstractSymmetricGraph, V::AbstractVector)
     index = Dict{Tuple{Int, Int}, Int}()
     sizehint!(index, ne(codomain))
     
@@ -291,13 +303,13 @@ function induced_homomorphism(domain::AbstractSymmetricGraph, codomain::Abstract
         index[src(codomain, e), tgt(codomain, e)] = e
     end
     
-    emap = Vector{Int}(undef, ne(domain))
+    E = Vector{Int}(undef, ne(domain))
     
     for e in edges(domain)
-        emap[e] = index[vmap[src(domain, e)], vmap[tgt(domain, e)]]
+        E[e] = index[V[src(domain, e)], V[tgt(domain, e)]]
     end
     
-    ACSetTransformation(domain, codomain, V=vmap, E=emap)
+    ACSetTransformation(domain, codomain; V, E)
 end
 
 
