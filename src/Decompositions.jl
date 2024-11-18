@@ -251,7 +251,7 @@ function induced_mapping(sep::AbstractVector, psnd::AbstractUnitRange, psep::Abs
         if v in psnd
             mapping[j] = v - first(psnd) + 1
         else
-            i = searchsortedfirst(view(psep, i + 1:length(psep)), v)
+            i += searchsortedfirst(view(psep, i + 1:length(psep)), v)
             mapping[j] = length(psnd) + i
         end
     end
