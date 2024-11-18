@@ -58,20 +58,23 @@ end
 # Algorithm 4.2: Elimination Tree by Path Compression.
 function etree(graph::OrderedGraph)
     n = nv(graph)
-    parent = collect(1:n)
-    ancestor = collect(1:n)
+    parent = Vector{Int}(undef, n)
+    ancestor = Vector{Int}(undef, n)
 
     for i in 1:n
+        parent[i] = i
+        ancestor[i] = 0
+
         for k in inneighbors(graph, i)
             r = k
 
-            while ancestor[r] != r && ancestor[r] != i
+            while ancestor[r] != 0 && ancestor[r] != i
                 t = ancestor[r]
                 ancestor[r] = i
                 r = t
             end
 
-            if ancestor[r] == r
+            if ancestor[r] == 0
                 ancestor[r] = i
                 parent[r] = i
             end
