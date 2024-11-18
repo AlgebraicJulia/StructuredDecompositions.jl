@@ -62,7 +62,7 @@ function etree(graph::OrderedGraph)
     ancestor = Vector{Int}(undef, n)
 
     for i in 1:n
-        parent[i] = i
+        parent[i] = 0
         ancestor[i] = 0
 
         for k in inneighbors(graph, i)
@@ -81,6 +81,7 @@ function etree(graph::OrderedGraph)
         end
     end
 
+    parent[n] = n
     parent
 end
 
