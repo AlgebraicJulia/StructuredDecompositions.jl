@@ -210,7 +210,8 @@ function StrDecomp(graph::AbstractSymmetricGraph, stree::SupernodeTree)
         add_edge!(tree, i, parentindex(stree.tree, i))
     end
 
-    StrDecomp(tree, FinDomFunctor(homomorphisms(graph, stree)..., ∫(tree)))
+    diagram = FinDomFunctor(homomorphisms(graph, stree)..., ∫(tree))
+    StrDecomp(tree, diagram, Decomposition, dom(diagram))
 end
 
 
