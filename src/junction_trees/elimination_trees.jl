@@ -7,6 +7,10 @@ end
 
 
 # Construct an elimination tree using an elimination algorithm.
+# ----------------------------------------
+#    graph    simple connected graph
+#    ealg     elimination algorithm
+# ----------------------------------------
 function EliminationTree(
         graph::AbstractSymmetricGraph,
         ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM)
@@ -15,12 +19,19 @@ end
 
 
 # Construct the elimination tree of an ordered graph.
+# ----------------------------------------
+#    graph    ordered graph
+# ----------------------------------------
 function EliminationTree(graph::OrderedGraph)
     EliminationTree(Tree(etree(graph)), graph)
 end
 
 
 # Postorder an elimination tree.
+# ----------------------------------------
+#    graph    ordered graph
+#    order    postorder
+# ----------------------------------------
 function EliminationTree{PostorderTree}(etree::EliminationTree, order::Order)
     EliminationTree(PostorderTree(etree.tree, order), OrderedGraph(etree.graph, order))
 end

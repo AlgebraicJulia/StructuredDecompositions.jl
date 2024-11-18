@@ -8,6 +8,10 @@ end
 # Given a graph G, construct the ordered graph
 #    (G, σ),
 # where the permutation σ is computed using an elimination algorithm.
+# ----------------------------------------
+#    sgraph    simple connected graph
+#    ealg      elimination algorithm
+# ----------------------------------------
 function OrderedGraph(sgraph::AbstractSymmetricGraph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     OrderedGraph(sgraph, Order(sgraph, ealg))
 end
@@ -15,6 +19,10 @@ end
 
 # Given a graph G and permutation σ, construct the ordered graph
 #    (G, σ).
+# ----------------------------------------
+#    sgraph    simple connected graph
+#    order     vertex order
+# ----------------------------------------
 function OrderedGraph(sgraph::AbstractSymmetricGraph, order::Order)
     n = nv(sgraph)
     graph = Graph(n)
@@ -34,6 +42,10 @@ end
 
 # Given an ordered graph (G, σ) and permutation μ, construct the ordered graph
 #    (G, σ ∘ μ).
+# ----------------------------------------
+#    ograph    ordered graph
+#    order     permutation
+# ----------------------------------------
 function OrderedGraph(ograph::OrderedGraph, order::Order)
     n = nv(ograph)
     graph = Graph(n)

@@ -7,6 +7,9 @@ end
 
 
 # Construct a tree from a list of parents.
+# ----------------------------------------
+#    parent    list of parents
+# ----------------------------------------
 function Tree(parent::AbstractVector)
     n = root = length(parent)
     children = Vector{Vector{Int}}(undef, n)

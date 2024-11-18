@@ -8,6 +8,9 @@ end
 
 
 # Construct a tree from a postordered list of parents.
+# ----------------------------------------
+#    parent    list of parents
+# ----------------------------------------
 function PostorderTree(parent::AbstractVector)
     n = length(parent)
     children = Vector{Vector{Int}}(undef, n)
@@ -36,6 +39,10 @@ end
 
 
 # Postorder a tree.
+# ----------------------------------------
+#    tree    tree
+#    order   postorder
+# ----------------------------------------
 function PostorderTree(tree::Tree, order::Order)
     n = length(tree)
     parent = collect(1:n)

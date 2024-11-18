@@ -7,6 +7,9 @@ end
 
 # Construct an permutation σ from a vector
 #    (σ(1), ..., σ(n)).
+# ----------------------------------------
+#    order    permutation
+# ----------------------------------------
 function Order(order::AbstractVector)
     n = length(order)
     index = Vector{Int}(undef, n)

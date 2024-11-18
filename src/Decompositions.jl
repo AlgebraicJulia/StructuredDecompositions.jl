@@ -192,6 +192,11 @@ end
 
 
 # Construct a tree decomposition of a graph.
+# ----------------------------------------
+#    graph    simple connected graph
+#    ealg     elimination algorithm
+#    stype    supernode type
+# ----------------------------------------
 function StrDecomp(
     graph::AbstractSymmetricGraph,
     ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
@@ -202,6 +207,10 @@ end
 
 
 # Construct a tree decomposition of a graph.
+# ----------------------------------------
+#    graph    simple connected graph
+#    stree    supernodal elimination tree
+# ----------------------------------------
 function StrDecomp(graph::AbstractSymmetricGraph, stree::SupernodeTree)
     n = length(stree.tree)
     tree = Graph(n)
