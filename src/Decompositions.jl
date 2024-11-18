@@ -18,8 +18,6 @@ using Catlab.Graphs
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra.Diagrams
 import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map, colimit, limit
-using Catlab.FinSets: FinSetInt, FinDomFunctionVector
-
 
 
 #####################
