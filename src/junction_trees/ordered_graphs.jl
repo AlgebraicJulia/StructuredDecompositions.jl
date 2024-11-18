@@ -130,19 +130,6 @@ function BasicGraphs.edges(ograph::OrderedGraph)
 end
 
 
-function BasicGraphs.add_edge!(ograph::OrderedGraph, i, j)
-    u = min(i, j)
-    v = max(i, j)
-    
-    if !has_edge(ograph.graph, u, v)
-        add_edge!(ograph.graph, u, v)
-        true
-    else
-        false
-    end
-end
- 
-
 function BasicGraphs.vertices(ograph::OrderedGraph)
     vertices(ograph.graph)
 end
