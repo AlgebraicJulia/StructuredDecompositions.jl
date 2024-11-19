@@ -191,22 +191,22 @@ end
 ##################################
 
 
-# Construct a tree decomposition of a graph.
+# Construct a tree decomposition.
 # ----------------------------------------
-#    graph    simple connected graph
-#    ealg     elimination algorithm
-#    stype    supernode type
+#    graph       simple graph
+#    ealg        elimination algorithm
+#    stype       supernode type
 # ----------------------------------------
 function StrDecomp(
     graph::AbstractSymmetricGraph,
     ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
     stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-    StrDecomp(graph, SupernodeTree(graph, ealg, stype))
+    merge_decompositions(decompositions(graph, ealg, stype))
 end
 
 
-# Construct a tree decomposition of a graph.
+# Construct a tree decomposition.
 # ----------------------------------------
 #    graph    simple connected graph
 #    stree    supernodal elimination tree
@@ -221,6 +221,58 @@ function StrDecomp(graph::AbstractSymmetricGraph, stree::SupernodeTree)
 
     diagram = FinDomFunctor(homomorphisms(graph, stree)..., ∫(tree))
     StrDecomp(tree, diagram, Decomposition, dom(diagram))
+end
+
+
+function merge_decompositions(decomposition::AbstractVector)      
+    tree = map(decomposition) do d
+        d.decomp_shape
+    end
+    
+    domain = map(decomposition) do d
+        Catlab.graph(dom(d.diagram))
+    end
+    
+    subgraph = map(decomposition) do d
+        ob_map(d.diagram)
+    end
+    
+    homomorphism = map(decomposition) do d
+        hom_map(d.diagram)
+    end
+    
+    diagram = FinDomFunctor(vcat(subgraph...), vcat(homomorphism...), FinCat(apex(coproduct(domain))))
+    StrDecomp(apex(coproduct(tree)), diagram, Decomposition, dom(diagram))
+end
+
+
+function decompositions(graph::AbstractSymmetricGraph, ealg::EliminationAlgorithm, stype::SupernodeType)
+    component = connected_components(graph)
+
+    n = length(component)
+    decomposition = Vector(undef, n)
+    
+    for i in 1:n # TODO: construct decompositions in parallel
+        subgraph = induced_subgraph(graph, component[i])
+        decomposition[i] = StrDecomp(subgraph, SupernodeTree(subgraph, ealg, stype))
+    end
+    
+    decomposition
+end
+
+
+function decompositions(graph::AbstractSymmetricGraph, order::Order, stype::SupernodeType)
+    component = connected_components(graph)
+
+    n = length(component)
+    decomposition = Vector(undef, n)
+    
+    for i in 1:n # TODO: construct decompositions in parallal
+        subgraph = induced_subgraph(graph, component[i])
+        decomposition[i] = StrDecomp(subgraph, SupernodeTree(subgraph, induced_order(order, component[i]), stype))
+    end
+    
+    decomposition
 end
 
 
@@ -284,6 +336,11 @@ function homomorphisms(graph::AbstractSymmetricGraph, stree::SupernodeTree)
     end
     
     subgraph, homomorphism
+end
+
+
+function induced_order(order::Order, elements::AbstractVector)
+    Order(sortperm(inverse(order, elements)))
 end
 
 
