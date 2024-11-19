@@ -31,31 +31,30 @@ end
 # ----------------------------------------
 function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     degree = outdegrees(etree)
-    snode, parent, ancestor = stree(etree, degree, stype)
+    supernode, parent, ancestor = stree(etree, degree, stype)
     tree = Tree(parent)
 
-    treeorder = postorder(tree)
-    graphorder = Order(vcat(snode[treeorder]...))
+    order = postorder(tree)
+    tree = PostorderTree(tree, order)
+    permute!(supernode, order)
+    permute!(ancestor, order)
 
-    tree = PostorderTree(tree, treeorder)
-    graph = OrderedGraph(etree.graph, graphorder)
-
-    permute!(snode, treeorder)
-    permute!(ancestor, treeorder)
-    permute!(degree, graphorder)
+    order = Order(vcat(supernode...))
+    graph = OrderedGraph(etree.graph, order)
+    permute!(degree, order)
 
     n = length(tree)
     representative = zeros(Int, n)
     cardinality = zeros(Int, n)
 
     for i in 1:n - 1
-        representative[i] = inverse(graphorder, snode[i][1])
-        cardinality[i] = length(snode[i])
-        ancestor[i] = inverse(graphorder, ancestor[i])
+        representative[i] = inverse(order, supernode[i][1])
+        cardinality[i] = length(supernode[i])
+        ancestor[i] = inverse(order, ancestor[i])
     end
 
-    representative[n] = inverse(graphorder, snode[n][1])
-    cardinality[n] = length(snode[n])
+    representative[n] = inverse(order, supernode[n][1])
+    cardinality[n] = length(supernode[n])
 
     SupernodeTree(tree, graph, representative, cardinality, ancestor, degree)
 end
