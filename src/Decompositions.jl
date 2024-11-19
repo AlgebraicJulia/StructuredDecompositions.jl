@@ -252,7 +252,7 @@ function decompositions(graph::AbstractSymmetricGraph, ealg::EliminationAlgorith
     n = length(component)
     decomposition = Vector(undef, n)
     
-    for i in 1:n # TODO: construct decompositions in parallel
+    Threads.@threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
         decomposition[i] = StrDecomp(subgraph, SupernodeTree(subgraph, ealg, stype))
     end
@@ -267,7 +267,7 @@ function decompositions(graph::AbstractSymmetricGraph, order::Order, stype::Supe
     n = length(component)
     decomposition = Vector(undef, n)
     
-    for i in 1:n # TODO: construct decompositions in parallal
+    Threads.@threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
         decomposition[i] = StrDecomp(subgraph, SupernodeTree(subgraph, induced_order(order, component[i]), stype))
     end
