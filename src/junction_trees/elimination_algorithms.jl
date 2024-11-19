@@ -80,7 +80,19 @@ end
 
 # Construct an order using the Bouchitte-Todinca algorithm. Uses TreeWidthSolver.jl.
 function Order(graph::AbstractSymmetricGraph, ealg::TreeWidthSolverJL_BT)
-    order = reverse(vcat(TreeWidthSolver.elimination_order(Graphs.Graph(adjacencymatrix(graph)))...))
+    n = nv(graph)
+    T = TreeWidthSolver.LongLongUInt{n ÷ 64 + 1}
+    fadjlist = Vector{Vector{Int}}(undef, n)
+    bitfadjlist = Vector{T}(undef, n)
+    
+    for i in 1:n
+        fadjlist[i] = sort(collect(outneighbors(graph, i)))
+        bitfadjlist[i] = TreeWidthSolver.bmask(T, fadjlist[i])
+    end
+
+    bitgraph = TreeWidthSolver.MaskedBitGraph(bitfadjlist, fadjlist, TreeWidthSolver.bmask(T, 1:n))
+    decomposition = TreeWidthSolver.bt_algorithm(bitgraph, TreeWidthSolver.all_pmc_enmu(bitgraph, false), ones(n), false, true)
+    order = reverse(vcat(TreeWidthSolver.EliminationOrder(decomposition.tree).order...))
     Order(order)
 end
 
