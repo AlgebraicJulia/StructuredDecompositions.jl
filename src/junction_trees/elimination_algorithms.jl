@@ -5,6 +5,7 @@ A graph elimination algorithm. The options are
 - [`CuthillMcKeeJL_RCM`](@ref)
 - [`AMDJL_AMD`](@ref)
 - [`MetisJL_ND`](@ref)
+- [`TreeWidthSolverJL_BT`](@ref)
 - [`MCS`](@ref)
 """
 abstract type EliminationAlgorithm end
@@ -35,6 +36,14 @@ struct MetisJL_ND <: EliminationAlgorithm end
 
 
 """
+    TreeWidthSolverJL_BT <: EliminationAlgorithm
+
+The Bouchitte-Todinca algorithm. Uses TreeWidthSolver.jl.
+"""
+struct TreeWidthSolverJL_BT <: EliminationAlgorithm end
+
+
+"""
     MCS <: EliminationAlgorithm
 
 The maximum cardinality search algorithm.
@@ -48,16 +57,14 @@ function Order(graph::AbstractSymmetricGraph)
 end
 
 
-# Construct an order using the reverse Cuthill-McKee algorithm. Uses
-# CuthillMcKee.jl.
+# Construct an order using the reverse Cuthill-McKee algorithm. Uses CuthillMcKee.jl.
 function Order(graph::AbstractSymmetricGraph, ealg::CuthillMcKeeJL_RCM)
     order = CuthillMcKee.symrcm(adjacencymatrix(graph))
     Order(order)
 end
 
 
-# Construct an order using the approximate minimum degree algorithm. Uses
-# AMD.jl.
+# Construct an order using the approximate minimum degree algorithm. Uses AMD.jl.
 function Order(graph::AbstractSymmetricGraph, ealg::AMDJL_AMD)
     order = AMD.symamd(adjacencymatrix(graph))
     Order(order)
@@ -68,6 +75,13 @@ end
 function Order(graph::AbstractSymmetricGraph, ealg::MetisJL_ND)
     order, index = Metis.permutation(adjacencymatrix(graph))
     Order(order, index)
+end
+
+
+# Construct an order using the Bouchitte-Todinca algorithm. Uses TreeWidthSolver.jl.
+function Order(graph::AbstractSymmetricGraph, ealg::TreeWidthSolverJL_BT)
+    order = reverse(vcat(TreeWidthSolver.elimination_order(Graphs.Graph(adjacencymatrix(graph)))...))
+    Order(order)
 end
 
 

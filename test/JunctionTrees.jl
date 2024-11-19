@@ -25,6 +25,9 @@ order = JunctionTrees.Order(graph, AMDJL_AMD())
 order = JunctionTrees.Order(graph, MetisJL_ND())
 @test length(order) == 17
 
+order = JunctionTrees.Order(graph, TreeWidthSolverJL_BT())
+@test length(order) == 17
+
 order = JunctionTrees.Order(graph, MCS())
 @test length(order) == 17
 

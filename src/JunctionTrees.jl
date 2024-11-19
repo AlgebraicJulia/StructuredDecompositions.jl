@@ -3,7 +3,9 @@ module JunctionTrees
 
 import AMD
 import CuthillMcKee
+import Graphs
 import Metis
+import TreeWidthSolver
 
 using AbstractTrees
 using Catlab.BasicGraphs
@@ -16,7 +18,7 @@ export Order, inverse
 
 
 # Elimination Algorithms
-export AMDJL_AMD, CuthillMcKeeJL_RCM, MetisJL_ND, MCS
+export AMDJL_AMD, CuthillMcKeeJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS
 
 
 # Supernode Types
