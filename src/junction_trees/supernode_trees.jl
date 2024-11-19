@@ -104,3 +104,13 @@ function seperators(stree::SupernodeTree)
     seperator[n] = Set()
     seperator
 end
+
+
+function Base.show(io::IO, stree::SupernodeTree)
+    n = width(stree)
+    print(io, "width: $n\nsupernodal elimination tree:\n")
+    
+    print_tree(io, IndexNode(stree.tree)) do io, node
+        show(IOContext(io, :compact => true, :limit => true), permutation(stree.graph, supernode(stree, node.index)))
+    end
+end
