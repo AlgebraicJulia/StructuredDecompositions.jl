@@ -12,11 +12,13 @@ using PartialFunctions
 using MLStyle
 
 using AbstractTrees
+using Base.Threads
 using Catlab
 using Catlab.CategoricalAlgebra
 using Catlab.Graphs
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra.Diagrams
+
 import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map, colimit, limit
 
 
@@ -252,7 +254,7 @@ function decompositions(graph::AbstractSymmetricGraph, ealg::EliminationAlgorith
     n = length(component)
     decomposition = Vector(undef, n)
     
-    Threads.@threads for i in 1:n
+    @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
         decomposition[i] = StrDecomp(subgraph, SupernodeTree(subgraph, ealg, stype))
     end
@@ -267,7 +269,7 @@ function decompositions(graph::AbstractSymmetricGraph, order::Order, stype::Supe
     n = length(component)
     decomposition = Vector(undef, n)
     
-    Threads.@threads for i in 1:n
+    @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
         decomposition[i] = StrDecomp(subgraph, SupernodeTree(subgraph, induced_order(order, component[i]), stype))
     end
