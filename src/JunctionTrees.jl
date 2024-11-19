@@ -3,6 +3,7 @@ module JunctionTrees
 
 import AMD
 import CuthillMcKee
+import LinkedLists
 import Metis
 import TreeWidthSolver
 

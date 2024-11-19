@@ -130,31 +130,32 @@ end
 function mcs(graph::AbstractSymmetricGraph)
     n = nv(graph)
     α = Vector{Int}(undef, n)
-    α⁻¹ = Vector{Int}(undef, n)
+    β = Vector{Int}(undef, n)
     size = Vector{Int}(undef, n)
-    set = Vector{Set{Int}}(undef, n)
+    set = Vector{LinkedLists.LinkedList{Int}}(undef, n)
+    pointer = Vector{LinkedLists.ListNode{Int}}(undef, n)
 
     for i in 1:n
         size[i] = 1
-        set[i] = Set()
+        set[i] = LinkedLists.LinkedList{Int}()
+        pointer[i] = push!(set[1], i)
     end
-
-    union!(set[1], 1:n)
 
     i = n
     j = 1
 
     while i >= 1
-        v = pop!(set[j])
+        v = first(set[j])
+        deleteat!(set[j], pointer[v])        
         α[v] = i
-        α⁻¹[i] = v
+        β[i] = v
         size[v] = 0
 
         for w in neighbors(graph, v)
             if size[w] >= 1
-                delete!(set[size[w]], w)
+                deleteat!(set[size[w]], pointer[w])
                 size[w] += 1
-                push!(set[size[w]], w)
+                pointer[w] = push!(set[size[w]], w)
             end
         end
 
@@ -166,7 +167,7 @@ function mcs(graph::AbstractSymmetricGraph)
         end
     end
 
-    α⁻¹, α
+    β, α
 end
 
 
