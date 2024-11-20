@@ -33,40 +33,40 @@ A fundamental supernode.
 struct Fundamental <: SupernodeType end
 
 
-# Chordal Graphs and Semidefinite Optimization
-# Vanderberghe and Andersen
-# Algorithm 4.1: Maximal supernodes and supernodal elimination tree.
+# Compact Clique Tree Data Structures in Sparse Matrix Factorizations
+# Pothen and Sun
+# Figure 4: The Clique Tree Algorithm 2
 function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeType)
-    m = 0
     n = length(etree.tree)
-    index = zeros(Int, n)
-    snd = Vector{Int}[]
-    q = Int[]
-    a = Int[]
+    new_in_clique = Vector{Int}(undef, n)
+    new = Vector{Int}[]
+    parent = Int[]
+    first_anc = Int[]
+
+    i = 0
 
     for v in 1:n
-        ww = findchild(etree, degree, stype, v)
-        
-        if isnothing(ww)
-            index[v] = m += 1
-            push!(snd, [v])
-            push!(q, m)
-            push!(a, n)
+        u = findchild(etree, degree, stype, v)
+ 
+        if !isnothing(u)
+            new_in_clique[v] = new_in_clique[u]
+            push!(new[new_in_clique[v]], v)
         else
-            index[v] = index[ww]
-            push!(snd[index[v]], v)
+            new_in_clique[v] = i += 1
+            push!(new, [v])
+            push!(parent, i)
+            push!(first_anc, n)
         end
 
-        for w in childindices(etree.tree, v)
-            if w !== ww
-                j = index[w]
-                q[j] = index[v]
-                a[j] = v
+        for s in childindices(etree.tree, v)
+            if s !== u
+                parent[new_in_clique[s]] = new_in_clique[v]
+                first_anc[new_in_clique[s]] = v
             end
         end
     end
 
-    snd, q, a
+    new, parent, first_anc
 end
 
 
