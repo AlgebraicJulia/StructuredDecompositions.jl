@@ -111,7 +111,7 @@ function permutation(ograph::OrderedGraph, i)
 end
 
 
-# Get the index σ⁻¹(v),
+# Get the index σ⁻¹(v).
 function inverse(ograph::OrderedGraph, v)
     inverse(ograph.order, v)
 end
