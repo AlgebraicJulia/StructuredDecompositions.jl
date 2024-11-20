@@ -34,9 +34,9 @@ abstract type StructuredDecomposition{G, C, D} <: Diagram{id, C, D} end
   CoDecomposition
 end
 
-"""Structrured decomposition struct
-    -- think of these are graphs whose vertices are labeled by the objects of some category 
-    and whose edges are labeled by SPANS in this category
+"""Structured decomposition struct
+    -- Consider these as graphs whose vertices are labeled by the objects of some category 
+    and whose edges are labeled by spans in this category
 """
 struct StrDecomp{G, C, D} <: StructuredDecomposition{G, C, D}  
   decomp_shape ::G 
@@ -73,7 +73,7 @@ ob_map(d::StructuredDecomposition, x)  = ob_map(d.diagram, x)
 hom_map(d::StructuredDecomposition, f) = hom_map(d.diagram, f)
 
 function colimit(d::StructuredDecomposition) colimit(FreeDiagram(d.diagram)) end
-function limit(  d::StructuredDecomposition) limit(FreeDiagram(d.diagram))   end
+function limit(d::StructuredDecomposition) limit(FreeDiagram(d.diagram)) end
 
 
 
@@ -89,9 +89,9 @@ function limit(  d::StructuredDecomposition) limit(FreeDiagram(d.diagram))   end
 end
 
 function getFromDom(c::ShapeCpt, d::StructuredDecomposition, el::Elements = elements(d.decomp_shape))
-  #get the points in el:Elements corresp to either Vertices of Edges
+  #Get the points in el:Elements corresp to either Vertices of Edges
   get_Ele_cpt(j) = filter(part -> el[part, :πₑ] == j, parts(el, :El)) 
-  #get the points in el:Elements into actual objects of the Category ∫G (for G the shape of decomp)
+  #Get the points in el:Elements into actual objects of the Category ∫G (for G the shape of decomp)
   get_Cat_cpt(j) = map(grCpt -> ob_generators(d.domain)[grCpt], get_Ele_cpt(j))
   @match c begin
     ShapeVertex => get_Cat_cpt(1)
@@ -112,7 +112,7 @@ end
 end
 
 function get(c::StrDcmpCpt, d::StructuredDecomposition, indexing::Bool)
-  # either apply the object- or the morphism component of the diagram of d
+  # Either apply the object- or the morphism component of the diagram of d
   evalDiagr(t::MapType, x) = @match t begin 
     ObMap  => ob_map( d.diagram, x) 
     HomMap => hom_map(d.diagram, x)
@@ -129,19 +129,19 @@ function get(c::StrDcmpCpt, d::StructuredDecomposition, indexing::Bool)
   end
 end
 
-"""get a vector of indexed bags; i.e. a vector consisting of pairs (x, dx) where x ∈ FG and dx is the value mapped to x under the decompositon d"""
+"""Get a vector of indexed bags; i.e. a vector consisting of pairs (x, dx) where x ∈ FG and dx is the value mapped to x under the decompositon d"""
 bags(d, ind)          = get(Bag, d, ind)
-"""get a vector of the bags of a decomposition"""
+"""Get a vector of the bags of a decomposition"""
 bags(d)               = bags(d, false)
 
-"""get a vector of indexed adhesions; i.e. a vector consisting of pairs (e, de) where e is an edge in ∫G and de is the value mapped to e under the decompositon d"""
+"""Get a vector of indexed adhesions; i.e. a vector consisting of pairs (e, de) where e is an edge in ∫G and de is the value mapped to e under the decompositon d"""
 adhesions(d, ind)     = get(AdhesionApex, d, ind)
-"""get a vector of the adhesions of a decomposition"""
+"""Get a vector of the adhesions of a decomposition"""
 adhesions(d)          = adhesions(d, false)     
 
-"""get a vector of indexed adhesion spans; i.e. a vector consisting of pairs (x₁ <- e -> x₂, dx₁ <- de -> dx₂) where x₁ <- e -> x₂ is span in ∫G and dx₁ <- de -> dx₂ is what its image under the decompositon d"""
+"""Get a vector of indexed adhesion spans; i.e. a vector consisting of pairs (x₁ <- e -> x₂, dx₁ <- de -> dx₂) where x₁ <- e -> x₂ is span in ∫G and dx₁ <- de -> dx₂ is what its image under the decompositon d"""
 adhesionSpans(d, ind) = get(AdhesionSpan, d, ind)
-"""get a vector of the adhesion spans of a decomposition"""
+"""Get a vector of the adhesion spans of a decomposition"""
 adhesionSpans(d)      = adhesionSpans(d, false)
 
 function elements_graph(el::Elements)
@@ -150,13 +150,13 @@ function elements_graph(el::Elements)
   return migrate(Graph, el, ΔF)
 end
 
-"""Syntactic sugar for costrucitng the category of elements of a graph. 
+"""Syntactic sugar for costructing the category of elements of a graph. 
 Note that ∫(G) has type Category whereas elements(G) has type Elements
 """
 function ∫(G::T) where {T <: ACSet} ∫(elements(G))            end 
 function ∫(G::Elements)             FinCat(elements_graph(G)) end 
 
-#reverse direction of the edges
+#Reverse direction of the edges
 function op_graph(g::Graph)::Graph
   F = FinFunctor(Dict(:V => :V, :E => :E), Dict(:src => :tgt, :tgt => :src), SchGraph, SchGraph)
   ΔF = DeltaMigration(F)
