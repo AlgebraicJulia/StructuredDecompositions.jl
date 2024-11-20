@@ -37,6 +37,7 @@ struct Fundamental <: SupernodeType end
 # Vanderberghe and Andersen
 # Algorithm 4.1: Maximal supernodes and supernodal elimination tree.
 function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeType)
+    m = 0
     n = length(etree.tree)
     index = zeros(Int, n)
     snd = Vector{Int}[]
@@ -47,14 +48,12 @@ function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeT
         ww = findchild(etree, degree, stype, v)
         
         if isnothing(ww)
-            i = length(snd) + 1
-            index[v] = i
+            index[v] = i = m += 1
             push!(snd, [v])
-            push!(q, length(snd))
-            push!(a, n + 1)
+            push!(q, m)
+            push!(a, n)
         else
-            i = index[ww]
-            index[v] = i
+            index[v] = i = index[ww]
             push!(snd[i], v)
         end
 

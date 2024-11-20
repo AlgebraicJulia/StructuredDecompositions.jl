@@ -43,18 +43,10 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
     graph = OrderedGraph(etree.graph, order)
     permute!(degree, order)
 
-    n = length(tree)
-    representative = zeros(Int, n)
-    cardinality = zeros(Int, n)
-
-    for i in 1:n - 1
-        representative[i] = inverse(order, supernode[i][1])
-        cardinality[i] = length(supernode[i])
-        ancestor[i] = inverse(order, ancestor[i])
-    end
-
-    representative[n] = inverse(order, supernode[n][1])
-    cardinality[n] = length(supernode[n])
+    representative = map(first, supernode)
+    cardinality = map(length, supernode)
+    map!(i -> inverse(order, i), ancestor, ancestor)
+    map!(i -> inverse(order, i), representative, representative)
 
     SupernodeTree(tree, graph, representative, cardinality, ancestor, degree)
 end
@@ -89,15 +81,14 @@ function seperators(stree::SupernodeTree)
         end
     end
 
-    for i in 1:n - 2
-        j = parentindex(stree.tree, i)
-
-        for v in seperator[i]
-            if stree.ancestor[j] < v
-                push!(seperator[j], v)
+    for j in 1:n - 1
+        for i in childindices(stree.tree, j)
+            for v in seperator[i]
+                if stree.ancestor[j] < v
+                    push!(seperator[j], v)
+                end
             end
         end
-        
     end
 
     seperator[n] = Set()
