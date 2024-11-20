@@ -211,17 +211,17 @@ end
 # Construct a tree decomposition.
 # ----------------------------------------
 #    graph    simple connected graph
-#    stree    supernodal elimination tree
+#    jtree    junction tree
 # ----------------------------------------
-function StrDecomp(graph::AbstractSymmetricGraph, stree::SupernodeTree)
-    n = length(stree.tree)
+function StrDecomp(graph::AbstractSymmetricGraph, jtree::JunctionTree)
+    n = length(jtree)
     tree = Graph(n)
     
     for i in 1:n - 1
-        add_edge!(tree, i, parentindex(stree.tree, i))
+        add_edge!(tree, i, parentindex(jtree, i))
     end
 
-    diagram = FinDomFunctor(homomorphisms(graph, stree)..., ∫(tree))
+    diagram = FinDomFunctor(homomorphisms(graph, jtree)..., ∫(tree))
     StrDecomp(tree, diagram, Decomposition, dom(diagram))
 end
 
@@ -270,7 +270,7 @@ function decompositions(graph::AbstractSymmetricGraph, ealg::EliminationAlgorith
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, SupernodeTree(subgraph, ealg, stype))
+        decomposition[i] = StrDecomp(subgraph, JunctionTree(subgraph, ealg, stype))
     end
     
     decomposition
@@ -285,70 +285,37 @@ function decompositions(graph::AbstractSymmetricGraph, order::Order, stype::Supe
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, SupernodeTree(subgraph, induced_order(order, component[i]), stype))
+        decomposition[i] = StrDecomp(subgraph, JunctionTree(subgraph, induced_order(order, component[i]), stype))
     end
     
     decomposition
 end
 
 
-function mappings(stree::SupernodeTree)
-    seperator = map(sort ∘ collect, seperators(stree))
-
-    n = length(stree.tree)
-    set = Vector{Vector{Int}}(undef, 2n - 1)
-    mapping = Vector{Vector{Int}}(undef, 2n - 2)
-
-    for i in 1:n
-        # clique(i)
-        set[i] = permutation(stree.graph, [supernode(stree, i); seperator[i]])
-    end
-
-    for i in 1:n - 1
-        # seperator(i)
-        set[n + i] = permutation(stree.graph, seperator[i])
-    end
-
-    for i in 1:n - 1
-        # seperator(i) → clique(parent(i))
-        j = parentindex(stree.tree, i)
-        mapping[i] = induced_mapping(seperator[i], supernode(stree, j), seperator[j])
-    end
-
-    for i in 1:n - 1
-        # seperator(i) → clique(i)
-        mapping[n + i - 1] = (1:length(seperator[i])) .+ length(supernode(stree, i))
-    end
-
-    set, mapping
-end
-
-
-function homomorphisms(graph::AbstractSymmetricGraph, stree::SupernodeTree)
-    set, mapping = mappings(stree)
-
-    n = length(stree.tree)
+function homomorphisms(graph::AbstractSymmetricGraph, jtree::JunctionTree)
+    n = length(jtree)
     subgraph = Vector{Any}(undef, 2n - 1)
     homomorphism = Vector{Any}(undef, 2n - 2)
     
     for i in 1:n
         # clique(i)
-        subgraph[i] = induced_subgraph(graph, set[i])
+        subgraph[i] = induced_subgraph(graph, clique(jtree, i))
     end
   
     for i in 1:n - 1
         # seperator(i)
-        subgraph[n + i] = induced_subgraph(graph, set[n + i])
+        subgraph[n + i] = induced_subgraph(graph, seperator(jtree, i))
     end
   
     for i in 1:n - 1
         # seperator(i) → clique(parent(i))
-        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[parentindex(stree.tree, i)], mapping[i])
+        j = parentindex(jtree, i)
+        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], seperator_to_parent(jtree, i))
     end
     
     for i in 1:n - 1
         # seperator(i) → clique(i)
-        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], mapping[n + i - 1])
+        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], seperator_to_self(jtree, i))
     end
     
     subgraph, homomorphism
@@ -357,23 +324,6 @@ end
 
 function induced_order(order::Order, elements::AbstractVector)
     Order(sortperm(inverse(order, elements)))
-end
-
-
-function induced_mapping(domain::AbstractVector, codomain_left::AbstractUnitRange, codomain_right::AbstractVector)
-    i = 0
-    mapping = Vector{Int}(undef, length(domain))
-    
-    for (j, v) in enumerate(domain)
-        if v in codomain_left
-            mapping[j] = v - first(codomain_left) + 1
-        else
-            i += searchsortedfirst(view(codomain_right, i + 1:length(codomain_right)), v)
-            mapping[j] = length(codomain_left) + i
-        end
-    end
-    
-    mapping
 end
 
 

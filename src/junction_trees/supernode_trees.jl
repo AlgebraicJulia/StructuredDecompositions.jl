@@ -16,11 +16,11 @@ end
 #    stype    supernode type
 # ----------------------------------------
 function SupernodeTree(
-        graph::AbstractSymmetricGraph,
-        ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
-        stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    graph::AbstractSymmetricGraph,
+    ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
+    stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-        SupernodeTree(EliminationTree(graph, ealg), stype)
+    SupernodeTree(EliminationTree(graph, ealg), stype)
 end
     
 
@@ -93,14 +93,4 @@ function seperators(stree::SupernodeTree)
 
     seperator[n] = Set()
     seperator
-end
-
-
-function Base.show(io::IO, stree::SupernodeTree)
-    n = width(stree)
-    print(io, "width: $n\nsupernodal elimination tree:\n")
-    
-    print_tree(io, IndexNode(stree.tree)) do io, node
-        show(IOContext(io, :compact => true, :limit => true), permutation(stree.graph, supernode(stree, node.index)))
-    end
 end
