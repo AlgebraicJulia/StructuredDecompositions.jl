@@ -37,11 +37,11 @@ makedocs(
   checkdocs=:none,
   pages=Any[
     "StructuredDecompositions.jl"=>"index.md",
-    # If you have examples, add them to the sidebar here
-    # "Examples"=>Any[
-    #   "examples/predation/lotka-volterra.md",
-    #   ...
-    # ],
+    "Decompositions"=>"pages/decompositions.md",
+    "Deciding Sheaves"=>"pages/decidingsheaves.md",
+#    "Junction Trees"=>"pages/junction_trees.md",
+    "Functor Utils"=>"pages/functor_utils.md",
+#    "Nested UWDs"=>"pages/nested_uwds.md",
     "Library Reference"=>"api.md",
   ]
 )
