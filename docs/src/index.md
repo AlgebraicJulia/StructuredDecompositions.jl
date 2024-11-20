@@ -19,7 +19,6 @@ Pages = [
     "pages/decompostions.md",
     "pages/decidingsheaves.md",
     "pages/junction_trees.md",
-    "pages/nested_uwds.md",
     "pages/functor_utils.md",
     ]
 Depth = 2
