@@ -51,7 +51,11 @@ The maximum cardinality search algorithm.
 struct MCS <: EliminationAlgorithm end
 
 
-# Construct an order using the default graph elimination algorithm.
+"""
+    Order(graph::AbstractSymmetricGraph[, ealg::EliminationAlgorithm])
+
+Construct an elimination order for a simple graph, optionally specifying an elimination algorithm.
+"""
 function Order(graph::AbstractSymmetricGraph)
     Order(graph, DEFAULT_ELIMINATION_ALGORITHM)
 end

@@ -1,15 +1,19 @@
-# A permutation σ of the set {1, ..., n}.
+"""
+    Order <: AbstractVector{Int}
+
+A permutation of the set ``\\{1, \\dot, n\\}.``
+"""
 struct Order <: AbstractVector{Int}
     order::Vector{Int} # permutation
     index::Vector{Int} # inverse permutation
 end
 
 
-# Construct an permutation σ from a vector
-#    (σ(1), ..., σ(n)).
-# ----------------------------------------
-#    order    permutation
-# ----------------------------------------
+"""
+    Order(order::AbstractVector)
+
+Construct a permutation ``\\sigma`` from a sequence ``(\\sigma(1), \\dots, \\sigma(n)).``
+"""
 function Order(order::AbstractVector)
     n = length(order)
     index = Vector{Int}(undef, n)

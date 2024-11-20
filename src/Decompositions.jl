@@ -193,12 +193,12 @@ end
 ##################################
 
 
-# Construct a tree decomposition.
-# ----------------------------------------
-#    graph       simple graph
-#    ealg        elimination algorithm
-#    stype       supernode type
-# ----------------------------------------
+"""
+    StrDecomp(graph::AbstractSymmetricGraph[, ealg::Union{Order, EliminationAlgorithm}[, stype::SupernodeType]])
+
+Construct a structured decomposition of a simple graph, optionally specifying an elimination algorithm and
+supernode type.
+"""
 function StrDecomp(
     graph::AbstractSymmetricGraph,
     ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
