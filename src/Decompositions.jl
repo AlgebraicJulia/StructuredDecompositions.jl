@@ -239,19 +239,19 @@ function merge_decompositions(decomposition::AbstractVector)
         n = nv(decomposition[j].decomp_shape)
 
         for k in 1:n
-            subgraph[k + 2i - j + 1] = ob_map(decomposition[j].diagram, k)
+            subgraph[i + k] = ob_map(decomposition[j].diagram, k)
         end
 
         for k in 1:n - 1
-            subgraph[k + 2i - j + 1 + m] = ob_map(decomposition[j].diagram, n + k)
+            subgraph[i - j + k + m + 1] = ob_map(decomposition[j].diagram, k + n)
         end
 
         for k in 1:n - 1
-            homomorphism[k + 2i - 2j + 2] = hom_map(decomposition[j].diagram, k)
+            homomorphism[i - j + k + 1] = hom_map(decomposition[j].diagram, k)
         end
 
         for k in 1:n - 1
-            homomorphism[k + 2i - 2j + 2 + m - l] = hom_map(decomposition[j].diagram, n + k - 1)
+            homomorphism[i - j + k - l + m + 1] = hom_map(decomposition[j].diagram, k + n - 1)
         end
 
         i += n
