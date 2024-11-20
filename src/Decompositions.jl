@@ -227,24 +227,38 @@ end
 
 
 function merge_decompositions(decomposition::AbstractVector)      
-    tree = map(decomposition) do d
-        d.decomp_shape
-    end
-    
-    domain = map(decomposition) do d
-        Catlab.graph(dom(d.diagram))
-    end
-    
-    subgraph = map(decomposition) do d
-        ob_map(d.diagram)
-    end
-    
-    homomorphism = map(decomposition) do d
-        hom_map(d.diagram)
-    end
-    
-    diagram = FinDomFunctor(vcat(subgraph...), vcat(homomorphism...), FinCat(apex(coproduct(domain))))
-    StrDecomp(apex(coproduct(tree)), diagram, Decomposition, dom(diagram))
+    tree = apex(coproduct(map(d -> d.decomp_shape, decomposition)))
+    l = length(decomposition)
+    m = nv(tree)
+    subgraph = Vector(undef, 2m - l)
+    homomorphism = Vector(undef, 2m - 2l)
+
+    i = 0
+
+    for j in 1:l
+        n = nv(decomposition[j].decomp_shape)
+
+        for k in 1:n
+            subgraph[k + 2i - j + 1] = ob_map(decomposition[j].diagram, k)
+        end
+
+        for k in 1:n - 1
+            subgraph[k + 2i - j + 1 + m] = ob_map(decomposition[j].diagram, n + k)
+        end
+
+        for k in 1:n - 1
+            homomorphism[k + 2i - 2j + 2] = hom_map(decomposition[j].diagram, k)
+        end
+
+        for k in 1:n - 1
+            homomorphism[k + 2i - 2j + 2 + m - l] = hom_map(decomposition[j].diagram, n + k - 1)
+        end
+
+        i += n
+    end  
+
+    diagram = FinDomFunctor(subgraph, homomorphism, ∫(tree))
+    StrDecomp(tree, diagram, Decomposition, dom(diagram))
 end
 
 
