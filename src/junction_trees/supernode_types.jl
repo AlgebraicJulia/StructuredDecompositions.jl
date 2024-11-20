@@ -3,8 +3,8 @@
 
 A type of supernode. The options are
 - [`Node`](@ref)
-- [`MaximalSupernode`](@ref)
-- [`FundamentalSupernode`](@ref)
+- [`Maximal](@ref)
+- [`Fundamental`](@ref)
 """
 abstract type SupernodeType end
 
@@ -18,7 +18,7 @@ struct Node <: SupernodeType end
 
 
 """
-    MaximalSupernode <: Supernode
+    Maximal <: Supernode
 
 A maximal supernode.
 """
@@ -26,7 +26,7 @@ struct Maximal <: SupernodeType end
 
 
 """
-    FundamentalSupernode <: Supernode
+    Fundamental <: Supernode
 
 A fundamental supernode.
 """
