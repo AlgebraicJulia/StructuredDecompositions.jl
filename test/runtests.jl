@@ -11,3 +11,7 @@ end
 @testset "FunctorUtils" begin
   include("FunctorUtils.jl")
 end
+
+@testset "JunctionTrees" begin
+  include("JunctionTrees.jl")
+end
