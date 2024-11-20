@@ -48,19 +48,19 @@ function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeT
         ww = findchild(etree, degree, stype, v)
         
         if isnothing(ww)
-            index[v] = i = m += 1
+            index[v] = m += 1
             push!(snd, [v])
             push!(q, m)
             push!(a, n)
         else
-            index[v] = i = index[ww]
-            push!(snd[i], v)
+            index[v] = index[ww]
+            push!(snd[index[v]], v)
         end
 
         for w in childindices(etree.tree, v)
             if w !== ww
                 j = index[w]
-                q[j] = i
+                q[j] = index[v]
                 a[j] = v
             end
         end
