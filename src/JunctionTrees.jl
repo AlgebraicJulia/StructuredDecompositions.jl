@@ -25,10 +25,6 @@ export AMDJL_AMD, CuthillMcKeeJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS
 export Node, Maximal, Fundamental 
 
 
-# Supernode Trees
-export SupernodeTree, width, height, seperators, supernode, permutation
-
-
 # Junction Trees
 export JunctionTree, width, height, seperator, residual, clique, seperator_to_parent, seperator_to_self
 

@@ -35,32 +35,12 @@ order = JunctionTrees.Order(1:17)
 @test length(order) == 17
 
 # Figure 4.3
-stree = SupernodeTree(graph, order, Node())
-@test width(stree) == 4
-@test length(stree.tree) == 17
-@test height(stree.tree) == 7
+jtree = JunctionTree(graph, order, Node())
+@test width(jtree) == 4
+@test height(jtree) == 7
+@test length(jtree) == 17
 
-@test map(i -> inverse(stree.graph, i), 1:17) == [
-    5,  # a
-    4,  # b
-    6,  # c
-    7,  # d
-    8,  # e
-    3,  # f
-    1,  # g
-    2,  # h
-    9,  # i
-    12, # j
-    13, # k
-    11, # l
-    14, # m
-    15, # n
-    10, # o
-    16, # p
-    17, # q
-]
-
-@test map(i -> parentindex(stree.tree, i), 1:17)  == [
+@test map(i -> parentindex(jtree, i), 1:17)  == [
     2,
     9,
     9,
@@ -80,7 +60,7 @@ stree = SupernodeTree(graph, order, Node())
     nothing,
 ]
 
-@test map(i -> childindices(stree.tree, i), 1:17) == [
+@test map(i -> childindices(jtree, i), 1:17) == [
     [],
     [1],
     [],
@@ -100,41 +80,41 @@ stree = SupernodeTree(graph, order, Node())
     [16],
 ]
 
-@test map(i -> supernode(stree, i), 1:17) == [
-    [1],  # g
-    [2],  # h
-    [3],  # f
-    [4],  # b
-    [5],  # a
-    [6],  # c
-    [7],  # d
-    [8],  # e
+@test map(i -> residual(jtree, i), 1:17) == [
+    [7],  # g
+    [8],  # h
+    [6],  # f
+    [2],  # b
+    [1],  # a
+    [3],  # c
+    [4],  # d
+    [5],  # e
     [9],  # i
-    [10], # o
-    [11], # l
-    [12], # j
-    [13], # k
-    [14], # m
-    [15], # n
+    [15], # o
+    [12], # l
+    [10], # j
+    [11], # k
+    [13], # m
+    [14], # n
     [16], # p
     [17], # q
 ]
 
-@test map(sort ∘ collect, seperators(stree)) == [
-    [2, 9, 10],       # h i o
-    [9, 10],          # i o
+@test map(i -> seperator(jtree, i), 1:17) == [
+    [8, 9, 15],       # h i o
+    [9, 15],          # i o
     [9, 16],          # i p
-    [6, 7],           # c d
-    [6, 7, 8, 10],    # c d e o
-    [7, 8, 10],       # d e o
-    [8, 10],          # e o
-    [9, 10, 16],      # i o p
-    [10, 16],         # o p
+    [3, 4],           # c d
+    [3, 4, 5, 15],    # c d e o
+    [4, 5, 15],       # d e o
+    [5, 15],          # e o
+    [9, 15, 16],      # i o p
+    [15, 16],         # o p
     [16, 17],         # p q
-    [14, 15, 16, 17], # m n p q
-    [13, 14, 15, 17], # k m n q
-    [14, 15, 17],     # m n q
-    [15, 16, 17],     # n p q
+    [13, 14, 16, 17], # m n p q
+    [11, 13, 14, 17], # k m n q
+    [13, 14, 17],     # m n q
+    [14, 16, 17],     # n p q
     [16, 17],         # p q
     [17],             # q
     [],               #
@@ -142,32 +122,12 @@ stree = SupernodeTree(graph, order, Node())
 
 
 # Figure 4.7 (left)
-stree = SupernodeTree(graph, order, Maximal())
-@test width(stree) == 4
-@test length(stree.tree) == 8
-@test height(stree.tree) == 4
+jtree = JunctionTree(graph, order, Maximal())
+@test width(jtree) == 4
+@test height(jtree) == 4
+@test length(jtree) == 8
 
-@test map(i -> inverse(stree.graph, i), 1:17) == [
-    5,  # a
-    4,  # b
-    6,  # c
-    7,  # d
-    8,  # e
-    3,  # f
-    1,  # g
-    2,  # h
-    9,  # i
-    11, # j 
-    12, # k
-    13, # l
-    14, # m
-    15, # n
-    10, # o
-    16, # p
-    17, # q
-]
-
-@test map(i -> parentindex(stree.tree, i), 1:8)  == [
+@test map(i -> parentindex(jtree, i), 1:8)  == [
     5,
     5,
     4,
@@ -178,7 +138,7 @@ stree = SupernodeTree(graph, order, Maximal())
     nothing
 ]
 
-@test map(i -> childindices(stree.tree, i), 1:8)  == [
+@test map(i -> childindices(jtree, i), 1:8)  == [
     [],
     [],
     [],
@@ -189,56 +149,35 @@ stree = SupernodeTree(graph, order, Maximal())
     [6, 7],
 ]
 
-@test map(i -> supernode(stree, i), 1:8) == [
-    [1, 2],               # g h
-    [3],                  # f
-    [4],                  # b
-    [5, 6, 7],            # a c d
-    [8, 9],               # e i
-    [10],                 # o
-    [11, 12],             # j k
-    [13, 14, 15, 16, 17], # l m n p q
+@test map(i -> residual(jtree, i), 1:8) == [
+    [7, 8],               # g h
+    [6],                  # f
+    [2],                  # b
+    [1, 3, 4],            # a c d
+    [5, 9],               # e i
+    [15],                 # o
+    [10, 11],             # j k
+    [12, 13, 14, 16, 17], # l m n p q
 ]
 
-@test map(sort ∘ collect, seperators(stree)) == [
-    [9, 10],      # i o
+@test map(i -> seperator(jtree, i), 1:8) == [
+    [9, 15],      # i o
     [9, 16],      # i p
-    [6, 7],       # c d
-    [8, 10],      # e o
-    [10, 16],     # o p
+    [3, 4],       # c d
+    [5, 15],      # e o
+    [15, 16],     # o p
     [16, 17],     # p q
-    [14, 15, 17], # m n q
+    [13, 14, 17], # m n q
     [],           #
 ]
 
 # Figure 4.9
-stree = SupernodeTree(graph, order, Fundamental())
-@test width(stree) == 4
-@test length(stree.tree) == 12
-@test height(stree.tree) == 5
+jtree = JunctionTree(graph, order, Fundamental())
+@test width(jtree) == 4
+@test height(jtree) == 5
+@test length(jtree) == 12
 
-
-@test map(i -> inverse(stree.graph, i), 1:17) == [
-    5,  # a
-    4,  # b
-    6,  # c
-    7,  # d
-    8,  # e
-    3,  # f
-    1,  # g
-    2,  # h
-    9,  # i
-    12, # j
-    13, # k
-    11, # l
-    14, # m
-    15, # n
-    10, # o
-    16, # p
-    17, # q
-]
-
-@test map(i -> parentindex(stree.tree, i), 1:12)  == [
+@test map(i -> parentindex(jtree, i), 1:12)  == [
     7,
     7,
     5,
@@ -253,7 +192,7 @@ stree = SupernodeTree(graph, order, Fundamental())
     nothing,
 ]
 
-@test map(i -> childindices(stree.tree, i), 1:12)  == [
+@test map(i -> childindices(jtree, i), 1:12)  == [
     [],
     [],
     [],
@@ -268,32 +207,32 @@ stree = SupernodeTree(graph, order, Fundamental())
     [8, 11],
 ]
 
-@test map(i -> supernode(stree, i), 1:12) == [
-    [1, 2],   # g h
-    [3],      # f
-    [4],      # b
-    [5],      # a
-    [6, 7],   # c d
-    [8],      # e
+@test map(i -> residual(jtree, i), 1:12) == [
+    [7, 8],   # g h
+    [6],      # f
+    [2],      # b
+    [1],      # a
+    [3, 4],   # c d
+    [5],      # e
     [9],      # i
-    [10],     # o
-    [11],     # l
-    [12, 13], # j k
-    [14, 15], # m n
+    [15],     # o
+    [12],     # l
+    [10, 11], # j k
+    [13, 14], # m n
     [16, 17], # p q
 ]
 
-@test map(sort ∘ collect, seperators(stree)) == [
-    [9, 10],          # i o
+@test map(i -> seperator(jtree, i), 1:12) == [
+    [9, 15],          # i o
     [9, 16],          # i p
-    [6, 7],           # c d
-    [6, 7, 8, 10],    # c d e o
-    [8, 10],          # e o
-    [9, 10, 16],      # i o p
-    [10, 16],         # o p
+    [3, 4],           # c d
+    [3, 4, 5, 15],    # c d e o
+    [5, 15],          # e o
+    [9, 15, 16],      # i o p
+    [15, 16],         # o p
     [16, 17],         # p q
-    [14, 15, 16, 17], # m n p q
-    [14, 15, 17],     # m n q
+    [13, 14, 16, 17], # m n p q
+    [13, 14, 17],     # m n q
     [16, 17],         # p q
     [],               #
 ]

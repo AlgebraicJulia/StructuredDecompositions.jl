@@ -1,4 +1,8 @@
-# A junction tree.
+"""
+    JunctionTree
+
+A junction tree.
+"""
 struct JunctionTree
     stree::SupernodeTree           # supernodal elimination tree
     seperator::Vector{Vector{Int}} # seperator
@@ -21,6 +25,9 @@ end
 
 
 # Construct a junction tree.
+# ----------------------------------------
+#    stree    supernodal elimination tree
+# ----------------------------------------
 function JunctionTree(stree::SupernodeTree)
     JunctionTree(stree, map(sort ∘ collect, seperators(stree)))
 end
