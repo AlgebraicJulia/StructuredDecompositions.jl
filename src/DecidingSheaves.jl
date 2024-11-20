@@ -14,8 +14,8 @@ Note: we are assuming that we only know how to work with FinSet(Int) !
 
 INPUT: a Finset^{op}-valued structured decomposition d : FG → Span Finset^{op} 
           (which is expected to be in co-decomposition form; 
-            i.e. as a diagram d : FG → Cospan Finset )
-       and an indexed span ( (ℓ, r), ( d(ℓ), d(r) ) ) in d 
+          i.e. as a diagram d : FG → Cospan Finset )
+          and an indexed span ( (ℓ, r), ( d(ℓ), d(r) ) ) in d 
           (i.e a pair consisting of span (ℓ, r) in ∫G and its image under d)
 
 OUTPUT: a structured decomposition obtained by replacing the span de in d 
@@ -144,8 +144,9 @@ end
 
 """Solve the decision problem encoded by a sheaf. 
 The algorithm is as follows: 
-  compute on each bag (optionally, if the decomposition of the solution space
-                        is already known, then it can be passed as an argument),
+  compute on each bag 
+  (optionally, if the decomposition of the solution space
+  is already known, then it can be passed as an argument),
   compute composites on edges, 
   project back down to bags
   answer (providing a witness)
