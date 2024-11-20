@@ -46,7 +46,7 @@ function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeT
     i = 0
 
     for v in 1:n
-        u = findchild(etree, degree, stype, v)
+        u = child_in_supernode(etree, degree, stype, v)
  
         if !isnothing(u)
             new_in_clique[v] = new_in_clique[u]
@@ -73,13 +73,13 @@ end
 # Find a child w of v such that
 # v ∈ snd(w).
 # If no such child exists, return nothing.
-function findchild(etree::EliminationTree, degree::AbstractVector, stype::Node, v::Integer) end
+function child_in_supernode(etree::EliminationTree, degree::AbstractVector, stype::Node, v::Integer) end
 
 
 # Find a child w of v such that
 # v ∈ snd(w).
 # If no such child exists, return nothing.
-function findchild(etree::EliminationTree, degree::AbstractVector, stype::Maximal, v::Integer)
+function child_in_supernode(etree::EliminationTree, degree::AbstractVector, stype::Maximal, v::Integer)
     for w in childindices(etree.tree, v)
         if degree[w] == degree[v] + 1
             return w
@@ -91,7 +91,7 @@ end
 # Find a child w of v such that
 # v ∈ snd(w).
 # If no such child exists, return nothing.
-function findchild(etree::EliminationTree, degree::AbstractVector, stype::Fundamental, v::Integer)
+function child_in_supernode(etree::EliminationTree, degree::AbstractVector, stype::Fundamental, v::Integer)
     ws = childindices(etree.tree, v)
 
     if length(ws) == 1
