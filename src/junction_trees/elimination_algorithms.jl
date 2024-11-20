@@ -101,7 +101,7 @@ function Order(graph::AbstractSymmetricGraph, ealg::TreeWidthSolverJL_BT)
 end
 
 
-# Concstruct an order using the maximum cardinality search algorithm.
+# Construct an order using the maximum cardinality search algorithm.
 function Order(graph::AbstractSymmetricGraph, ealg::MCS)
     order, index = mcs(graph)
     Order(order, index)

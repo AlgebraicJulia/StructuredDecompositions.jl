@@ -1,7 +1,7 @@
 """
     Order <: AbstractVector{Int}
 
-A permutation of the set ``\\{1, \\dot, n\\}.``
+A permutation of the set ``\\{1, \\dots, n\\}.``
 """
 struct Order <: AbstractVector{Int}
     order::Vector{Int} # permutation
