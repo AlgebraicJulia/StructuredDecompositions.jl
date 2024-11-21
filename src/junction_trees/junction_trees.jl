@@ -10,17 +10,32 @@ end
 
 
 """
-    JunctionTree(graph::AbstractSymmetricGraph[, ealg::Union{Order, EliminationAlgorithm}[, stype::SupernodeType]])
+    JunctionTree(graph[, ealg::Union{Order, EliminationAlgorithm}[, stype::SupernodeType]])
 
 Construct a tree decomposition of a connected simple graph, optionally specifying an elimination algorithm and
 a supernode type.
 """
 function JunctionTree(
-    graph::AbstractSymmetricGraph,
+    graph,
     ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
     stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
     JunctionTree(SupernodeTree(graph, ealg, stype))
+end
+
+
+"""
+    JunctionTree(matrix::AbstractMatrix[, ealg::Union{Order, EliminationAlgorithm}[, stype::SupernodeType]])
+
+Construct a tree decomposition of a matrix, optionally specifying an elimination algorithm and
+a supernode type.
+"""
+function JunctionTree(
+    matrix::AbstractMatrix,
+    ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
+    stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+
+    JunctionTree(SupernodeTree(matrix, ealg, stype))
 end
 
 

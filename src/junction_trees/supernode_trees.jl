@@ -11,16 +11,16 @@ end
 
 # Construct a supernodal elimination tree using an elimination algorithm.
 # ----------------------------------------
-#    graph    simple connected graph
-#    ealg     elimination algorithm
-#    stype    supernode type
+#    graph_or_matrix    simple connected graph or matrix
+#    ealg               elimination algorithm
+#    stype              supernode type
 # ----------------------------------------
 function SupernodeTree(
-    graph::AbstractSymmetricGraph,
+    graph_or_matrix,
     ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
     stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-    SupernodeTree(EliminationTree(graph, ealg), stype)
+    SupernodeTree(EliminationTree(graph_or_matrix, ealg), stype)
 end
     
 
