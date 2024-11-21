@@ -120,13 +120,37 @@ function adjacencymatrix(graph::HasGraph)
     n = nv(graph)
 
     colptr = ones(Int, n + 1)
-    rowval = sizehint!(Vector{Int}(), 2m)
+    rowval = sizehint!(Int[], 2m)
 
     for j in 1:n
         ns = collect(neighbors(graph, j))
         sort!(ns)
         colptr[j + 1] = colptr[j] + length(ns)
         append!(rowval, ns)
+    end
+
+    nzval = ones(Int, length(rowval))
+    SparseMatrixCSC(n, n, colptr, rowval, nzval)
+end
+
+
+# Construct the sparsity graph of a matrix.
+function sparsitygraph(matrix::AbstractSparseMatrixCSC)
+    m = nnz(matrix)
+    n = size(matrix, 1)
+
+    colptr = ones(Int, n + 1)
+    rowval = sizehint!(Int[], m)
+
+    for j in 1:n
+        colptr[j + 1] = colptr[j]
+
+        for i in rowvals(matrix)[nzrange(matrix, j)]
+            if i != j
+                colptr[j + 1] += 1
+                push!(rowval, i)
+            end
+        end
     end
 
     nzval = ones(Int, length(rowval))
