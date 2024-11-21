@@ -26,6 +26,12 @@ function Order(order::AbstractVector)
 end
 
 
+# Construct a copy of a permutation.
+function Order(order::Order)
+    Order(order.order, order.index)
+end
+
+
 # Determine if i < j, where
 #    u = σ(i)
 #    v = σ(j)

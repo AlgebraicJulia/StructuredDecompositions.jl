@@ -78,6 +78,12 @@ function OrderedGraph(graph::OrderedGraph, order::Order)
 end
 
 
+# Construct the permutation σ.
+function Order(graph::OrderedGraph)
+    Order(graph.order)
+end
+
+
 # A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
 # Liu
 # Algorithm 4.2: Elimination Tree by Path Compression.
