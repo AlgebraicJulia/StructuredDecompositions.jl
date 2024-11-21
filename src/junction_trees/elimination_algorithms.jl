@@ -115,7 +115,7 @@ end
 
 
 # Construct the adjacency matrix of a graph.
-function adjacencymatrix(graph::HasGraph)
+function adjacencymatrix(graph)
     m = ne(graph)
     n = nv(graph)
 
@@ -123,7 +123,7 @@ function adjacencymatrix(graph::HasGraph)
     rowval = sizehint!(Int[], 2m)
 
     for j in 1:n
-        ns = collect(neighbors(graph, j))
+        ns = collect(all_neighbors(graph, j))
         sort!(ns)
         colptr[j + 1] = colptr[j] + length(ns)
         append!(rowval, ns)

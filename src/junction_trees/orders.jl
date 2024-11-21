@@ -76,8 +76,3 @@ end
 function Base.size(order::Order)
     (length(order.order),)
 end
-
-
-function Base.deepcopy(order::Order)
-    Order(copy(order.order), copy(order.index))
-end

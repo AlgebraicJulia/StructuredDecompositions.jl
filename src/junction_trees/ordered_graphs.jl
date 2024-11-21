@@ -1,7 +1,8 @@
 # An ordered graph (G, σ).
 struct OrderedGraph
-    graph::Graph # graph
-    order::Order # permutation
+    lower::SparseMatrixCSC{Int64, Int64} # adjacency matrix (lower triangular)
+    upper::SparseMatrixCSC{Int64, Int64} # adjacency matrix (upper triangular)
+    order::Order                         # permutation
 end
 
 
@@ -36,21 +37,48 @@ end
 #    order     vertex order
 # ----------------------------------------
 function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
+    m = last(nzrange(graph, size(graph, 1)))
     n = size(graph, 1)
-    digraph = Graph(n)
 
-    for u in 1:n
-        for v in rowvals(graph)[nzrange(graph, u)]
-            i = inverse(order, u)
-            j = inverse(order, v)
+    colptr_lower = Vector{Int}(undef, n + 1)
+    colptr_upper = Vector{Int}(undef, n + 1)
 
+    rowval_lower = Vector{Int}(undef, m ÷ 2)
+    rowval_upper = Vector{Int}(undef, m ÷ 2)
+
+    colptr_lower[1] = 1
+    colptr_upper[1] = 1
+
+    count_lower = 1
+    count_upper = 1
+
+    for i in 1:n
+        colptr_lower[i] = count_lower
+        colptr_upper[i] = count_upper
+        neighbors = inverse(order, rowvals(graph)[nzrange(graph, order[i])])
+        sort!(neighbors)
+
+        for j in neighbors
             if i < j
-                add_edge!(digraph, i, j)
+                rowval_lower[count_lower] = j                
+                count_lower += 1
+            else
+                rowval_upper[count_upper] = j
+                count_upper += 1
             end
         end
     end
 
-    OrderedGraph(digraph, order)
+    colptr_lower[n + 1] = m ÷ 2 + 1
+    colptr_upper[n + 1] = m ÷ 2 + 1  
+
+    nzval_lower = ones(Int, m ÷ 2)
+    nzval_upper = ones(Int, m ÷ 2) 
+
+    lower = SparseMatrixCSC(n, n, colptr_lower, rowval_lower, nzval_lower)
+    upper = SparseMatrixCSC(n, n, colptr_upper, rowval_upper, nzval_upper)
+
+    OrderedGraph(lower, upper, order)
 end
 
 
@@ -61,20 +89,8 @@ end
 #    order     permutation
 # ----------------------------------------
 function OrderedGraph(graph::OrderedGraph, order::Order)
-    digraph = Graph(nv(graph))
-
-    for edge in edges(graph)
-        i = inverse(order, src(graph, edge))
-        j = inverse(order, tgt(graph, edge))
-
-        if i < j
-            add_edge!(digraph, i, j)
-        else
-            add_edge!(digraph, j, i)
-        end
-    end
-    
-    OrderedGraph(digraph, compose(order, graph.order))
+    newgraph = OrderedGraph(adjacencymatrix(graph), order)
+    OrderedGraph(newgraph.lower, newgraph.upper, compose(order, graph.order))
 end
 
 
@@ -116,11 +132,6 @@ function etree(graph::OrderedGraph)
     parent
 end
 
-    
-function Base.deepcopy(graph::OrderedGraph)
-    OrderedGraph(deepcopy(graph.order), deepcopy(graph.graph))
-end
-
 
 # Get the vertex σ(i).
 function permutation(graph::OrderedGraph, i)
@@ -140,40 +151,45 @@ end
 
 
 function BasicGraphs.ne(graph::OrderedGraph)
-    ne(graph.graph)
+    last(graph.lower.colptr) - 1
 end
 
 
 function BasicGraphs.nv(graph::OrderedGraph)
-    nv(graph.graph)
+    size(graph.lower, 1)
 end
 
 
 function BasicGraphs.inneighbors(graph::OrderedGraph, i)
-    inneighbors(graph.graph, i)
+    rowvals(graph.upper)[nzrange(graph.upper, i)]
 end
 
 
 function BasicGraphs.outneighbors(graph::OrderedGraph, i)
-    outneighbors(graph.graph, i)
+    rowvals(graph.lower)[nzrange(graph.lower, i)]
 end
 
 
-function BasicGraphs.edges(graph::OrderedGraph)
-    edges(graph.graph)
+function BasicGraphs.all_neighbors(graph::OrderedGraph, i)
+    Base.Iterators.flatten((inneighbors(graph, i), outneighbors(graph, i)))
 end
+
+
+#function BasicGraphs.edges(graph::OrderedGraph)
+#    1:ne(graph)
+#end
 
 
 function BasicGraphs.vertices(graph::OrderedGraph)
-    vertices(graph.graph)
-end
-    
-
-function BasicGraphs.src(graph::OrderedGraph, i)
-    src(graph.graph, i)
+    1:nv(graph)
 end
 
 
-function BasicGraphs.tgt(graph::OrderedGraph, i)
-    tgt(graph.graph, i)
-end
+#function BasicGraphs.src(graph::OrderedGraph, i)
+#    src(graph.graph, i)
+#end
+
+
+#function BasicGraphs.tgt(graph::OrderedGraph, i)
+#    tgt(graph.graph, i)
+#end
