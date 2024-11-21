@@ -11,6 +11,7 @@ import TreeWidthSolver
 using AbstractTrees
 using DataStructures
 using Graphs
+using Graphs.SimpleGraphs
 using SparseArrays
 using SparseArrays: AbstractSparseMatrixCSC
 

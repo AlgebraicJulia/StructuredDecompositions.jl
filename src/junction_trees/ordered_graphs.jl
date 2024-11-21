@@ -1,5 +1,5 @@
 # An ordered graph (G, σ).
-struct OrderedGraph <: AbstractGraph{Int}
+struct OrderedGraph <: AbstractSimpleGraph{Int}
     lower::SparseMatrixCSC{Bool, Int} # adjacency matrix (lower triangular)
     upper::SparseMatrixCSC{Bool, Int} # adjacency matrix (upper triangular)
     order::Order                      # permutation
@@ -170,36 +170,43 @@ end
 ############################
 
 
-function Graphs.ne(graph::OrderedGraph)
-    last(graph.lower.colptr) - 1
-end
-
-
-function Graphs.nv(graph::OrderedGraph)
-    size(graph.lower, 1)
-end
-
-
-function Graphs.inneighbors(graph::OrderedGraph, i::Integer)
-    view(rowvals(graph.upper), nzrange(graph.upper, i))
-end
-
-
-function Graphs.outneighbors(graph::OrderedGraph, i::Integer)
-    view(rowvals(graph.lower), nzrange(graph.lower, i))
-end
-
-
-function Graphs.all_neighbors(graph::OrderedGraph, i::Integer)
-    [inneighbors(graph, i); outneighbors(graph, i)]
-end
-
-
-function Graphs.is_directed(::Type{OrderedGraph})
+function SimpleGraphs.is_directed(::Type{OrderedGraph})
     true
 end
 
 
-function Graphs.vertices(graph::OrderedGraph)
-    1:nv(graph)
+function SimpleGraphs.edgetype(graph::OrderedGraph)
+    SimpleEdge{Int}
+end
+
+
+function SimpleGraphs.ne(graph::OrderedGraph)
+    last(graph.lower.colptr) - 1
+end
+
+
+function SimpleGraphs.nv(graph::OrderedGraph)
+    size(graph.lower, 1)
+end
+
+
+function SimpleGraphs.badj(graph::OrderedGraph, i::Integer)
+    view(rowvals(graph.upper), nzrange(graph.upper, i))
+end
+
+
+function SimpleGraphs.fadj(graph::OrderedGraph, i::Integer)
+    view(rowvals(graph.lower), nzrange(graph.lower, i))
+end
+
+
+function SimpleGraphs.all_neighbors(graph::OrderedGraph, i::Integer)
+    [inneighbors(graph, i); outneighbors(graph, i)]
+end
+
+
+function SimpleGraphs.has_edge(graph::OrderedGraph, edge::SimpleEdge{Int})
+    i = src(edge)
+    j = dst(edge)
+    i < j && insorted(j, outneighbors(graph, i))
 end
