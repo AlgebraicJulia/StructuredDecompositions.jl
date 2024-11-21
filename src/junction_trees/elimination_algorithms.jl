@@ -61,46 +61,42 @@ function Order(graph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 end
 
 
-"""
-    Order(matrix::AbstractMatrix[, ealg::EliminationAlgorithm])
-
-Construct an elimination order for a matrix, optionally specifying an elimination algorithm.
-"""
-function Order(matrix::AbstractMatrix)
-    Order(matrix, DEFAULT_ELIMINATION_ALGORITHM)
+# Construct an elimination order.
+function Order(graph::AbstractMatrix)
+    Order(graph, DEFAULT_ELIMINATION_ALGORITHM)
 end
 
 
 # Construct an order using the reverse Cuthill-McKee algorithm. Uses CuthillMcKee.jl.
-function Order(matrix::AbstractMatrix, ealg::CuthillMcKeeJL_RCM)
-    order = CuthillMcKee.symrcm(matrix)
+function Order(graph::AbstractMatrix, ealg::CuthillMcKeeJL_RCM)
+    order = CuthillMcKee.symrcm(graph)
     Order(order)
 end
 
 
 # Construct an order using the approximate minimum degree algorithm. Uses AMD.jl.
-function Order(matrix::AbstractMatrix, ealg::AMDJL_AMD)
-    order = AMD.symamd(matrix)
+function Order(graph::AbstractMatrix, ealg::AMDJL_AMD)
+    order = AMD.symamd(graph)
     Order(order)
 end
 
 
 # Construct an order using the nested dissection heuristic. Uses Metis.jl.
-function Order(matrix::AbstractMatrix, ealg::MetisJL_ND)
-    order, index = Metis.permutation(matrix)
+function Order(graph::AbstractMatrix, ealg::MetisJL_ND)
+    order, index = Metis.permutation(graph)
     Order(order, index)
 end
 
 
 # Construct an order using the Bouchitte-Todinca algorithm. Uses TreeWidthSolver.jl.
-function Order(matrix::AbstractSparseMatrixCSC, ealg::TreeWidthSolverJL_BT)
-    n = size(matrix, 1)
+function Order(graph::AbstractSparseMatrixCSC, ealg::TreeWidthSolverJL_BT)
+    n = size(graph, 1)
     T = TreeWidthSolver.LongLongUInt{n ÷ 64 + 1}
     fadjlist = Vector{Vector{Int}}(undef, n)
     bitfadjlist = Vector{T}(undef, n)
     
     for i in 1:n
-        fadjlist[i] = rowvals(matrix)[nzrange(matrix, i)]
+        fadjlist[i] = rowvals(graph)[nzrange(graph, i)]
         bitfadjlist[i] = TreeWidthSolver.bmask(T, fadjlist[i])
     end
 
@@ -112,8 +108,8 @@ end
 
 
 # Construct an order using the maximum cardinality search algorithm.
-function Order(matrix::AbstractMatrix, ealg::MCS)
-    order, index = mcs(matrix)
+function Order(graph::AbstractMatrix, ealg::MCS)
+    order, index = mcs(graph)
     Order(order, index)
 end
 
@@ -141,8 +137,8 @@ end
 # Simple Linear-Time Algorithms to Test Chordality of Graphs, Test Acyclicity of Hypergraphs, and Selectively Reduce Acyclic Hypergraphs
 # Tarjan and Yannakakis
 # Maximum Cardinality Search
-function mcs(matrix::AbstractSparseMatrixCSC)
-    n = size(matrix, 1)
+function mcs(graph::AbstractSparseMatrixCSC)
+    n = size(graph, 1)
     α = Vector{Int}(undef, n)
     β = Vector{Int}(undef, n)
     len = Vector{Int}(undef, n)
@@ -165,7 +161,7 @@ function mcs(matrix::AbstractSparseMatrixCSC)
         β[i] = v
         len[v] = 0
 
-        for w in rowvals(matrix)[nzrange(matrix, v)]
+        for w in rowvals(graph)[nzrange(graph, v)]
             if len[w] >= 1
                 deleteat!(set[len[w]], pointer[w])
                 len[w] += 1

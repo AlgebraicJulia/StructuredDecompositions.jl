@@ -17,42 +17,40 @@ function OrderedGraph(graph, ealg::Union{Order, EliminationAlgorithm}=DEFAULT_EL
 end
 
 
-# Given a matrix M, construct the ordered graph
+# Given a graph G, construct the ordered graph
 #    (G, σ),
-# where G is the sparsity graph if M and σ is a permutation computed using an elimination
-# algorithm.
+# where σ is a permutation computed using an elimination algorithm.
 # ----------------------------------------
-#    matrix    symmetric matrix
+#    graph     simple connected graph
 #    ealg      elimination algorithm
 # ----------------------------------------
-function OrderedGraph(matrix::AbstractMatrix, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    OrderedGraph(matrix, Order(matrix, ealg))
+function OrderedGraph(graph::AbstractMatrix, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    OrderedGraph(graph, Order(graph, ealg))
 end
 
 
-# Given a matrix M and permutation σ, construct the ordered graph
+# Given a graph H and permutation σ, construct the ordered graph
 #    (G, σ)
-# where G is the sparsity graph of M.
 # ----------------------------------------
-#    graph     symmetric matrix
+#    graph     simple connected graph
 #    order     vertex order
 # ----------------------------------------
-function OrderedGraph(matrix::AbstractSparseMatrixCSC, order::Order)
-    n = size(matrix, 1)
-    graph = Graph(n)
+function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
+    n = size(graph, 1)
+    digraph = Graph(n)
 
     for u in 1:n
-        for v in rowvals(matrix)[nzrange(matrix, u)]
+        for v in rowvals(graph)[nzrange(graph, u)]
             i = inverse(order, u)
             j = inverse(order, v)
 
             if i < j
-                add_edge!(graph, i, j)
+                add_edge!(digraph, i, j)
             end
         end
     end
 
-    OrderedGraph(graph, order)
+    OrderedGraph(digraph, order)
 end
 
 

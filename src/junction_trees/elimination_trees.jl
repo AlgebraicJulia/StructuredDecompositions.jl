@@ -8,13 +8,13 @@ end
 
 # Construct an elimination tree using an elimination algorithm.
 # ----------------------------------------
-#    graph_or_matrix    simple connected graph
-#    ealg               elimination algorithm
+#    graph    simple connected graph
+#    ealg     elimination algorithm
 # ----------------------------------------
 function EliminationTree(
-        graph_or_matrix,
+        graph,
         ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM)
-    EliminationTree(OrderedGraph(graph_or_matrix, ealg))
+    EliminationTree(OrderedGraph(graph, ealg))
 end
 
 

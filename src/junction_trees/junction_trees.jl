@@ -24,21 +24,6 @@ function JunctionTree(
 end
 
 
-"""
-    JunctionTree(matrix::AbstractMatrix[, ealg::Union{Order, EliminationAlgorithm}[, stype::SupernodeType]])
-
-Construct a tree decomposition of a matrix, optionally specifying an elimination algorithm and
-a supernode type.
-"""
-function JunctionTree(
-    matrix::AbstractMatrix,
-    ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
-    stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-
-    JunctionTree(SupernodeTree(matrix, ealg, stype))
-end
-
-
 # Construct a junction tree.
 # ----------------------------------------
 #    stree    supernodal elimination tree
