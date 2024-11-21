@@ -129,7 +129,7 @@ function adjacencymatrix(graph)
         append!(rowval, ns)
     end
 
-    nzval = ones(Int, length(rowval))
+    nzval = ones(Bool, length(rowval))
     SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end
 
@@ -153,7 +153,7 @@ function sparsitygraph(matrix::AbstractSparseMatrixCSC)
         end
     end
 
-    nzval = ones(Int, length(rowval))
+    nzval = ones(Bool, length(rowval))
     SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end
 
