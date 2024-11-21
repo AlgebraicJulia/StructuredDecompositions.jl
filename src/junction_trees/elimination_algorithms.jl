@@ -139,32 +139,9 @@ function adjacencymatrix(graph::BasicGraphs.AbstractSymmetricGraph)
 end
 
 
+# Construct the adjacency matrix of a graph.
 function adjacencymatrix(graph::AbstractGraph)
     adjacency_matrix(graph; dir=:both)
-end
-
-
-# Construct the sparsity graph of a matrix.
-function sparsitygraph(matrix::AbstractSparseMatrixCSC)
-    m = nnz(matrix)
-    n = size(matrix, 1)
-
-    colptr = ones(Int, n + 1)
-    rowval = sizehint!(Int[], m)
-
-    for j in 1:n
-        colptr[j + 1] = colptr[j]
-
-        for i in rowvals(matrix)[nzrange(matrix, j)]
-            if i != j
-                colptr[j + 1] += 1
-                push!(rowval, i)
-            end
-        end
-    end
-
-    nzval = ones(Bool, length(rowval))
-    SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end
 
 
