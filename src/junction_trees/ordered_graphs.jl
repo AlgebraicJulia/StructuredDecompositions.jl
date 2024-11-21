@@ -182,12 +182,12 @@ end
 
 
 function Graphs.inneighbors(graph::OrderedGraph, i::Integer)
-    rowvals(graph.upper)[nzrange(graph.upper, i)]
+    view(rowvals(graph.upper), nzrange(graph.upper, i))
 end
 
 
 function Graphs.outneighbors(graph::OrderedGraph, i::Integer)
-    rowvals(graph.lower)[nzrange(graph.lower, i)]
+    view(rowvals(graph.lower), nzrange(graph.lower, i))
 end
 
 
