@@ -166,6 +166,13 @@ function inverse(graph::OrderedGraph, v)
 end
 
 
+# Multiline printing.
+function Base.show(io::IO, ::MIME"text/plain", graph::OrderedGraph)
+    print(io, "ordered graph:\n")
+    SparseArrays._show_with_braille_patterns(io, graph.lower)
+end 
+
+
 ############################
 # Abstract Graph Interface #
 ############################

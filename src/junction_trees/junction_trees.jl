@@ -134,7 +134,8 @@ function width(jtree::JunctionTree)
 end
 
 
-function Base.show(io::IO, jtree::JunctionTree)
+# Multiline printing.
+function Base.show(io::IO, ::MIME"text/plain", jtree::JunctionTree)
     n = width(jtree)
     print(io, "width: $n\njunction tree:\n")
     
