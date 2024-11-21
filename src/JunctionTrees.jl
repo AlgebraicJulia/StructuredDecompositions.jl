@@ -11,6 +11,7 @@ using AbstractTrees
 using Catlab.BasicGraphs
 using DataStructures
 using SparseArrays
+using SparseArrays: AbstractSparseMatrixCSC
 
 
 # Orders

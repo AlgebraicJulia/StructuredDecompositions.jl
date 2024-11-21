@@ -93,14 +93,14 @@ end
 
 
 # Construct an order using the Bouchitte-Todinca algorithm. Uses TreeWidthSolver.jl.
-function Order(matrix::AbstractMatrix, ealg::TreeWidthSolverJL_BT)
+function Order(matrix::AbstractSparseMatrixCSC, ealg::TreeWidthSolverJL_BT)
     n = size(matrix, 1)
     T = TreeWidthSolver.LongLongUInt{n ÷ 64 + 1}
     fadjlist = Vector{Vector{Int}}(undef, n)
     bitfadjlist = Vector{T}(undef, n)
     
     for i in 1:n
-        fadjlist[i] = matrix.rowval[matrix.colptr[i]:matrix.colptr[i + 1] - 1] 
+        fadjlist[i] = rowvals(matrix)[nzrange(matrix, i)]
         bitfadjlist[i] = TreeWidthSolver.bmask(T, fadjlist[i])
     end
 
@@ -141,7 +141,7 @@ end
 # Simple Linear-Time Algorithms to Test Chordality of Graphs, Test Acyclicity of Hypergraphs, and Selectively Reduce Acyclic Hypergraphs
 # Tarjan and Yannakakis
 # Maximum Cardinality Search
-function mcs(matrix::SparseMatrixCSC)
+function mcs(matrix::AbstractSparseMatrixCSC)
     n = size(matrix, 1)
     α = Vector{Int}(undef, n)
     β = Vector{Int}(undef, n)
@@ -165,7 +165,7 @@ function mcs(matrix::SparseMatrixCSC)
         β[i] = v
         len[v] = 0
 
-        for w in matrix.rowval[matrix.colptr[v]:matrix.colptr[v] + 1]
+        for w in rowvals(matrix)[nzrange(matrix, v)]
             if len[w] >= 1
                 deleteat!(set[len[w]], pointer[w])
                 len[w] += 1

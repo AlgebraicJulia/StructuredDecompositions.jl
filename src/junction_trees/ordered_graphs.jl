@@ -37,12 +37,12 @@ end
 #    graph     symmetric matrix
 #    order     vertex order
 # ----------------------------------------
-function OrderedGraph(matrix::SparseMatrixCSC, order::Order)
+function OrderedGraph(matrix::AbstractSparseMatrixCSC, order::Order)
     n = size(matrix, 1)
     graph = Graph(n)
 
     for u in 1:n
-        for v in matrix.rowval[matrix.colptr[u]:matrix.colptr[u + 1] - 1]
+        for v in rowvals(matrix)[nzrange(matrix, u)]
             i = inverse(order, u)
             j = inverse(order, v)
 
