@@ -78,6 +78,25 @@ function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
 end
 
 
+# Given an ordered graph (G, σ) and permutation μ, construct the ordered graph
+#    (G, σ ∘ μ).
+# ----------------------------------------
+#    graph     ordered graph
+#    order     permutation
+# ----------------------------------------
+function OrderedGraph(graph::OrderedGraph, order::Order)
+    newgraph = OrderedGraph(adjacencymatrix(graph), order)
+    OrderedGraph(newgraph.lower, newgraph.upper, compose(order, graph.order))
+end
+
+
+# Construct the permutation σ.
+function Order(graph::OrderedGraph)
+    Order(graph.order)
+end
+
+
+# Construct the adjacency matrix of an ordered graph.
 function adjacencymatrix(graph::OrderedGraph)
     m = ne(graph)
     n = nv(graph)
@@ -100,22 +119,6 @@ function adjacencymatrix(graph::OrderedGraph)
 end
 
 
-# Given an ordered graph (G, σ) and permutation μ, construct the ordered graph
-#    (G, σ ∘ μ).
-# ----------------------------------------
-#    graph     ordered graph
-#    order     permutation
-# ----------------------------------------
-function OrderedGraph(graph::OrderedGraph, order::Order)
-    newgraph = OrderedGraph(adjacencymatrix(graph), order)
-    OrderedGraph(newgraph.lower, newgraph.upper, compose(order, graph.order))
-end
-
-
-# Construct the permutation σ.
-function Order(graph::OrderedGraph)
-    Order(graph.order)
-end
 
 
 # A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
