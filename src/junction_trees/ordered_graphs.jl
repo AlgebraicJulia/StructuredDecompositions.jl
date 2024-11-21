@@ -52,8 +52,7 @@ function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
     for i in 1:n
         colptr_lower[i] = count_lower
         colptr_upper[i] = count_upper
-        neighbor = inverse(order, rowvals(graph)[nzrange(graph, order[i])])
-        sort!(neighbor)
+        neighbor = sort(inverse(order, rowvals(graph)[nzrange(graph, order[i])]))
 
         for j in neighbor
             if i < j
@@ -156,7 +155,7 @@ end
 
 # Get the vertex σ(i).
 function permutation(graph::OrderedGraph, i)
-    graph.order[i]
+    permutation(graph.order, i)
 end
 
 

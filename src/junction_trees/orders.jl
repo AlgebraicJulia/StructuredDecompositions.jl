@@ -32,29 +32,39 @@ function Order(order::Order)
 end
 
 
-# Determine if i < j, where
-#    u = σ(i)
-#    v = σ(j)
-function (order::Order)(u, v)
-    inverse(order, u) < inverse(order, v)
-end
-
-
 # Compose two permutations.
 function compose(left::Order, right::Order)
     Order(right.order[left.order], left.index[right.index])
 end
 
 
-# Construct the inverse permutation.
+# Construct the inverse permutation σ⁻¹.
 function inverse(order::Order)
     Order(order.index, order.order)
 end
 
 
+# Get the element σ(i).
+function permutation(order::Order, i::Integer)
+    order[i]
+end
+
+
+# Get the elements (σ(i₁, ..., iₙ)).
+function permutation(order::Order, i)
+    view(order, i)
+end
+
+
 # Get the index σ⁻¹(v),
-function inverse(order::Order, v)
+function inverse(order::Order, v::Integer)
     order.index[v]
+end
+
+
+# Get the indices (σ⁻¹(v₁), ..., σ(vₙ))
+function inverse(order::Order, v)
+    view(order.index, v)
 end
 
 

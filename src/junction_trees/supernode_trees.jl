@@ -45,8 +45,8 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
 
     representative = map(first, supernode)
     cardinality = map(length, supernode)
-    map!(i -> inverse(order, i), ancestor, ancestor)
-    map!(i -> inverse(order, i), representative, representative)
+    ancestor = inverse(order, ancestor)
+    representative = inverse(order, representative)
 
     SupernodeTree(tree, graph, representative, cardinality, ancestor, degree)
 end
