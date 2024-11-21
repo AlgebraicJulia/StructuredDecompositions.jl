@@ -7,32 +7,48 @@ end
 
 # Given a graph G, construct the ordered graph
 #    (G, σ),
-# where the permutation σ is computed using an elimination algorithm.
+# where σ is a permutation computed using an elimination algorithm.
 # ----------------------------------------
-#    sgraph    simple connected graph
+#    graph     simple connected graph
 #    ealg      elimination algorithm
 # ----------------------------------------
-function OrderedGraph(sgraph::AbstractSymmetricGraph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    OrderedGraph(sgraph, Order(sgraph, ealg))
+function OrderedGraph(graph, ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM)
+    OrderedGraph(adjacencymatrix(graph), ealg)
 end
 
 
-# Given a graph G and permutation σ, construct the ordered graph
-#    (G, σ).
+# Given a matrix M, construct the ordered graph
+#    (G, σ),
+# where G is the sparsity graph if M and σ is a permutation computed using an elimination
+# algorithm.
 # ----------------------------------------
-#    sgraph    simple connected graph
+#    matrix    symmetric matrix
+#    ealg      elimination algorithm
+# ----------------------------------------
+function OrderedGraph(matrix::AbstractMatrix, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    OrderedGraph(matrix, Order(matrix, ealg))
+end
+
+
+# Given a matrix M and permutation σ, construct the ordered graph
+#    (G, σ)
+# where G is the sparsity graph of M.
+# ----------------------------------------
+#    graph     symmetric matrix
 #    order     vertex order
 # ----------------------------------------
-function OrderedGraph(sgraph::AbstractSymmetricGraph, order::Order)
-    n = nv(sgraph)
+function OrderedGraph(matrix::SparseMatrixCSC, order::Order)
+    n = size(matrix, 1)
     graph = Graph(n)
 
-    for e in edges(sgraph)
-        u = src(sgraph, e)
-        v = tgt(sgraph, e)
-        
-        if order(u, v)
-            add_edge!(graph, inverse(order, u), inverse(order, v))
+    for u in 1:n
+        for v in matrix.rowval[matrix.colptr[u]:matrix.colptr[u + 1] - 1]
+            i = inverse(order, u)
+            j = inverse(order, v)
+
+            if i < j
+                add_edge!(graph, i, j)
+            end
         end
     end
 
@@ -43,25 +59,24 @@ end
 # Given an ordered graph (G, σ) and permutation μ, construct the ordered graph
 #    (G, σ ∘ μ).
 # ----------------------------------------
-#    ograph    ordered graph
+#    graph     ordered graph
 #    order     permutation
 # ----------------------------------------
-function OrderedGraph(ograph::OrderedGraph, order::Order)
-    n = nv(ograph)
-    graph = Graph(n)
+function OrderedGraph(graph::OrderedGraph, order::Order)
+    digraph = Graph(nv(graph))
 
-    for e in edges(ograph)
-        u = src(ograph, e)
-        v = tgt(ograph, e)
+    for edge in edges(graph)
+        i = inverse(order, src(graph, edge))
+        j = inverse(order, tgt(graph, edge))
 
-        if order(u, v)
-            add_edge!(graph, inverse(order, u), inverse(order, v))
+        if i < j
+            add_edge!(digraph, i, j)
         else
-            add_edge!(graph, inverse(order, v), inverse(order, u))
+            add_edge!(digraph, j, i)
         end
     end
     
-    OrderedGraph(graph, compose(order, ograph.order))
+    OrderedGraph(digraph, compose(order, graph.order))
 end
 
 
@@ -98,22 +113,20 @@ function etree(graph::OrderedGraph)
 end
 
     
-function Base.deepcopy(ograph::OrderedGraph)
-    order = deepcopy(ograph.order)
-    graph = deepcopy(ograph.graph)
-    OrderedGraph(graph, order)
+function Base.deepcopy(graph::OrderedGraph)
+    OrderedGraph(deepcopy(graph.order), deepcopy(graph.graph))
 end
 
 
 # Get the vertex σ(i).
-function permutation(ograph::OrderedGraph, i)
-    ograph.order[i]
+function permutation(graph::OrderedGraph, i)
+    graph.order[i]
 end
 
 
 # Get the index σ⁻¹(v).
-function inverse(ograph::OrderedGraph, v)
-    inverse(ograph.order, v)
+function inverse(graph::OrderedGraph, v)
+    inverse(graph.order, v)
 end
 
 
@@ -122,41 +135,41 @@ end
 ############################
 
 
-function BasicGraphs.ne(ograph::OrderedGraph)
-    ne(ograph.graph)
+function BasicGraphs.ne(graph::OrderedGraph)
+    ne(graph.graph)
 end
 
 
-function BasicGraphs.nv(ograph::OrderedGraph)
-    nv(ograph.graph)
+function BasicGraphs.nv(graph::OrderedGraph)
+    nv(graph.graph)
 end
 
 
-function BasicGraphs.inneighbors(ograph::OrderedGraph, i)
-    inneighbors(ograph.graph, i)
+function BasicGraphs.inneighbors(graph::OrderedGraph, i)
+    inneighbors(graph.graph, i)
 end
 
 
-function BasicGraphs.outneighbors(ograph::OrderedGraph, i)
-    outneighbors(ograph.graph, i)
+function BasicGraphs.outneighbors(graph::OrderedGraph, i)
+    outneighbors(graph.graph, i)
 end
 
 
-function BasicGraphs.edges(ograph::OrderedGraph)
-    edges(ograph.graph)
+function BasicGraphs.edges(graph::OrderedGraph)
+    edges(graph.graph)
 end
 
 
-function BasicGraphs.vertices(ograph::OrderedGraph)
-    vertices(ograph.graph)
+function BasicGraphs.vertices(graph::OrderedGraph)
+    vertices(graph.graph)
 end
     
 
-function BasicGraphs.src(ograph::OrderedGraph, i)
-    src(ograph.graph, i)
+function BasicGraphs.src(graph::OrderedGraph, i)
+    src(graph.graph, i)
 end
 
 
-function BasicGraphs.tgt(ograph::OrderedGraph, i)
-    tgt(ograph.graph, i)
+function BasicGraphs.tgt(graph::OrderedGraph, i)
+    tgt(graph.graph, i)
 end
