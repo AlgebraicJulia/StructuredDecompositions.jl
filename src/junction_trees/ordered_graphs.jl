@@ -1,8 +1,8 @@
 # An ordered graph (G, σ).
 struct OrderedGraph
-    lower::SparseMatrixCSC{Int64, Int64} # adjacency matrix (lower triangular)
-    upper::SparseMatrixCSC{Int64, Int64} # adjacency matrix (upper triangular)
-    order::Order                         # permutation
+    lower::SparseMatrixCSC{Bool, Int} # adjacency matrix (lower triangular)
+    upper::SparseMatrixCSC{Bool, Int} # adjacency matrix (upper triangular)
+    order::Order                      # permutation
 end
 
 
@@ -72,8 +72,8 @@ function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
     colptr_lower[n + 1] = m ÷ 2 + 1
     colptr_upper[n + 1] = m ÷ 2 + 1  
 
-    nzval_lower = ones(Int, m ÷ 2)
-    nzval_upper = ones(Int, m ÷ 2) 
+    nzval_lower = ones(Bool, m ÷ 2)
+    nzval_upper = ones(Bool, m ÷ 2) 
 
     lower = SparseMatrixCSC(n, n, colptr_lower, rowval_lower, nzval_lower)
     upper = SparseMatrixCSC(n, n, colptr_upper, rowval_upper, nzval_upper)
