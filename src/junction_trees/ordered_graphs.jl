@@ -87,10 +87,8 @@ function adjacencymatrix(graph::OrderedGraph)
 
     for i in 1:n
         colptr[i] = count
-        neighbor = collect(all_neighbors(graph, i))
-        sort!(neighbor)
 
-        for j in neighbor
+        for j in sort(all_neighbors(graph, i))
             rowval[count] = j
             count += 1
         end
