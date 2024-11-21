@@ -115,22 +115,32 @@ end
 
 
 # Construct the adjacency matrix of a graph.
-function adjacencymatrix(graph)
-    m = ne(graph)
-    n = nv(graph)
+function adjacencymatrix(graph::BasicGraphs.AbstractSymmetricGraph)
+    m = BasicGraphs.ne(graph)
+    n = BasicGraphs.nv(graph)
+    colptr = Vector{Int}(undef, n + 1)
+    rowval = Vector{Int}(undef, m)
+    count = 1
 
-    colptr = ones(Int, n + 1)
-    rowval = sizehint!(Int[], 2m)
+    for i in 1:n
+        colptr[i] = count
+        neighbor = collect(BasicGraphs.all_neighbors(graph, i))
+        sort!(neighbor)
 
-    for j in 1:n
-        ns = collect(all_neighbors(graph, j))
-        sort!(ns)
-        colptr[j + 1] = colptr[j] + length(ns)
-        append!(rowval, ns)
+        for j in neighbor
+            rowval[count] = j
+            count += 1
+        end
     end
 
-    nzval = ones(Bool, length(rowval))
+    colptr[n + 1] = m + 1
+    nzval = ones(Bool, m)
     SparseMatrixCSC(n, n, colptr, rowval, nzval)
+end
+
+
+function adjacencymatrix(graph::AbstractGraph)
+    adjacency_matrix(graph; dir=:both)
 end
 
 

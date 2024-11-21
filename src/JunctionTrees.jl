@@ -2,14 +2,15 @@ module JunctionTrees
 
 
 import AMD
+import Catlab.BasicGraphs
 import CuthillMcKee
 import LinkedLists
 import Metis
 import TreeWidthSolver
 
 using AbstractTrees
-using Catlab.BasicGraphs
 using DataStructures
+using Graphs
 using SparseArrays
 using SparseArrays: AbstractSparseMatrixCSC
 

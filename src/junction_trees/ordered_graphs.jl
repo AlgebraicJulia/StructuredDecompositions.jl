@@ -1,5 +1,5 @@
 # An ordered graph (G, σ).
-struct OrderedGraph
+struct OrderedGraph <: AbstractGraph{Int}
     lower::SparseMatrixCSC{Bool, Int} # adjacency matrix (lower triangular)
     upper::SparseMatrixCSC{Bool, Int} # adjacency matrix (upper triangular)
     order::Order                      # permutation
@@ -46,19 +46,16 @@ function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
     rowval_lower = Vector{Int}(undef, m ÷ 2)
     rowval_upper = Vector{Int}(undef, m ÷ 2)
 
-    colptr_lower[1] = 1
-    colptr_upper[1] = 1
-
     count_lower = 1
     count_upper = 1
 
     for i in 1:n
         colptr_lower[i] = count_lower
         colptr_upper[i] = count_upper
-        neighbors = inverse(order, rowvals(graph)[nzrange(graph, order[i])])
-        sort!(neighbors)
+        neighbor = inverse(order, rowvals(graph)[nzrange(graph, order[i])])
+        sort!(neighbor)
 
-        for j in neighbors
+        for j in neighbor
             if i < j
                 rowval_lower[count_lower] = j                
                 count_lower += 1
@@ -79,6 +76,30 @@ function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
     upper = SparseMatrixCSC(n, n, colptr_upper, rowval_upper, nzval_upper)
 
     OrderedGraph(lower, upper, order)
+end
+
+
+function adjacencymatrix(graph::OrderedGraph)
+    m = ne(graph)
+    n = nv(graph)
+    colptr = Vector{Int}(undef, n + 1)
+    rowval = Vector{Int}(undef, 2m)
+    count = 1
+
+    for i in 1:n
+        colptr[i] = count
+        neighbor = collect(all_neighbors(graph, i))
+        sort!(neighbor)
+
+        for j in neighbor
+            rowval[count] = j
+            count += 1
+        end
+    end
+
+    colptr[n + 1] = 2m + 1
+    nzval = ones(Bool, 2m)
+    SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end
 
 
@@ -150,46 +171,36 @@ end
 ############################
 
 
-function BasicGraphs.ne(graph::OrderedGraph)
+function Graphs.ne(graph::OrderedGraph)
     last(graph.lower.colptr) - 1
 end
 
 
-function BasicGraphs.nv(graph::OrderedGraph)
+function Graphs.nv(graph::OrderedGraph)
     size(graph.lower, 1)
 end
 
 
-function BasicGraphs.inneighbors(graph::OrderedGraph, i)
+function Graphs.inneighbors(graph::OrderedGraph, i::Integer)
     rowvals(graph.upper)[nzrange(graph.upper, i)]
 end
 
 
-function BasicGraphs.outneighbors(graph::OrderedGraph, i)
+function Graphs.outneighbors(graph::OrderedGraph, i::Integer)
     rowvals(graph.lower)[nzrange(graph.lower, i)]
 end
 
 
-function BasicGraphs.all_neighbors(graph::OrderedGraph, i)
-    Base.Iterators.flatten((inneighbors(graph, i), outneighbors(graph, i)))
+function Graphs.all_neighbors(graph::OrderedGraph, i::Integer)
+    [inneighbors(graph, i); outneighbors(graph, i)]
 end
 
 
-#function BasicGraphs.edges(graph::OrderedGraph)
-#    1:ne(graph)
-#end
+function Graphs.is_directed(::Type{OrderedGraph})
+    true
+end
 
 
-function BasicGraphs.vertices(graph::OrderedGraph)
+function Graphs.vertices(graph::OrderedGraph)
     1:nv(graph)
 end
-
-
-#function BasicGraphs.src(graph::OrderedGraph, i)
-#    src(graph.graph, i)
-#end
-
-
-#function BasicGraphs.tgt(graph::OrderedGraph, i)
-#    tgt(graph.graph, i)
-#end
