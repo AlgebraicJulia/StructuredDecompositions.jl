@@ -3,7 +3,7 @@
 
 A type of supernode. The options are
 - [`Node`](@ref)
-- [`Maximal](@ref)
+- [`Maximal`](@ref)
 - [`Fundamental`](@ref)
 """
 abstract type SupernodeType end
