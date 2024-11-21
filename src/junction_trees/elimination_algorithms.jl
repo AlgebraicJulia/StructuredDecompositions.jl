@@ -52,12 +52,12 @@ struct MCS <: EliminationAlgorithm end
 
 
 """
-    Order(graph::AbstractSymmetricGraph[, ealg::EliminationAlgorithm])
+    Order(graph[, ealg::EliminationAlgorithm])
 
 Construct an elimination order for a simple graph, optionally specifying an elimination algorithm.
 """
-function Order(graph::AbstractSymmetricGraph)
-    Order(graph, DEFAULT_ELIMINATION_ALGORITHM)
+function Order(graph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    Order(adjacencymatrix(graph), ealg)
 end
 
 
@@ -68,12 +68,6 @@ Construct an elimination order for a matrix, optionally specifying an eliminatio
 """
 function Order(matrix::AbstractMatrix)
     Order(matrix, DEFAULT_ELIMINATION_ALGORITHM)
-end
-
-
-# Construct an order.
-function Order(graph::AbstractSymmetricGraph, ealg::Union{CuthillMcKeeJL_RCM, AMDJL_AMD, MetisJL_ND, TreeWidthSolverJL_BT})
-    Order(adjacencymatrix(graph), ealg)
 end
 
 
@@ -118,13 +112,6 @@ end
 
 
 # Construct an order using the maximum cardinality search algorithm.
-function Order(graph::AbstractSymmetricGraph, ealg::MCS)
-    order, index = mcs(graph)
-    Order(order, index)
-end
-
-
-# Construct an order using the maximum cardinality search algorithm.
 function Order(matrix::AbstractMatrix, ealg::MCS)
     order, index = mcs(matrix)
     Order(order, index)
@@ -132,7 +119,7 @@ end
 
 
 # Construct the adjacency matrix of a graph.
-function adjacencymatrix(graph::AbstractSymmetricGraph)
+function adjacencymatrix(graph::HasGraph)
     m = ne(graph)
     n = nv(graph)
 
@@ -148,53 +135,6 @@ function adjacencymatrix(graph::AbstractSymmetricGraph)
 
     nzval = ones(Int, length(rowval))
     SparseMatrixCSC(n, n, colptr, rowval, nzval)
-end
-
-
-# Simple Linear-Time Algorithms to Test Chordality of Graphs, Test Acyclicity of Hypergraphs, and Selectively Reduce Acyclic Hypergraphs
-# Tarjan and Yannakakis
-# Maximum Cardinality Search
-function mcs(graph::AbstractSymmetricGraph)
-    n = nv(graph)
-    α = Vector{Int}(undef, n)
-    β = Vector{Int}(undef, n)
-    size = Vector{Int}(undef, n)
-    set = Vector{LinkedLists.LinkedList{Int}}(undef, n)
-    pointer = Vector{LinkedLists.ListNode{Int}}(undef, n)
-
-    for i in 1:n
-        size[i] = 1
-        set[i] = LinkedLists.LinkedList{Int}()
-        pointer[i] = push!(set[1], i)
-    end
-
-    i = n
-    j = 1
-
-    while i >= 1
-        v = first(set[j])
-        deleteat!(set[j], pointer[v])        
-        α[v] = i
-        β[i] = v
-        size[v] = 0
-
-        for w in neighbors(graph, v)
-            if size[w] >= 1
-                deleteat!(set[size[w]], pointer[w])
-                size[w] += 1
-                pointer[w] = push!(set[size[w]], w)
-            end
-        end
-
-        i -= 1
-        j += 1
-
-        while j >= 1 && isempty(set[j])
-            j -= 1
-        end
-    end
-
-    β, α
 end
 
 
