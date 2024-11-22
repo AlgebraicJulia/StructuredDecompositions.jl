@@ -1,7 +1,8 @@
 """
     Order <: AbstractVector{Int}
 
-A permutation ``\\sigma`` of the set ``\\{1, \\dots, n\\}``. This type implements the [abstract array interface](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array).
+A [permutation](https://en.wikipedia.org/wiki/Permutation) ``\\sigma`` of the set ``\\{1, \\dots, n\\}``.
+This type implements the [abstract array interface](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array).
 """
 struct Order <: AbstractVector{Int}
     order::Vector{Int} # permutation
@@ -38,34 +39,42 @@ function compose(left::Order, right::Order)
 end
 
 
-# Get the element σ(i).
+"""
+    permutation(order::Order, i::Integer)
+
+Get the element ``\\sigma(i)``.
+"""
 function permutation(order::Order, i::Integer)
     order[i]
 end
 
 
 """
-    permutation(order::Order, i)
+    permutation(order::Order, i::AbstractVector)
 
-Get the element ``\\sigma(i)``.
+Get the elements ``(\\sigma(i_1), \\dots, \\sigma(i_n))``.
 """
-function permutation(order::Order, i)
+function permutation(order::Order, i::AbstractVector)
     view(order, i)
 end
 
 
-# Get the index σ⁻¹(v),
+"""
+    inverse(order::Order, v::Integer)
+
+Get the index ``\\sigma^{-1}(v)``.
+"""
 function inverse(order::Order, v::Integer)
     order.index[v]
 end
 
 
 """
-    inverse(order::Order, v)
+    inverse(order::Order, v::AbstractVector)
 
-Get the index ``\\sigma^{-1}(v)``.
+Get the indices ``(\\sigma^{-1}(v_1), \\dots, \\sigma^{-1}(v_n))``.
 """
-function inverse(order::Order, v)
+function inverse(order::Order, v::AbstractVector)
     view(order.index, v)
 end
 

@@ -1,7 +1,8 @@
 """
     OrderedGraph <: AbstractSimpleGraph{Int}
 
-An ordered graph ``(G, \\sigma)``. This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
+An [ordered graph](https://en.wikipedia.org/wiki/Ordered_graph) ``(G, \\sigma)``.
+This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
 """
 struct OrderedGraph <: AbstractSimpleGraph{Int}
     lower::SparseMatrixCSC{Bool, Int} # adjacency matrix (lower triangular)
@@ -161,21 +162,41 @@ end
 
 
 """
-    permutation(graph::OrderedGraph, i)
+    permutation(graph::OrderedGraph, i::Integer)
 
-Get the vertex ``\\sigmq(i)``.
+Get the vertex ``\\sigma(i)``.
 """
-function permutation(graph::OrderedGraph, i)
+function permutation(graph::OrderedGraph, i::Integer)
     permutation(graph.order, i)
 end
 
 
 """
-    inverse(graph::OrderedGraph, v)
+    permutation(graph::OrderedGraph, i::AbstractVector)
+
+Get the vertices ``(\\sigma(i_1), \\dots, \\sigma(i_n))``.
+"""
+function permutation(graph::OrderedGraph, i::AbstractVector)
+    permutation(graph.order, i)
+end
+
+
+"""
+    inverse(graph::OrderedGraph, v::Integer)
 
 Get the index ``\\sigma^{-1}(v)``.
 """
-function inverse(graph::OrderedGraph, v)
+function inverse(graph::OrderedGraph, v::Integer)
+    inverse(graph.order, v)
+end
+
+
+"""
+    inverse(order::Order, v::AbstractVector)
+
+Get the indices ``(\\sigma^{-1}(v_1), \\dots, \\sigma^{-1}(v_n))``.
+"""
+function inverse(graph::OrderedGraph, v::AbstractVector)
     inverse(graph.order, v)
 end
 

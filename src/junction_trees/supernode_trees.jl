@@ -3,10 +3,10 @@ struct SupernodeTree
     tree::PostorderTree         # supernodal elimination tree
     graph::OrderedGraph         # ordered graph
     partition::Vector{Int}      # supernode partition
-    representative::Vector{Int} # representative vertex
-    cardinality::Vector{Int}    # supernode cardinality
-    ancestor::Vector{Int}       # first ancestor
-    degree::Vector{Int}         # higher degrees
+    representative::Vector{Int} # vector of representative vertices
+    cardinality::Vector{Int}    # vector of supernode cardinalities
+    ancestor::Vector{Int}       # vector of first ancestors
+    degree::Vector{Int}         # vector of higher degrees
 end
 
 

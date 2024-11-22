@@ -1,11 +1,12 @@
 """
     JunctionTree
 
-An ordered graph ``(G, \\sigma``) along with a junction tree. This type implements the [indexed tree interface](https://juliacollections.github.io/AbstractTrees.jl/stable/#The-Indexed-Tree-Interface).
+A [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a graph ``G``.
+This type implements the [indexed tree interface](https://juliacollections.github.io/AbstractTrees.jl/stable/#The-Indexed-Tree-Interface).
 """
 struct JunctionTree
     stree::SupernodeTree           # supernodal elimination tree
-    seperator::Vector{Vector{Int}} # seperator
+    seperator::Vector{Vector{Int}} # vector of seperators
 end
 
 
@@ -36,7 +37,7 @@ end
 """
     Order(jtree::JunctionTree)
 
-Construct the elimination ordering ``\\sigma``.
+Construct a perfect elimination ordering.
 """
 function Order(jtree::JunctionTree)
     Order(jtree.stree.graph) 
@@ -46,7 +47,7 @@ end
 """
     OrderedGraph(jtree::JunctionTree)
 
-Construct the ordered graph ``(G, \\sigma)``.
+Construct the ordered graph ``(G, \\sigma)``, where ``\\sigma`` is a perfect elimination ordering.
 """
 function OrderedGraph(jtree::JunctionTree)
     OrderedGraph(jtree.stree.graph)
@@ -56,7 +57,7 @@ end
 """
     clique(jtree::JunctionTree, i::Integer)
 
-Get the clique at node `i`.
+Get the clique at node ``i``.
 """
 function clique(jtree::JunctionTree, i::Integer)
     [residual(jtree, i); seperator(jtree, i)]
@@ -66,7 +67,7 @@ end
 """
     seperator(jtree::JunctionTree, i::Integer)
 
-Get the seperator at node `i`.
+Get the seperator at node ``i``.
 """
 function seperator(jtree::JunctionTree, i::Integer)
     permutation(jtree.stree.graph, jtree.seperator[i])
@@ -76,52 +77,81 @@ end
 """
     residual(jtree::JunctionTree, i::Integer)
 
-Get the residual at node `i`.
+Get the residual at node ``i``.
 """
 function residual(jtree::JunctionTree, i::Integer)
     permutation(jtree.stree.graph, supernode(jtree.stree, i))
 end
 
 
-# Find the unique node i satisfying v ∈ residual(i).
-function in_residual(jtree::JunctionTree, v::Integer)
+"""
+    in_clique(jtree::JunctionTree, v::Integer)
+
+Find a node `i` safisfying `v ∈ clique(jtree, i)`.
+"""
+function in_clique(jtree::JunctionTree, v::Integer)
     in_supernode(jtree.stree, inverse(jtree.stree.graph, v))
 end
 
 
-# Find the least node i such that v ∩ residual(i) is nonempty.
-# If there exists a clique containing v, then v ⊆ clique(i).
-function in_residual(jtree::JunctionTree, v)
-    in_supernode(jtree.stree, minimum(inverse(jtree.stree.graph, v)))
+"""
+    in_clique(jtree::JunctionTree, set::AbstractVector)
+
+Find a node `i` satisfying `set ⊆ clique(jtree, i)`. In none exists, return `nothing`.
+"""
+function in_clique(jtree::JunctionTree, set::AbstractVector)
+    minimum = length(jtree)
+    maximum = 1
+
+    for i in inverse(jtree.stree.graph, set)
+        minimum = min(minimum, i)
+        maximum = max(maximum, i)
+    end
+
+    if maximum <= last(jtree.seperator[minimum])
+        i
+    end
 end
 
 
-# Construct the inclusion seperator(i) → clique(i).
+"""
+    seperator_to_clique(jtree::JunctionTree, i::Integer)
+
+Construct a vector `index` satisfying `seperator(jtree, i) == clique(jtree, i)[index]`
+"""
 function seperator_to_clique(jtree::JunctionTree, i::Integer)
-    res = supernode(jtree.stree, i)
-    sep = jtree.seperator[i]
-    length(res) + 1:length(res) + length(sep)
+    residual = supernode(jtree.stree, i)
+    seperator = jtree.seperator[i]
+    length(residual) + 1:length(residual) + length(seperator)
 end
 
 
-# Construct the inclusion seperator(i) → clique(parent(i)).
+"""
+    seperator_to_parent(jtree::JunctionTree, i::Integer)
+
+Construct a vector `index` satisfying `seperator(jtree, i) == clique(jtree, parent(jtree, i))[index]`.
+"""
 function seperator_to_parent(jtree::JunctionTree, i::Integer)
     j = parentindex(jtree, i)
-    sep = jtree.seperator[j]
-    res = supernode(jtree.stree, j)
+    residual = supernode(jtree.stree, j)
+    seperator = jtree.seperator[j]
 
     map(jtree.seperator[i]) do v
-        if v in res
-            v - first(res) + 1
+        if v in residual
+            v - first(residual) + 1
         else
-            length(res) + searchsortedfirst(sep, v)
+            length(residual) + searchsortedfirst(seperator, v)
         end
     end
 end
 
 
-# Construct the inclusion set → clique(i).
-function set_to_clique(jtree::JunctionTree, i::Integer, set)
+"""
+    set_to_clique(jtree::JunctionTree, i::Integer, set::AbstractVector)
+
+Construct a vector `index` satisfying `set == clique(jtree, i)[index]`.
+"""
+function set_to_clique(jtree::JunctionTree, i::Integer, set::AbstractVector)
     res = supernode(jtree.stree, i)
     sep = jtree.seperator[i]
 
