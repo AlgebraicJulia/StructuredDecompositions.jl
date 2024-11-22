@@ -54,7 +54,7 @@ end
 
 
 # Compute the width of a supernodal elimination tree.
-function width(stree::SupernodeTree)
+function treewidth(stree::SupernodeTree)
     maximum(stree.degree[stree.representative])
 end
 

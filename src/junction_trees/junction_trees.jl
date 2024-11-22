@@ -166,18 +166,18 @@ end
 
 
 """
-    width(jtree::JunctionTree)
+    treewidth(jtree::JunctionTree)
 
 Compute the width of a junction tree.
 """
-function width(jtree::JunctionTree)
-    width(jtree.stree)
+function treewidth(jtree::JunctionTree)
+    treewidth(jtree.stree)
 end
 
 
 # Multiline printing.
 function Base.show(io::IO, ::MIME"text/plain", jtree::JunctionTree)
-    n = width(jtree)
+    n = treewidth(jtree)
     print(io, "width: $n\njunction tree:\n")
     
     print_tree(io, IndexNode(jtree)) do io, node
