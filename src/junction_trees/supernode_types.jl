@@ -3,7 +3,7 @@
 
 A type of supernode. The options are
 - [`Node`](@ref)
-- [`Maximal](@ref)
+- [`Maximal`](@ref)
 - [`Fundamental`](@ref)
 """
 abstract type SupernodeType end
@@ -66,7 +66,7 @@ function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeT
         end
     end
 
-    new, parent, first_anc
+    new_in_clique, new, parent, first_anc
 end
 
 

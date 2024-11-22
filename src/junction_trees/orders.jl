@@ -26,11 +26,9 @@ function Order(order::AbstractVector)
 end
 
 
-# Determine if i < j, where
-#    u = σ(i)
-#    v = σ(j)
-function (order::Order)(u, v)
-    inverse(order, u) < inverse(order, v)
+# Construct a copy of a permutation.
+function Order(order::Order)
+    Order(order.order, order.index)
 end
 
 
@@ -40,15 +38,33 @@ function compose(left::Order, right::Order)
 end
 
 
-# Construct the inverse permutation.
+# Construct the inverse permutation σ⁻¹.
 function inverse(order::Order)
     Order(order.index, order.order)
 end
 
 
+# Get the element σ(i).
+function permutation(order::Order, i::Integer)
+    order[i]
+end
+
+
+# Get the elements (σ(i₁, ..., iₙ)).
+function permutation(order::Order, i)
+    view(order, i)
+end
+
+
 # Get the index σ⁻¹(v),
-function inverse(order::Order, v)
+function inverse(order::Order, v::Integer)
     order.index[v]
+end
+
+
+# Get the indices (σ⁻¹(v₁), ..., σ(vₙ))
+function inverse(order::Order, v)
+    view(order.index, v)
 end
 
 
@@ -69,9 +85,4 @@ end
 
 function Base.size(order::Order)
     (length(order.order),)
-end
-
-
-function Base.deepcopy(order::Order)
-    Order(copy(order.order), copy(order.index))
 end

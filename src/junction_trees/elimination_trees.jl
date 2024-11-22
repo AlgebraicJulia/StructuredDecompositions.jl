@@ -12,7 +12,7 @@ end
 #    ealg     elimination algorithm
 # ----------------------------------------
 function EliminationTree(
-        graph::AbstractSymmetricGraph,
+        graph,
         ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM)
     EliminationTree(OrderedGraph(graph, ealg))
 end

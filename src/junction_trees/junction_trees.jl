@@ -10,13 +10,13 @@ end
 
 
 """
-    JunctionTree(graph::AbstractSymmetricGraph[, ealg::Union{Order, EliminationAlgorithm}[, stype::SupernodeType]])
+    JunctionTree(graph[, ealg::Union{Order, EliminationAlgorithm}[, stype::SupernodeType]])
 
 Construct a tree decomposition of a connected simple graph, optionally specifying an elimination algorithm and
 a supernode type.
 """
 function JunctionTree(
-    graph::AbstractSymmetricGraph,
+    graph,
     ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
     stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
@@ -34,9 +34,19 @@ end
 
 
 """
+    Order(jtree::JunctionTree)
+
+Construct the elimination ordering of junction tree.
+"""
+function Order(jtree::JunctionTree)
+    Order(jtree.stree.graph) 
+end
+
+
+"""
     clique(jtree::JunctionTree, i::Integer)
 
-Get the clique at node i.
+Get the clique at node `i`.
 """
 function clique(jtree::JunctionTree, i::Integer)
     [residual(jtree, i); seperator(jtree, i)]
@@ -46,7 +56,7 @@ end
 """
     seperator(jtree::JunctionTree, i::Integer)
 
-Get the seperator at node i.
+Get the seperator at node `i`.
 """
 function seperator(jtree::JunctionTree, i::Integer)
     permutation(jtree.stree.graph, jtree.seperator[i])
@@ -56,10 +66,22 @@ end
 """
     residual(jtree::JunctionTree, i::Integer)
 
-Get the residual at node i.
+Get the residual at node `i`.
 """
 function residual(jtree::JunctionTree, i::Integer)
     permutation(jtree.stree.graph, supernode(jtree.stree, i))
+end
+
+
+# Find the least node i such that v ∈ clique(i).
+function findnode(jtree::JunctionTree, v::Integer)
+    findnode(jtree.stree, inverse(jtree.stree.graph, v))
+end
+
+
+# Find the least node i such that v ⊆ clique(i).
+function findnode(jtree::JunctionTree, v)
+    findnode(jtree.stree, minimum(inverse(jtree.stree.graph, v)))
 end
 
 
@@ -124,7 +146,8 @@ function width(jtree::JunctionTree)
 end
 
 
-function Base.show(io::IO, jtree::JunctionTree)
+# Multiline printing.
+function Base.show(io::IO, ::MIME"text/plain", jtree::JunctionTree)
     n = width(jtree)
     print(io, "width: $n\njunction tree:\n")
     

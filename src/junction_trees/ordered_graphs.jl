@@ -1,68 +1,124 @@
 # An ordered graph (G, σ).
-struct OrderedGraph
-    graph::Graph # graph
-    order::Order # permutation
+struct OrderedGraph <: AbstractSimpleGraph{Int}
+    lower::SparseMatrixCSC{Bool, Int} # adjacency matrix (lower triangular)
+    upper::SparseMatrixCSC{Bool, Int} # adjacency matrix (upper triangular)
+    order::Order                      # permutation
 end
 
 
 # Given a graph G, construct the ordered graph
 #    (G, σ),
-# where the permutation σ is computed using an elimination algorithm.
+# where σ is a permutation computed using an elimination algorithm.
 # ----------------------------------------
-#    sgraph    simple connected graph
+#    graph     simple connected graph
 #    ealg      elimination algorithm
 # ----------------------------------------
-function OrderedGraph(sgraph::AbstractSymmetricGraph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    OrderedGraph(sgraph, Order(sgraph, ealg))
+function OrderedGraph(graph, ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM)
+    OrderedGraph(adjacencymatrix(graph), ealg)
 end
 
 
-# Given a graph G and permutation σ, construct the ordered graph
-#    (G, σ).
+# Given a graph G, construct the ordered graph
+#    (G, σ),
+# where σ is a permutation computed using an elimination algorithm.
 # ----------------------------------------
-#    sgraph    simple connected graph
+#    graph     simple connected graph
+#    ealg      elimination algorithm
+# ----------------------------------------
+function OrderedGraph(graph::AbstractMatrix, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    OrderedGraph(graph, Order(graph, ealg))
+end
+
+
+# Given a graph H and permutation σ, construct the ordered graph
+#    (G, σ)
+# ----------------------------------------
+#    graph     simple connected graph
 #    order     vertex order
 # ----------------------------------------
-function OrderedGraph(sgraph::AbstractSymmetricGraph, order::Order)
-    n = nv(sgraph)
-    graph = Graph(n)
+function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
+    m = last(nzrange(graph, size(graph, 1)))
+    n = size(graph, 1)
 
-    for e in edges(sgraph)
-        u = src(sgraph, e)
-        v = tgt(sgraph, e)
-        
-        if order(u, v)
-            add_edge!(graph, inverse(order, u), inverse(order, v))
+    colptr_lower = Vector{Int}(undef, n + 1)
+    colptr_upper = Vector{Int}(undef, n + 1)
+
+    rowval_lower = Vector{Int}(undef, m ÷ 2)
+    rowval_upper = Vector{Int}(undef, m ÷ 2)
+
+    count_lower = 1
+    count_upper = 1
+
+    for i in 1:n
+        colptr_lower[i] = count_lower
+        colptr_upper[i] = count_upper
+        neighbor = sort(inverse(order, rowvals(graph)[nzrange(graph, order[i])]))
+
+        for j in neighbor
+            if i < j
+                rowval_lower[count_lower] = j                
+                count_lower += 1
+            else
+                rowval_upper[count_upper] = j
+                count_upper += 1
+            end
         end
     end
 
-    OrderedGraph(graph, order)
+    colptr_lower[n + 1] = m ÷ 2 + 1
+    colptr_upper[n + 1] = m ÷ 2 + 1  
+
+    nzval_lower = ones(Bool, m ÷ 2)
+    nzval_upper = ones(Bool, m ÷ 2) 
+
+    lower = SparseMatrixCSC(n, n, colptr_lower, rowval_lower, nzval_lower)
+    upper = SparseMatrixCSC(n, n, colptr_upper, rowval_upper, nzval_upper)
+
+    OrderedGraph(lower, upper, order)
 end
 
 
 # Given an ordered graph (G, σ) and permutation μ, construct the ordered graph
 #    (G, σ ∘ μ).
 # ----------------------------------------
-#    ograph    ordered graph
+#    graph     ordered graph
 #    order     permutation
 # ----------------------------------------
-function OrderedGraph(ograph::OrderedGraph, order::Order)
-    n = nv(ograph)
-    graph = Graph(n)
+function OrderedGraph(graph::OrderedGraph, order::Order)
+    newgraph = OrderedGraph(adjacencymatrix(graph), order)
+    OrderedGraph(newgraph.lower, newgraph.upper, compose(order, graph.order))
+end
 
-    for e in edges(ograph)
-        u = src(ograph, e)
-        v = tgt(ograph, e)
 
-        if order(u, v)
-            add_edge!(graph, inverse(order, u), inverse(order, v))
-        else
-            add_edge!(graph, inverse(order, v), inverse(order, u))
+# Construct the permutation σ.
+function Order(graph::OrderedGraph)
+    Order(graph.order)
+end
+
+
+# Construct the adjacency matrix of an ordered graph.
+function adjacencymatrix(graph::OrderedGraph)
+    m = ne(graph)
+    n = nv(graph)
+    colptr = Vector{Int}(undef, n + 1)
+    rowval = Vector{Int}(undef, 2m)
+    count = 1
+
+    for i in 1:n
+        colptr[i] = count
+
+        for j in sort(all_neighbors(graph, i))
+            rowval[count] = j
+            count += 1
         end
     end
-    
-    OrderedGraph(graph, compose(order, ograph.order))
+
+    colptr[n + 1] = 2m + 1
+    nzval = ones(Bool, 2m)
+    SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end
+
+
 
 
 # A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
@@ -97,24 +153,24 @@ function etree(graph::OrderedGraph)
     parent
 end
 
-    
-function Base.deepcopy(ograph::OrderedGraph)
-    order = deepcopy(ograph.order)
-    graph = deepcopy(ograph.graph)
-    OrderedGraph(graph, order)
-end
-
 
 # Get the vertex σ(i).
-function permutation(ograph::OrderedGraph, i)
-    ograph.order[i]
+function permutation(graph::OrderedGraph, i)
+    permutation(graph.order, i)
 end
 
 
 # Get the index σ⁻¹(v).
-function inverse(ograph::OrderedGraph, v)
-    inverse(ograph.order, v)
+function inverse(graph::OrderedGraph, v)
+    inverse(graph.order, v)
 end
+
+
+# Multiline printing.
+function Base.show(io::IO, ::MIME"text/plain", graph::OrderedGraph)
+    print(io, "ordered graph:\n")
+    SparseArrays._show_with_braille_patterns(io, graph.lower)
+end 
 
 
 ############################
@@ -122,41 +178,43 @@ end
 ############################
 
 
-function BasicGraphs.ne(ograph::OrderedGraph)
-    ne(ograph.graph)
+function SimpleGraphs.is_directed(::Type{OrderedGraph})
+    true
 end
 
 
-function BasicGraphs.nv(ograph::OrderedGraph)
-    nv(ograph.graph)
+function SimpleGraphs.edgetype(graph::OrderedGraph)
+    SimpleEdge{Int}
 end
 
 
-function BasicGraphs.inneighbors(ograph::OrderedGraph, i)
-    inneighbors(ograph.graph, i)
+function SimpleGraphs.ne(graph::OrderedGraph)
+    last(graph.lower.colptr) - 1
 end
 
 
-function BasicGraphs.outneighbors(ograph::OrderedGraph, i)
-    outneighbors(ograph.graph, i)
+function SimpleGraphs.nv(graph::OrderedGraph)
+    size(graph.lower, 1)
 end
 
 
-function BasicGraphs.edges(ograph::OrderedGraph)
-    edges(ograph.graph)
+function SimpleGraphs.badj(graph::OrderedGraph, i::Integer)
+    view(rowvals(graph.upper), nzrange(graph.upper, i))
 end
 
 
-function BasicGraphs.vertices(ograph::OrderedGraph)
-    vertices(ograph.graph)
-end
-    
-
-function BasicGraphs.src(ograph::OrderedGraph, i)
-    src(ograph.graph, i)
+function SimpleGraphs.fadj(graph::OrderedGraph, i::Integer)
+    view(rowvals(graph.lower), nzrange(graph.lower, i))
 end
 
 
-function BasicGraphs.tgt(ograph::OrderedGraph, i)
-    tgt(ograph.graph, i)
+function SimpleGraphs.all_neighbors(graph::OrderedGraph, i::Integer)
+    [inneighbors(graph, i); outneighbors(graph, i)]
+end
+
+
+function SimpleGraphs.has_edge(graph::OrderedGraph, edge::SimpleEdge{Int})
+    i = src(edge)
+    j = dst(edge)
+    i < j && insorted(j, outneighbors(graph, i))
 end
