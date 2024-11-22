@@ -166,26 +166,6 @@ end
 
 
 """
-    length(jtree::JunctionTree)
-
-Get the number of nodes in a junction tree.
-"""
-function Base.length(jtree::JunctionTree)
-    length(jtree.stree.tree)
-end
-
-
-"""
-    height(jtree::JunctionTree)
-
-Compute the height of a junction tree.
-"""
-function height(jtree::JunctionTree)
-    height(jtree.stree.tree)
-end
-
-
-"""
     width(jtree::JunctionTree)
 
 Compute the width of a junction tree.
@@ -209,6 +189,16 @@ end
 ##########################
 # Indexed Tree Interface #
 ##########################
+
+
+function AbstractTrees.treesize(jtree::JunctionTree)
+    treesize(jtree.stree.tree)
+end
+
+
+function AbstractTrees.treeheight(jtree::JunctionTree)
+    treeheight(jtree.stree.tree)
+end
 
 
 function AbstractTrees.rootindex(jtree::JunctionTree)

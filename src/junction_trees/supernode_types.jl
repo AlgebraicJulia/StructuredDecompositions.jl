@@ -37,7 +37,7 @@ struct Fundamental <: SupernodeType end
 # Pothen and Sun
 # Figure 4: The Clique Tree Algorithm 2
 function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeType)
-    n = length(etree.tree)
+    n = treesize(etree.tree)
     new_in_clique = Vector{Int}(undef, n)
     new = Vector{Int}[]
     parent = Int[]

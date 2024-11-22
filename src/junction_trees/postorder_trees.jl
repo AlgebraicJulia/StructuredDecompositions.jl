@@ -1,9 +1,10 @@
 # A postordered rooted tree.
+# This type implements the indexed tree interface.
 struct PostorderTree
-    parent::Vector{Int}           # parent
-    children::Vector{Vector{Int}} # children
-    level::Vector{Int}            # level
-    descendant::Vector{Int}       # first descendant
+    parent::Vector{Int}           # vector of parents
+    children::Vector{Vector{Int}} # vector of children
+    level::Vector{Int}            # vector of levels
+    descendant::Vector{Int}       # vector of first descendants
 end
 
 
@@ -44,20 +45,15 @@ end
 #    order   postorder
 # ----------------------------------------
 function PostorderTree(tree::Tree, order::Order)
-    n = length(tree)
-    parent = collect(1:n)
+    n = treesize(tree)
+    parent = Vector{Int}(undef, n)
     
     for i in 1:n - 1
         parent[i] = inverse(order, parentindex(tree, order[i]))
     end
     
+    parent[n] = n
     PostorderTree(parent)
-end
-
-
-# The number of node in a tree.
-function Base.length(tree::PostorderTree)
-    length(tree.parent)
 end
 
 
@@ -73,21 +69,19 @@ function firstdescendant(tree::PostorderTree, i::Integer)
 end
 
 
-# Determine whether the node i is a descendant of the node j.
-function isdescendant(tree::PostorderTree, i::Integer, j::Integer)
-    getdescendant(tree, j) <= i < j
-end
-
-
-# Get the height of a tree.
-function height(tree::PostorderTree)
-    maximum(tree.level)
-end
-
-
 ##########################
 # Indexed Tree Interface #
 ##########################
+
+
+function AbstractTrees.treesize(tree::PostorderTree)
+    length(tree.parent)
+end
+
+
+function AbstractTrees.treeheight(tree::PostorderTree)
+    maximum(tree.level)
+end
 
 
 function AbstractTrees.parentindex(tree::PostorderTree, i::Integer)
@@ -103,7 +97,7 @@ end
 
 
 function AbstractTrees.rootindex(tree::PostorderTree)
-    length(tree)
+    treesize(tree)
 end
 
 

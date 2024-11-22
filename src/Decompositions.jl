@@ -214,7 +214,7 @@ end
 #    jtree    junction tree
 # ----------------------------------------
 function StrDecomp(graph::AbstractSymmetricGraph, jtree::JunctionTree)
-    n = length(jtree)
+    n = treesize(jtree)
     tree = Graph(n)
     
     for i in 1:n - 1
@@ -293,7 +293,7 @@ end
 
 
 function homomorphisms(graph::AbstractSymmetricGraph, jtree::JunctionTree)
-    n = length(jtree)
+    n = treesize(jtree)
     subgraph = Vector{Any}(undef, 2n - 1)
     homomorphism = Vector{Any}(undef, 2n - 2)
     

@@ -37,8 +37,8 @@ order = JunctionTrees.Order(1:17)
 # Figure 4.3
 jtree = JunctionTree(graph, order, Node())
 @test width(jtree) == 4
-@test height(jtree) == 7
-@test length(jtree) == 17
+@test treeheight(jtree) == 7
+@test treesize(jtree) == 17
 
 @test map(i -> parentindex(jtree, i), 1:17)  == [
     2,
@@ -124,8 +124,8 @@ jtree = JunctionTree(graph, order, Node())
 # Figure 4.7 (left)
 jtree = JunctionTree(graph, order, Maximal())
 @test width(jtree) == 4
-@test height(jtree) == 4
-@test length(jtree) == 8
+@test treeheight(jtree) == 4
+@test treesize(jtree) == 8
 
 @test map(i -> parentindex(jtree, i), 1:8)  == [
     5,
@@ -174,8 +174,8 @@ jtree = JunctionTree(graph, order, Maximal())
 # Figure 4.9
 jtree = JunctionTree(graph, order, Fundamental())
 @test width(jtree) == 4
-@test height(jtree) == 5
-@test length(jtree) == 12
+@test treeheight(jtree) == 5
+@test treesize(jtree) == 12
 
 @test map(i -> parentindex(jtree, i), 1:12)  == [
     7,

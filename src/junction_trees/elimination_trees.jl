@@ -52,7 +52,7 @@ end
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
 function supcnt(etree::EliminationTree{PostorderTree})
-    n = length(etree.tree)
+    n = treesize(etree.tree)
     
     #### Disjoint Set Union ####
     

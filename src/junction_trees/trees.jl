@@ -1,4 +1,5 @@
 # A rooted tree.
+# This type implements the indexed tree interface.
 struct Tree
     root::Int                     # root
     parent::Vector{Int}           # vector of parents
@@ -32,15 +33,9 @@ function Tree(parent::AbstractVector)
 end
 
 
-# Get the number of nodes in a tree.
-function Base.length(tree::Tree)
-    length(tree.parent)
-end
-
-
 # Compute a postordering of tree's vertices.
 function postorder(tree::Tree)
-    n = length(tree)
+    n = treesize(tree)
     order = Vector{Int}(undef, n)
     index = Vector{Int}(undef, n)
     
@@ -57,6 +52,11 @@ end
 ##########################
 # Indexed Tree Interface #
 ##########################
+
+
+function AbstractTrees.treesize(tree::Tree)
+    length(tree.parent)
+end
 
 
 function AbstractTrees.rootindex(tree::Tree)

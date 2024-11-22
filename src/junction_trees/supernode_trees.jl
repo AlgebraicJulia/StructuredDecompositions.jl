@@ -75,7 +75,7 @@ end
 
 # Compute the (unsorted) seperators of every node in T.
 function seperators(stree::SupernodeTree)
-    n = length(stree.tree)
+    n = treesize(stree.tree)
     seperator = Vector{Set{Int}}(undef, n)
 
     for i in 1:n - 1
