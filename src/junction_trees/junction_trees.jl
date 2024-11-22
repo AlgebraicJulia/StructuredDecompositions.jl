@@ -73,46 +73,55 @@ function residual(jtree::JunctionTree, i::Integer)
 end
 
 
-# Find the least node i such that v ∈ clique(i).
-function findnode(jtree::JunctionTree, v::Integer)
-    findnode(jtree.stree, inverse(jtree.stree.graph, v))
+# Find the unique node i satisfying v ∈ residual(i).
+function in_residual(jtree::JunctionTree, v::Integer)
+    in_supernode(jtree.stree, inverse(jtree.stree.graph, v))
 end
 
 
-# Find the least node i such that v ⊆ clique(i).
-function findnode(jtree::JunctionTree, v)
-    findnode(jtree.stree, minimum(inverse(jtree.stree.graph, v)))
+# Find the least node i such that v ∩ residual(i) is nonempty.
+# If there exists a clique containing v, then v ⊆ clique(i).
+function in_residual(jtree::JunctionTree, v)
+    in_supernode(jtree.stree, minimum(inverse(jtree.stree.graph, v)))
+end
+
+
+# Construct the inclusion seperator(i) → clique(i).
+function seperator_to_clique(jtree::JunctionTree, i::Integer)
+    res = supernode(jtree.stree, i)
+    sep = jtree.seperator[i]
+    length(res) + 1:length(res) + length(sep)
 end
 
 
 # Construct the inclusion seperator(i) → clique(parent(i)).
 function seperator_to_parent(jtree::JunctionTree, i::Integer)
     j = parentindex(jtree, i)
-    sep = jtree.seperator[i]
-    sep_parent = jtree.seperator[j]
-    res_parent = supernode(jtree.stree, j)
+    sep = jtree.seperator[j]
+    res = supernode(jtree.stree, j)
 
-    i = 0
-    index = Vector{Int}(undef, length(sep))
-    
-    for (j, v) in enumerate(sep)
-        if v in res_parent
-            index[j] = v - first(res_parent) + 1
+    map(jtree.seperator[i]) do v
+        if v in res
+            v - first(res) + 1
         else
-            i += searchsortedfirst(view(sep_parent, i + 1:length(sep_parent)), v)
-            index[j] = length(res_parent) + i
+            length(res) + searchsortedfirst(sep, v)
         end
     end
-
-    index
 end
 
 
-# Construct the inclusion seperator(i) → clique(i).
-function seperator_to_self(jtree::JunctionTree, i::Integer)
-    sep = jtree.seperator[i]
+# Construct the inclusion set → clique(i).
+function set_to_clique(jtree::JunctionTree, i::Integer, set)
     res = supernode(jtree.stree, i)
-    length(res) + 1:length(res) + length(sep)
+    sep = jtree.seperator[i]
+
+    map(inverse(jtree.stree.graph, set)) do v
+        if v in res
+            v - first(res) + 1
+        else
+            length(res) + searchsortedfirst(sep, v)
+        end
+    end
 end
 
 

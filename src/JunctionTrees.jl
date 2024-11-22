@@ -29,7 +29,7 @@ export Node, Maximal, Fundamental
 
 
 # Junction Trees
-export JunctionTree, width, height, seperator, residual, clique, seperator_to_parent, seperator_to_self
+export JunctionTree, width, height, seperator, residual, clique, seperator_to_parent, seperator_to_clique, set_to_clique, in_residual
 
 
 include("junction_trees/orders.jl")

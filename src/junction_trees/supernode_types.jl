@@ -70,37 +70,42 @@ function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeT
 end
 
 
-# Find a child w of v such that
-# v ∈ snd(w).
+# Find a child w of v such that v ∈ supernode(w).
 # If no such child exists, return nothing.
 function child_in_supernode(etree::EliminationTree, degree::AbstractVector, stype::Node, v::Integer) end
 
 
-# Find a child w of v such that
-# v ∈ snd(w).
+# Find a child w of v such that v ∈ supernode(w).
 # If no such child exists, return nothing.
 function child_in_supernode(etree::EliminationTree, degree::AbstractVector, stype::Maximal, v::Integer)
+    u = nothing
+
     for w in childindices(etree.tree, v)
         if degree[w] == degree[v] + 1
-            return w
+            u = w
+            break
         end
     end
+
+    u
 end
 
 
-# Find a child w of v such that
-# v ∈ snd(w).
+# Find a child w of v such that v ∈ supernode(w).
 # If no such child exists, return nothing.
 function child_in_supernode(etree::EliminationTree, degree::AbstractVector, stype::Fundamental, v::Integer)
-    ws = childindices(etree.tree, v)
+    u = nothing
 
-    if length(ws) == 1
-        w = only(ws)
-
-        if degree[w] == degree[v] + 1
-            return w
+    for w in childindices(etree.tree, v)
+        if isnothing(u) && degree[w] == degree[v] + 1
+            u = w
+        else
+            u = nothing
+            break
         end
     end
+
+    u
 end
 
 

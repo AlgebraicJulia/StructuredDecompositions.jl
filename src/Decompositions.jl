@@ -315,7 +315,7 @@ function homomorphisms(graph::AbstractSymmetricGraph, jtree::JunctionTree)
     
     for i in 1:n - 1
         # seperator(i) → clique(i)
-        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], seperator_to_self(jtree, i))
+        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], seperator_to_clique(jtree, i))
     end
     
     subgraph, homomorphism
