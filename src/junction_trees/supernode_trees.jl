@@ -2,9 +2,11 @@
 struct SupernodeTree
     tree::PostorderTree         # supernodal elimination tree
     graph::OrderedGraph         # ordered graph
-    partition::Vector{Int}      # supernode partition
     representative::Vector{Int} # vector of representative vertices
     cardinality::Vector{Int}    # vector of supernode cardinalities
+
+    # cache
+    partition::Vector{Int}      # supernode partition
     ancestor::Vector{Int}       # vector of first ancestors
     degree::Vector{Int}         # vector of higher degrees
 end
@@ -49,7 +51,7 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
     representative = inverse(order, map(first, supernode))
     cardinality = map(length, supernode)
 
-    SupernodeTree(tree, graph, partition, representative, cardinality, ancestor, degree)
+    SupernodeTree(tree, graph, representative, cardinality, partition, ancestor, degree)
 end
 
 

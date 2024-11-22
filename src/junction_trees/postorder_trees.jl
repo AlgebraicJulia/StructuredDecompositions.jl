@@ -3,6 +3,8 @@
 struct PostorderTree
     parent::Vector{Int}           # vector of parents
     children::Vector{Vector{Int}} # vector of children
+
+    # cache
     level::Vector{Int}            # vector of levels
     descendant::Vector{Int}       # vector of first descendants
 end
