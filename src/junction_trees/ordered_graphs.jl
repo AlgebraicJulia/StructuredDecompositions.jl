@@ -1,4 +1,8 @@
-# An ordered graph (G, σ).
+"""
+    OrderedGraph <: AbstractSimpleGraph{Int}
+
+An ordered graph ``(G, \\sigma)``. This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
+"""
 struct OrderedGraph <: AbstractSimpleGraph{Int}
     lower::SparseMatrixCSC{Bool, Int} # adjacency matrix (lower triangular)
     upper::SparseMatrixCSC{Bool, Int} # adjacency matrix (upper triangular)
@@ -6,13 +10,11 @@ struct OrderedGraph <: AbstractSimpleGraph{Int}
 end
 
 
-# Given a graph G, construct the ordered graph
-#    (G, σ),
-# where σ is a permutation computed using an elimination algorithm.
-# ----------------------------------------
-#    graph     simple connected graph
-#    ealg      elimination algorithm
-# ----------------------------------------
+"""
+    OrderedGraph(graph[, ealg::Union{Order, EliminationAlgorithm}])
+
+Construct an ordered graph, optionally specifying an elimination algorithm.
+"""
 function OrderedGraph(graph, ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM)
     OrderedGraph(adjacencymatrix(graph), ealg)
 end
@@ -90,7 +92,11 @@ function OrderedGraph(graph::OrderedGraph, order::Order)
 end
 
 
-# Construct the permutation σ.
+"""
+    Order(graph::OrderedGraph)
+
+Construct the permutation ``\\sigma``.
+"""
 function Order(graph::OrderedGraph)
     Order(graph.order)
 end
@@ -154,13 +160,21 @@ function etree(graph::OrderedGraph)
 end
 
 
-# Get the vertex σ(i).
+"""
+    permutation(graph::OrderedGraph, i)
+
+Get the vertex ``\\sigmq(i)``.
+"""
 function permutation(graph::OrderedGraph, i)
     permutation(graph.order, i)
 end
 
 
-# Get the index σ⁻¹(v).
+"""
+    inverse(graph::OrderedGraph, v)
+
+Get the index ``\\sigma^{-1}(v)``.
+"""
 function inverse(graph::OrderedGraph, v)
     inverse(graph.order, v)
 end

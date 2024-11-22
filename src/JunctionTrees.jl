@@ -17,11 +17,15 @@ using SparseArrays: AbstractSparseMatrixCSC
 
 
 # Orders
-export Order, inverse
+export Order, permutation, inverse
 
 
 # Elimination Algorithms
 export AMDJL_AMD, CuthillMcKeeJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS
+
+
+# Ordered Graphs
+export OrderedGraph
 
 
 # Supernode Types

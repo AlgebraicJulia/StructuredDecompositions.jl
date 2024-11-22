@@ -1,7 +1,7 @@
 """
     JunctionTree
 
-A junction tree.
+An ordered graph ``(G, \\sigma``) along with a junction tree. This type implements the [indexed tree interface](https://juliacollections.github.io/AbstractTrees.jl/stable/#The-Indexed-Tree-Interface).
 """
 struct JunctionTree
     stree::SupernodeTree           # supernodal elimination tree
@@ -36,10 +36,20 @@ end
 """
     Order(jtree::JunctionTree)
 
-Construct the elimination ordering of junction tree.
+Construct the elimination ordering ``\\sigma``.
 """
 function Order(jtree::JunctionTree)
     Order(jtree.stree.graph) 
+end
+
+
+"""
+    OrderedGraph(jtree::JunctionTree)
+
+Construct the ordered graph ``(G, \\sigma)``.
+"""
+function OrderedGraph(jtree::JunctionTree)
+    OrderedGraph(jtree.stree.graph)
 end
 
 
