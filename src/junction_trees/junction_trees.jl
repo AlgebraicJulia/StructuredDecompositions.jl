@@ -85,32 +85,22 @@ end
 
 
 """
-    in_clique(jtree::JunctionTree, v::Integer)
+    find_node(jtree::JunctionTree, v::Integer)
 
 Find a node `i` safisfying `v ∈ clique(jtree, i)`.
 """
-function in_clique(jtree::JunctionTree, v::Integer)
-    in_supernode(jtree.stree, inverse(jtree.stree.graph, v))
+function find_node(jtree::JunctionTree, v::Integer)
+    find_node(jtree.stree, inverse(jtree.stree.graph, v))
 end
 
 
 """
-    in_clique(jtree::JunctionTree, set::AbstractVector)
+    find_node(jtree::JunctionTree, set::AbstractVector)
 
-Find a node `i` satisfying `set ⊆ clique(jtree, i)`. In none exists, return `nothing`.
+Find a node `i` satisfying `set ⊆ clique(jtree, i)`.
 """
-function in_clique(jtree::JunctionTree, set::AbstractVector)
-    minimum = length(jtree)
-    maximum = 1
-
-    for i in inverse(jtree.stree.graph, set)
-        minimum = min(minimum, i)
-        maximum = max(maximum, i)
-    end
-
-    if maximum <= last(jtree.seperator[minimum])
-        i
-    end
+function find_node(jtree::JunctionTree, set::AbstractVector)
+    find_node(jtree.stree, minimum(inverse(jtree.stree.graph, set)))
 end
 
 
@@ -152,14 +142,14 @@ end
 Construct a vector `index` satisfying `set == clique(jtree, i)[index]`.
 """
 function set_to_clique(jtree::JunctionTree, i::Integer, set::AbstractVector)
-    res = supernode(jtree.stree, i)
-    sep = jtree.seperator[i]
+    residual = supernode(jtree.stree, i)
+    sepeperator = jtree.seperator[i]
 
     map(inverse(jtree.stree.graph, set)) do v
-        if v in res
-            v - first(res) + 1
+        if v in residual
+            v - first(residual) + 1
         else
-            length(res) + searchsortedfirst(sep, v)
+            length(residual) + searchsortedfirst(seperator, v)
         end
     end
 end

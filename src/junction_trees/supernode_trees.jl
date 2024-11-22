@@ -68,7 +68,7 @@ end
 
 
 # Get the unique node j satisfying i ∈ supernode(j).
-function in_supernode(stree::SupernodeTree, i::Integer)
+function find_node(stree::SupernodeTree, i::Integer)
     stree.partition[i]
 end
 
