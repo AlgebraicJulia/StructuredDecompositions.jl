@@ -172,7 +172,7 @@ function mcs(graph::AbstractSparseMatrixCSC)
         β[i] = v
         len[v] = 0
 
-        for w in rowvals(graph)[nzrange(graph, v)]
+        for w in view(rowvals(graph), nzrange(graph, v))
             if len[w] >= 1
                 deleteat!(set[len[w]], pointer[w])
                 len[w] += 1

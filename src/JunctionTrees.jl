@@ -9,6 +9,7 @@ import Metis
 import TreeWidthSolver
 
 using AbstractTrees
+using Base.Order: Ordering
 using DataStructures
 using Graphs
 using Graphs.SimpleGraphs
@@ -17,7 +18,7 @@ using SparseArrays: AbstractSparseMatrixCSC
 
 
 # Orders
-export Order, permutation, inverse
+export Order
 
 
 # Elimination Algorithms

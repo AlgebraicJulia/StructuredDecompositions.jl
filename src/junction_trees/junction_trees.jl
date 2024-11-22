@@ -70,7 +70,7 @@ end
 Get the seperator at node ``i``.
 """
 function seperator(jtree::JunctionTree, i::Integer)
-    permutation(jtree.stree.graph, jtree.seperator[i])
+    view(Order(jtree), jtree.seperator[i])
 end
 
 
@@ -80,7 +80,7 @@ end
 Get the residual at node ``i``.
 """
 function residual(jtree::JunctionTree, i::Integer)
-    permutation(jtree.stree.graph, supernode(jtree.stree, i))
+    view(Order(jtree), supernode(jtree.stree, i))
 end
 
 
@@ -90,7 +90,7 @@ end
 Find a node `i` safisfying `v ∈ clique(jtree, i)`.
 """
 function find_node(jtree::JunctionTree, v::Integer)
-    find_node(jtree.stree, inverse(jtree.stree.graph, v))
+    find_node(jtree.stree, inv(Order(jtree))[v])
 end
 
 
@@ -100,7 +100,7 @@ end
 Find a node `i` satisfying `set ⊆ clique(jtree, i)`.
 """
 function find_node(jtree::JunctionTree, set::AbstractVector)
-    find_node(jtree.stree, minimum(inverse(jtree.stree.graph, set)))
+    find_node(jtree.stree, minimum(view(inv(Order(jtree)), set)))
 end
 
 
@@ -145,7 +145,7 @@ function set_to_clique(jtree::JunctionTree, i::Integer, set::AbstractVector)
     residual = supernode(jtree.stree, i)
     sepeperator = jtree.seperator[i]
 
-    map(inverse(jtree.stree.graph, set)) do v
+    map(view(inv(Order(jtree)), set)) do v
         if v in residual
             v - first(residual) + 1
         else

@@ -55,7 +55,7 @@ function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
     for i in 1:n
         colptr_lower[i] = count_lower
         colptr_upper[i] = count_upper
-        neighbor = sort(inverse(order, rowvals(graph)[nzrange(graph, order[i])]))
+        neighbor = sort(view(inv(order), view(rowvals(graph), nzrange(graph, order[i]))))
 
         for j in neighbor
             if i < j
@@ -158,46 +158,6 @@ function etree(graph::OrderedGraph)
 
     parent[n] = n
     parent
-end
-
-
-"""
-    permutation(graph::OrderedGraph, i::Integer)
-
-Get the vertex ``\\sigma(i)``.
-"""
-function permutation(graph::OrderedGraph, i::Integer)
-    permutation(graph.order, i)
-end
-
-
-"""
-    permutation(graph::OrderedGraph, i::AbstractVector)
-
-Get the vertices ``(\\sigma(i_1), \\dots, \\sigma(i_n))``.
-"""
-function permutation(graph::OrderedGraph, i::AbstractVector)
-    permutation(graph.order, i)
-end
-
-
-"""
-    inverse(graph::OrderedGraph, v::Integer)
-
-Get the index ``\\sigma^{-1}(v)``.
-"""
-function inverse(graph::OrderedGraph, v::Integer)
-    inverse(graph.order, v)
-end
-
-
-"""
-    inverse(order::Order, v::AbstractVector)
-
-Get the indices ``(\\sigma^{-1}(v_1), \\dots, \\sigma^{-1}(v_n))``.
-"""
-function inverse(graph::OrderedGraph, v::AbstractVector)
-    inverse(graph.order, v)
 end
 
 

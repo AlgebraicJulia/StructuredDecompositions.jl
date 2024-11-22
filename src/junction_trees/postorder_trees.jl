@@ -51,7 +51,7 @@ function PostorderTree(tree::Tree, order::Order)
     parent = Vector{Int}(undef, n)
     
     for i in 1:n - 1
-        parent[i] = inverse(order, parentindex(tree, order[i]))
+        parent[i] = inv(order)[parentindex(tree, order[i])]
     end
     
     parent[n] = n

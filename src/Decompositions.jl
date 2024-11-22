@@ -323,7 +323,7 @@ end
 
 
 function induced_order(order::Order, elements::AbstractVector)
-    Order(sortperm(inverse(order, elements)))
+    Order(sortperm(view(inv(order), elements)))
 end
 
 

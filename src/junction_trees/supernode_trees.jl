@@ -39,7 +39,7 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
 
     order = postorder(tree)
     tree = PostorderTree(tree, order)
-    partition = inverse(order, partition)
+    partition = view(inv(order), partition)
     supernode = view(supernode, order)
     ancestor = view(ancestor, order)
 
@@ -47,8 +47,8 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
     graph = OrderedGraph(etree.graph, order)
     degree = view(degree, order)
     partition = view(partition, order)
-    ancestor = inverse(order, ancestor)
-    representative = inverse(order, map(first, supernode))
+    ancestor = view(inv(order), ancestor)
+    representative = view(inv(order), map(first, supernode))
     cardinality = map(length, supernode)
 
     SupernodeTree(tree, graph, representative, cardinality, partition, ancestor, degree)

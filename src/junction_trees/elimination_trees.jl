@@ -42,9 +42,8 @@ end
 # Figure 3: Implementation of algorithm to compute row and column counts.
 function supcnt(etree::EliminationTree)
     order = postorder(etree.tree)
-    index = inverse(order)
     rc, cc = supcnt(EliminationTree{PostorderTree}(etree, order))
-    rc[index], cc[index]
+    view(rc, inv(order)), view(cc, inv(order))
 end
 
 

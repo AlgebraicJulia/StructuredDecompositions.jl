@@ -40,51 +40,11 @@ end
 
 
 """
-    permutation(order::Order, i::Integer)
-
-Get the element ``\\sigma(i)``.
-"""
-function permutation(order::Order, i::Integer)
-    order[i]
-end
-
-
-"""
-    permutation(order::Order, i::AbstractVector)
-
-Get the elements ``(\\sigma(i_1), \\dots, \\sigma(i_n))``.
-"""
-function permutation(order::Order, i::AbstractVector)
-    view(order, i)
-end
-
-
-"""
-    inverse(order::Order, v::Integer)
-
-Get the index ``\\sigma^{-1}(v)``.
-"""
-function inverse(order::Order, v::Integer)
-    order.index[v]
-end
-
-
-"""
-    inverse(order::Order, v::AbstractVector)
-
-Get the indices ``(\\sigma^{-1}(v_1), \\dots, \\sigma^{-1}(v_n))``.
-"""
-function inverse(order::Order, v::AbstractVector)
-    view(order.index, v)
-end
-
-
-"""
     inverse(order::Order)
 
 Construct the inverse permutation ``\\sigma^{-1}``.
 """
-function inverse(order::Order)
+function Base.inv(order::Order)
     Order(order.index, order.order)
 end
 
