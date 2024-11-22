@@ -73,6 +73,18 @@ function residual(jtree::JunctionTree, i::Integer)
 end
 
 
+# Find the least node i such that v ∈ clique(i).
+function findnode(jtree::JunctionTree, v::Integer)
+    findnode(jtree.stree, inverse(jtree.stree.graph, v))
+end
+
+
+# Find the least node i such that v ⊆ clique(i).
+function findnode(jtree::JunctionTree, v)
+    findnode(jtree.stree, minimum(inverse(jtree.stree.graph, v)))
+end
+
+
 # Construct the inclusion seperator(i) → clique(parent(i)).
 function seperator_to_parent(jtree::JunctionTree, i::Integer)
     j = parentindex(jtree, i)

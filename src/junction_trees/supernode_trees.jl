@@ -2,6 +2,7 @@
 struct SupernodeTree
     tree::PostorderTree         # supernodal elimination tree
     graph::OrderedGraph         # ordered graph
+    partition::Vector{Int}      # supernode partition
     representative::Vector{Int} # representative vertex
     cardinality::Vector{Int}    # supernode cardinality
     ancestor::Vector{Int}       # first ancestor
@@ -31,24 +32,24 @@ end
 # ----------------------------------------
 function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     degree = outdegrees(etree)
-    supernode, parent, ancestor = stree(etree, degree, stype)
+    partition, supernode, parent, ancestor = stree(etree, degree, stype)
     tree = Tree(parent)
 
     order = postorder(tree)
     tree = PostorderTree(tree, order)
-    permute!(supernode, order)
-    permute!(ancestor, order)
+    partition = inverse(order, partition)
+    supernode = view(supernode, order)
+    ancestor = view(ancestor, order)
 
     order = Order(vcat(supernode...))
     graph = OrderedGraph(etree.graph, order)
-    permute!(degree, order)
-
-    representative = map(first, supernode)
-    cardinality = map(length, supernode)
+    degree = view(degree, order)
+    partition = view(partition, order)
     ancestor = inverse(order, ancestor)
-    representative = inverse(order, representative)
+    representative = inverse(order, map(first, supernode))
+    cardinality = map(length, supernode)
 
-    SupernodeTree(tree, graph, representative, cardinality, ancestor, degree)
+    SupernodeTree(tree, graph, partition, representative, cardinality, ancestor, degree)
 end
 
 
@@ -63,6 +64,12 @@ function supernode(stree::SupernodeTree, i::Integer)
     v = stree.representative[i]
     n = stree.cardinality[i]
     v:v + n - 1
+end
+
+
+# Get the unique node j satisfying i ∈ supernode(j).
+function findnode(stree::SupernodeTree, i::Integer)
+    stree.partition[i]
 end
 
 
