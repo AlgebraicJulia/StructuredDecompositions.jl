@@ -7,7 +7,6 @@ struct Tree
     root::Int           # root
 end
 
-
 # Construct a tree from a list of parents.
 # ----------------------------------------
 #    parent    list of parents
@@ -98,26 +97,19 @@ end
 
 function AbstractTrees.parentindex(tree::Tree, i::Integer)
     j = tree.parent[i]
-    i != j ? j : nothing
+
+    if i != j
+        j
+    end
 end
 
 
 function AbstractTrees.nextsiblingindex(tree::Tree, i::Integer)
     j = tree.next[i]
-    !iszero(j) ? j : nothing
-end
 
-
-function AbstractTrees.childindices(tree::Tree, i::Integer)
-    index = Int[]
-    j = tree.head[i]
-
-    while !iszero(j)
-        push!(index, j)
-        j = tree.next[j]
+    if !iszero(j)
+        j
     end
-
-    index
 end
 
 
