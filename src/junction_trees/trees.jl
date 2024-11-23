@@ -31,24 +31,6 @@ function Tree(parent::AbstractVector)
 end
 
 
-#=
-# Compute a postordering of tree's vertices.
-function postorder(tree::Tree)
-    n = treesize(tree)
-    order = Vector{Int}(undef, n)
-    index = Vector{Int}(undef, n)
-    
-    for node in PreOrderDFS(IndexNode(tree))
-        order[n] = node.index
-        index[node.index] = n
-        n -= 1
-    end
-    
-    Order(order, index)
-end
-=#
-
-
 # Compute a postordering of tree's vertices.
 function postorder(tree::Tree)
     #### Stack ####
