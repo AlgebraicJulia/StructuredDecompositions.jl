@@ -1,9 +1,10 @@
-# A rooted tree.
+# A left-child right-sibling binary tree.
 # This type implements the indexed tree interface.
 struct Tree
-    root::Int                     # root
-    parent::Vector{Int}           # vector of parents
-    children::Vector{Vector{Int}} # vector of children
+    parent::Vector{Int} # vector of parents
+    head::Vector{Int}   # vector of first children
+    next::Vector{Int}   # vector of next siblings
+    root::Int           # root
 end
 
 
@@ -12,24 +13,21 @@ end
 #    parent    list of parents
 # ----------------------------------------
 function Tree(parent::AbstractVector)
-    n = root = length(parent)
-    children = Vector{Vector{Int}}(undef, n)
-    
-    for i in 1:n
-        children[i] = []
-    end
+    n = length(parent)
+    head = zeros(Int, n)
+    next = zeros(Int, n)
+    root = n
 
-    for i in 1:n
-        j = parent[i]
-        
-        if i == j
+    for i in n:-1:1
+        if parent[i] == i
             root = i
         else
-            push!(children[j], i)
+            next[i] = head[parent[i]]
+            head[parent[i]] = i
         end
     end
 
-    Tree(root, parent, children)
+    Tree(parent, head, next, root)
 end
 
 
@@ -65,15 +63,33 @@ end
 
 
 function AbstractTrees.parentindex(tree::Tree, i::Integer)
-    if i != rootindex(tree)
-        tree.parent[i]
-    end
+    j = tree.parent[i]
+    !iszero(j) ? j : nothing
 end
 
 
 function AbstractTrees.childindices(tree::Tree, i::Integer)
-    tree.children[i]
+    index = Int[]
+    j = tree.head[i]
+
+    while !iszero(j)
+        push!(index, j)
+        j = tree.next[j]
+    end
+
+    index
 end
+
+
+#function AbstractTrees.nextsiblingindex(tree::Tree, i::Integer)
+#    j = tree.next[i]
+#    i != j ? j : nothing
+#end
+
+
+#function SiblingLinks(::Type{IndexNode{Tree, Int}})
+#    StoredSiblings()
+#end
 
 
 function AbstractTrees.NodeType(::Type{IndexNode{Tree, Int}})
