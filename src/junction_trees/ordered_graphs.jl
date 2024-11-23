@@ -52,8 +52,8 @@ end
 #    order     permutation
 # ----------------------------------------
 function OrderedGraph(graph::OrderedGraph, order::Order)
-    newgraph = OrderedGraph(adjacencymatrix(graph), order)
-    OrderedGraph(newgraph.lower, newgraph.upper, compose(order, graph.order))
+    graph_ = OrderedGraph(adjacencymatrix(graph), order)
+    OrderedGraph(graph_.lower, graph_.upper, compose(order, graph.order))
 end
 
 
@@ -69,26 +69,8 @@ end
 
 # Construct the adjacency matrix of an ordered graph.
 function adjacencymatrix(graph::OrderedGraph)
-    m = ne(graph)
-    n = nv(graph)
-    colptr = Vector{Int}(undef, n + 1)
-    rowval = Vector{Int}(undef, 2m)
-    count = 1
-
-    for i in 1:n
-        colptr[i] = count
-
-        for j in sort(all_neighbors(graph, i))
-            rowval[count] = j
-            count += 1
-        end
-    end
-
-    colptr[n + 1] = 2m + 1
-    nzval = ones(Bool, 2m)
-    SparseMatrixCSC(n, n, colptr, rowval, nzval)
+    graph.lower + graph.upper
 end
-
 
 
 # A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
