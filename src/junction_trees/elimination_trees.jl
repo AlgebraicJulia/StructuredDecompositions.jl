@@ -84,7 +84,7 @@ function supcnt(etree::EliminationTree{PostorderTree})
         wt[parentindex(etree.tree, p)] -= 1
 
         for u in outneighbors(etree.graph, p)
-            if firstdescendant(etree.tree, p) > prev_nbr[u]
+            if fdesc(etree.tree, p) > prev_nbr[u]
                 wt[p] += 1
                 pp = prev_p[u]
                 

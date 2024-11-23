@@ -1,12 +1,9 @@
 # A postordered rooted tree.
 # This type implements the indexed tree interface.
 struct PostorderTree
-    parent::Vector{Int}           # vector of parents
-    children::Vector{Vector{Int}} # vector of children
-
-    # cache
-    level::Vector{Int}            # vector of levels
-    descendant::Vector{Int}       # vector of first descendants
+    tree::Tree         # rooted tree
+    level::Vector{Int} # vector of levels
+    fdesc::Vector{Int} # vector of first descendants
 end
 
 
@@ -15,29 +12,23 @@ end
 #    parent    list of parents
 # ----------------------------------------
 function PostorderTree(parent::AbstractVector)
-    n = length(parent)
-    children = Vector{Vector{Int}}(undef, n)
+    tree = Tree(parent)
+    n = treesize(tree)
     level = Vector{Int}(undef, n)
-    descendant = Vector{Int}(undef, n)
-    
-    for i in 1:n
-        children[i] = []
-        level[i] = 0
-        descendant[i] = i
-    end
-    
-    for i in 1:n - 1
-        j = parent[i]
-        push!(children[j], i)
-        descendant[j] = min(descendant[i], descendant[j])
-    end
-    
+    fdesc = Vector{Int}(undef, n)
+    level[n] = 0
+    fdesc[n] = n
+
     for i in n - 1:-1:1
-        j = parent[i]
-        level[i] = level[j] + 1
+        level[i] = level[parentindex(tree, i)] + 1
+        fdesc[i] = i
+    end
+
+    for i in 1:n - 1
+        fdesc[parentindex(tree, i)] = min(fdesc[i], fdesc[parentindex(tree, i)])
     end
     
-    PostorderTree(parent, children, level, descendant)
+    PostorderTree(tree, level, fdesc)
 end
 
 
@@ -66,8 +57,8 @@ end
 
 
 # Get the first descendant of a node i.
-function firstdescendant(tree::PostorderTree, i::Integer)
-    tree.descendant[i]
+function fdesc(tree::PostorderTree, i::Integer)
+    tree.fdesc[i]
 end
 
 
@@ -77,7 +68,7 @@ end
 
 
 function AbstractTrees.treesize(tree::PostorderTree)
-    length(tree.parent)
+    treesize(tree.tree)
 end
 
 
@@ -87,19 +78,17 @@ end
 
 
 function AbstractTrees.parentindex(tree::PostorderTree, i::Integer)
-    if i != rootindex(tree)
-        tree.parent[i]
-    end
+    parentindex(tree.tree, i)
 end
 
 
 function AbstractTrees.childindices(tree::PostorderTree, i::Integer)
-    tree.children[i]
+    childindices(tree.tree, i)
 end
 
 
 function AbstractTrees.rootindex(tree::PostorderTree)
-    treesize(tree)
+    rootindex(tree.tree, i)
 end
 
 

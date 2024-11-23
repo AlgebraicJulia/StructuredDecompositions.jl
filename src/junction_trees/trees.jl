@@ -1,4 +1,4 @@
-# A left-child right-sibling binary tree.
+# A rooted tree.
 # This type implements the indexed tree interface.
 struct Tree
     parent::Vector{Int} # vector of parents
