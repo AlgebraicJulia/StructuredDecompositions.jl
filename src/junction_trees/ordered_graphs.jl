@@ -48,12 +48,13 @@ end
 # Given an ordered graph (G, σ) and permutation μ, construct the ordered graph
 #    (G, σ ∘ μ).
 # ----------------------------------------
-#    graph     ordered graph
-#    order     permutation
+#    graph           ordered graph
+#    permutation     permutation
 # ----------------------------------------
-function OrderedGraph(graph::OrderedGraph, order::Order)
-    graph_ = OrderedGraph(adjacencymatrix(graph), order)
-    OrderedGraph(graph_.lower, graph_.upper, compose(order, graph.order))
+function OrderedGraph(graph::OrderedGraph, permutation::Order)
+    order = graph.order
+    graph = OrderedGraph(adjacencymatrix(graph), permutation)
+    OrderedGraph(graph.lower, graph.upper, compose(permutation, order))
 end
 
 
@@ -69,7 +70,7 @@ end
 
 # Construct the adjacency matrix of an ordered graph.
 function adjacencymatrix(graph::OrderedGraph)
-    graph.lower + graph.upper
+    graph.lower .|| graph.upper
 end
 
 
