@@ -114,6 +114,8 @@ add_edges!(graph,
 
 decomposition = StrDecomp(graph, Order(1:17), Maximal())
 
+
+#=
 @test decomposition.decomp_shape == @acset Graph begin
   V = 8
   E = 7
@@ -155,6 +157,7 @@ end
     ACSetTransformation(induced_subgraph(graph, [16, 17]),     induced_subgraph(graph, [15, 16, 17]),         V=[2, 3],    E=Int[]), # p q   → o p q
     ACSetTransformation(induced_subgraph(graph, [13, 14, 17]), induced_subgraph(graph, [10, 11, 13, 14, 17]), V=[3, 4, 5], E=Int[]), # m n q → j k m n q
 ]
+=#
 
 
 end

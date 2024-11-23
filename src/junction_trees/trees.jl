@@ -31,6 +31,7 @@ function Tree(parent::AbstractVector)
 end
 
 
+#=
 # Compute a postordering of tree's vertices.
 function postorder(tree::Tree)
     n = treesize(tree)
@@ -44,6 +45,124 @@ function postorder(tree::Tree)
     end
     
     Order(order, index)
+end
+=#
+
+
+# Compute a postordering of tree's vertices.
+function postorder(tree::Tree)
+    n = treesize(tree)
+    order = Vector{Int}(undef, n)
+    index = Vector{Int}(undef, n)
+
+    #=
+    k = 1
+
+    head = copy(tree.head)
+    next = copy(tree.next)
+    post = Vector{Int}(undef, n)
+    stack = Vector{Int}(undef, n)
+
+    top = 1
+    stack[1] = tree.root
+    while top >= 1
+        p = stack[top]
+        i = head[p]
+        if i == 0
+            top -= 1
+            post[k] = p
+            k += 1
+        else
+            head[p] = next[i]
+            top += 1
+            stack[top] = i
+        end
+    end
+
+    Order(post)
+    =#
+
+    #### Stack ####
+
+    #=
+    top = 0
+    items = Vector{Int}(undef, n)
+
+    function empty()
+        iszero(top)
+    end
+
+    function push(i)
+        top += 1
+        items[top] = i
+    end
+
+    function pop()
+        top -= 1
+        items[top + 1]
+    end
+
+    ###############
+
+    k = 1
+
+    head = copy(tree.head)
+    next = tree.next
+    post = Vector{Int}(undef, n)
+
+    push(rootindex(tree))
+
+    while !empty()
+        p = pop()
+        i = head[p]
+
+        if iszero(i)
+            post[k] = p
+            k += 1
+        else
+            head[p] = next[i]
+            push(p)
+            push(i)
+        end
+    end
+   
+    Order(post)
+    =#
+
+    #### Stack ###
+
+    top = 0
+    items = Vector{Int}(undef, n)
+
+    ##############
+
+    k = 1
+
+    head = copy(tree.head)
+    next = tree.next
+    post = Vector{Int}(undef, n)
+
+    top += 1
+    items[top] = rootindex(tree)
+
+    while !iszero(top)
+        p = items[top]
+        i = head[p]
+        top -= 1
+
+        if iszero(i)
+            post[k] = p
+            k += 1
+        else
+            head[p] = next[i]
+            top += 1
+            items[top] = p
+            top += 1
+            items[top] = i
+        end
+    end
+   
+    Order(post)
 end
 
 
@@ -64,6 +183,12 @@ end
 
 function AbstractTrees.parentindex(tree::Tree, i::Integer)
     j = tree.parent[i]
+    i != j ? j : nothing
+end
+
+
+function AbstractTrees.nextsiblingindex(tree::Tree, i::Integer)
+    j = tree.next[i]
     !iszero(j) ? j : nothing
 end
 
@@ -81,15 +206,9 @@ function AbstractTrees.childindices(tree::Tree, i::Integer)
 end
 
 
-#function AbstractTrees.nextsiblingindex(tree::Tree, i::Integer)
-#    j = tree.next[i]
-#    i != j ? j : nothing
-#end
-
-
-#function SiblingLinks(::Type{IndexNode{Tree, Int}})
-#    StoredSiblings()
-#end
+function AbstractTrees.SiblingLinks(::Type{IndexNode{Tree, Int}})
+    StoredSiblings()
+end
 
 
 function AbstractTrees.NodeType(::Type{IndexNode{Tree, Int}})
