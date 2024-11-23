@@ -5,6 +5,7 @@ An [ordered graph](https://en.wikipedia.org/wiki/Ordered_graph) ``(G, \\sigma)``
 This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
 """
 struct OrderedGraph <: AbstractSimpleGraph{Int}
+    adjmx::SparseMatrixCSC{Bool, Int} # adjacency matrix
     lower::SparseMatrixCSC{Bool, Int} # adjacency matrix (lower triangular)
     upper::SparseMatrixCSC{Bool, Int} # adjacency matrix (upper triangular)
     order::Order                      # permutation
@@ -41,7 +42,7 @@ end
 # ----------------------------------------
 function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
     graph = permute(graph, order, order)
-    OrderedGraph(tril(graph), triu(graph), order)
+    OrderedGraph(graph, tril(graph), triu(graph), order)
 end
 
 
@@ -52,9 +53,9 @@ end
 #    permutation     permutation
 # ----------------------------------------
 function OrderedGraph(graph::OrderedGraph, permutation::Order)
-    order = graph.order
-    graph = OrderedGraph(adjacencymatrix(graph), permutation)
-    OrderedGraph(graph.lower, graph.upper, compose(permutation, order))
+    order = compose(permutation, graph.order)
+    graph = OrderedGraph(graph.adjmx, permutation)
+    OrderedGraph(graph.adjmx, graph.lower, graph.upper, order)
 end
 
 
@@ -65,12 +66,6 @@ Construct the permutation ``\\sigma``.
 """
 function Order(graph::OrderedGraph)
     copy(graph.order)
-end
-
-
-# Construct the adjacency matrix of an ordered graph.
-function adjacencymatrix(graph::OrderedGraph)
-    graph.lower .|| graph.upper
 end
 
 
@@ -109,7 +104,7 @@ end
 
 # Construct a copy of an ordered graph.
 function Base.copy(graph::OrderedGraph)
-    OrderedGraph(graph.lower, graph.upper, graph.order)
+    OrderedGraph(graph.adjmx, graph.lower, graph.upper, graph.order)
 end
 
 
@@ -156,7 +151,7 @@ end
 
 
 function SimpleGraphs.all_neighbors(graph::OrderedGraph, i::Integer)
-    [inneighbors(graph, i); outneighbors(graph, i)]
+    view(rowvals(graph.adjmx), nzrange(graph.adjmx, i))
 end
 
 
