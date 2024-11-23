@@ -3,7 +3,6 @@ struct SupernodeTree
     tree::PostorderTree         # supernodal elimination tree
     graph::OrderedGraph         # ordered graph
     representative::Vector{Int} # vector of representative vertices
-    cardinality::Vector{Int}    # vector of supernode cardinalities
 
     # cache
     partition::Vector{Int}      # supernode partition
@@ -48,24 +47,24 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
     degree = view(degree, order)
     partition = view(partition, order)
     ancestor = view(inv(order), ancestor)
-    representative = view(inv(order), map(first, supernode))
-    cardinality = map(length, supernode)
 
-    SupernodeTree(tree, graph, representative, cardinality, partition, ancestor, degree)
+    representative = Vector{Int}(undef, treesize(tree) + 1)
+    representative[1:end - 1] .= view(inv(order), map(first, supernode))
+    representative[end] = representative[end - 1] + length(supernode[end])
+
+    SupernodeTree(tree, graph, representative, partition, ancestor, degree)
 end
 
 
 # Compute the width of a supernodal elimination tree.
 function treewidth(stree::SupernodeTree)
-    maximum(stree.degree[stree.representative])
+    maximum(stree.degree)
 end
 
 
 # Get the (sorted) supernode at node i.
 function supernode(stree::SupernodeTree, i::Integer)
-    v = stree.representative[i]
-    n = stree.cardinality[i]
-    v:v + n - 1
+    stree.representative[i]:stree.representative[i + 1] - 1
 end
 
 
