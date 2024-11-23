@@ -33,10 +33,12 @@ end
 
 # Compute a postordering of tree's vertices.
 function postorder(tree::Tree)
+    n = treesize(tree)
+
     #### Stack ####
 
     top = Ref{Int}(0)
-    items = Vector{Int}(undef, treesize(tree))
+    items = Vector{Int}(undef, n)
 
     function empty()
         iszero(top[])
@@ -55,8 +57,8 @@ function postorder(tree::Tree)
     ###############
 
     push(rootindex(tree))
-    order = Vector{Int}(undef, treesize(tree))
-    index = Vector{Int}(undef, treesize(tree))
+    order = Vector{Int}(undef, n)
+    index = Vector{Int}(undef, n)
     head = copy(tree.head)
     count = 1
 
