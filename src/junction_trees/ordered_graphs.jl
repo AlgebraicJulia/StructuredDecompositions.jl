@@ -40,44 +40,8 @@ end
 #    order     vertex order
 # ----------------------------------------
 function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
-    m = last(nzrange(graph, size(graph, 1)))
-    n = size(graph, 1)
-
-    colptr_lower = Vector{Int}(undef, n + 1)
-    colptr_upper = Vector{Int}(undef, n + 1)
-
-    rowval_lower = Vector{Int}(undef, m ÷ 2)
-    rowval_upper = Vector{Int}(undef, m ÷ 2)
-
-    count_lower = 1
-    count_upper = 1
-
-    for i in 1:n
-        colptr_lower[i] = count_lower
-        colptr_upper[i] = count_upper
-        neighbor = sort(view(inv(order), view(rowvals(graph), nzrange(graph, order[i]))))
-
-        for j in neighbor
-            if i < j
-                rowval_lower[count_lower] = j                
-                count_lower += 1
-            else
-                rowval_upper[count_upper] = j
-                count_upper += 1
-            end
-        end
-    end
-
-    colptr_lower[n + 1] = m ÷ 2 + 1
-    colptr_upper[n + 1] = m ÷ 2 + 1  
-
-    nzval_lower = ones(Bool, m ÷ 2)
-    nzval_upper = ones(Bool, m ÷ 2) 
-
-    lower = SparseMatrixCSC(n, n, colptr_lower, rowval_lower, nzval_lower)
-    upper = SparseMatrixCSC(n, n, colptr_upper, rowval_upper, nzval_upper)
-
-    OrderedGraph(lower, upper, order)
+    graph = permute(graph, order, order)
+    OrderedGraph(tril(graph), triu(graph), order)
 end
 
 

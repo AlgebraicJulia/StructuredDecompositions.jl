@@ -13,6 +13,7 @@ using Base.Order: Ordering
 using DataStructures
 using Graphs
 using Graphs.SimpleGraphs
+using LinearAlgebra
 using SparseArrays
 using SparseArrays: AbstractSparseMatrixCSC
 
