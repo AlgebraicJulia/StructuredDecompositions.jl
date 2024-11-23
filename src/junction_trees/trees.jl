@@ -51,118 +51,49 @@ end
 
 # Compute a postordering of tree's vertices.
 function postorder(tree::Tree)
-    n = treesize(tree)
-    order = Vector{Int}(undef, n)
-    index = Vector{Int}(undef, n)
-
-    #=
-    k = 1
-
-    head = copy(tree.head)
-    next = copy(tree.next)
-    post = Vector{Int}(undef, n)
-    stack = Vector{Int}(undef, n)
-
-    top = 1
-    stack[1] = tree.root
-    while top >= 1
-        p = stack[top]
-        i = head[p]
-        if i == 0
-            top -= 1
-            post[k] = p
-            k += 1
-        else
-            head[p] = next[i]
-            top += 1
-            stack[top] = i
-        end
-    end
-
-    Order(post)
-    =#
-
     #### Stack ####
 
-    #=
-    top = 0
-    items = Vector{Int}(undef, n)
+    top = Ref{Int}(0)
+    items = Vector{Int}(undef, treesize(tree))
 
     function empty()
-        iszero(top)
+        iszero(top[])
     end
 
     function push(i)
-        top += 1
-        items[top] = i
+        top[] += 1
+        items[top[]] = i
     end
 
     function pop()
-        top -= 1
-        items[top + 1]
+        top[] -= 1
+        items[top[] + 1]
     end
 
     ###############
 
-    k = 1
-
-    head = copy(tree.head)
-    next = tree.next
-    post = Vector{Int}(undef, n)
-
     push(rootindex(tree))
+    order = Vector{Int}(undef, treesize(tree))
+    index = Vector{Int}(undef, treesize(tree))
+    head = copy(tree.head)
+    count = 1
 
     while !empty()
-        p = pop()
-        i = head[p]
+        j = pop()
+        i = head[j]
 
         if iszero(i)
-            post[k] = p
-            k += 1
+            order[count] = j
+            index[j] = count
+            count += 1
         else
-            head[p] = next[i]
-            push(p)
+            head[j] = tree.next[i]
+            push(j)
             push(i)
         end
     end
    
-    Order(post)
-    =#
-
-    #### Stack ###
-
-    top = 0
-    items = Vector{Int}(undef, n)
-
-    ##############
-
-    k = 1
-
-    head = copy(tree.head)
-    next = tree.next
-    post = Vector{Int}(undef, n)
-
-    top += 1
-    items[top] = rootindex(tree)
-
-    while !iszero(top)
-        p = items[top]
-        i = head[p]
-        top -= 1
-
-        if iszero(i)
-            post[k] = p
-            k += 1
-        else
-            head[p] = next[i]
-            top += 1
-            items[top] = p
-            top += 1
-            items[top] = i
-        end
-    end
-   
-    Order(post)
+    Order(order, index)
 end
 
 
