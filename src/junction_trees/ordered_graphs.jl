@@ -91,7 +91,6 @@ end
 
 
 
-
 # A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
 # Liu
 # Algorithm 4.2: Elimination Tree by Path Compression.
@@ -107,13 +106,13 @@ function etree(graph::OrderedGraph)
         for k in inneighbors(graph, i)
             r = k
 
-            while ancestor[r] != 0 && ancestor[r] != i
+            while !iszero(ancestor[r]) && ancestor[r] != i
                 t = ancestor[r]
                 ancestor[r] = i
                 r = t
             end
 
-            if ancestor[r] == 0
+            if iszero(ancestor[r])
                 ancestor[r] = i
                 parent[r] = i
             end
