@@ -50,7 +50,7 @@ end
 Construct the ordered graph ``(G, \\sigma)``, where ``\\sigma`` is a perfect elimination ordering.
 """
 function OrderedGraph(jtree::JunctionTree)
-    OrderedGraph(jtree.stree.graph)
+    copy(jtree.stree.graph)
 end
 
 
@@ -60,7 +60,7 @@ end
 Get the clique at node ``i``.
 """
 function clique(jtree::JunctionTree, i::Integer)
-    [residual(jtree, i); seperator(jtree, i)]
+    view(Order(jtree), [supernode(jtree.stree, i); jtree.seperator[i]])
 end
 
 
@@ -85,73 +85,22 @@ end
 
 
 """
-    find_node(jtree::JunctionTree, v::Integer)
+    find_clique(jtree::JunctionTree, v::Integer)
 
 Find a node `i` safisfying `v ∈ clique(jtree, i)`.
 """
-function find_node(jtree::JunctionTree, v::Integer)
-    find_node(jtree.stree, inv(Order(jtree))[v])
+function find_clique(jtree::JunctionTree, v::Integer)
+    find_supernode(jtree.stree, inv(Order(jtree))[v])
 end
 
 
 """
-    find_node(jtree::JunctionTree, set::AbstractVector)
+    find_clique(jtree::JunctionTree, set::AbstractVector)
 
-Find a node `i` satisfying `set ⊆ clique(jtree, i)`.
+Find a node `i` satisfying `vertices ⊆ clique(jtree, i)`.
 """
-function find_node(jtree::JunctionTree, set::AbstractVector)
-    find_node(jtree.stree, minimum(view(inv(Order(jtree)), set)))
-end
-
-
-"""
-    seperator_to_clique(jtree::JunctionTree, i::Integer)
-
-Construct a vector `index` satisfying `seperator(jtree, i) == clique(jtree, i)[index]`
-"""
-function seperator_to_clique(jtree::JunctionTree, i::Integer)
-    residual = supernode(jtree.stree, i)
-    seperator = jtree.seperator[i]
-    length(residual) + 1:length(residual) + length(seperator)
-end
-
-
-"""
-    seperator_to_parent(jtree::JunctionTree, i::Integer)
-
-Construct a vector `index` satisfying `seperator(jtree, i) == clique(jtree, parent(jtree, i))[index]`.
-"""
-function seperator_to_parent(jtree::JunctionTree, i::Integer)
-    j = parentindex(jtree, i)
-    residual = supernode(jtree.stree, j)
-    seperator = jtree.seperator[j]
-
-    map(jtree.seperator[i]) do v
-        if v in residual
-            v - first(residual) + 1
-        else
-            length(residual) + searchsortedfirst(seperator, v)
-        end
-    end
-end
-
-
-"""
-    set_to_clique(jtree::JunctionTree, i::Integer, set::AbstractVector)
-
-Construct a vector `index` satisfying `set == clique(jtree, i)[index]`.
-"""
-function set_to_clique(jtree::JunctionTree, i::Integer, set::AbstractVector)
-    residual = supernode(jtree.stree, i)
-    sepeperator = jtree.seperator[i]
-
-    map(view(inv(Order(jtree)), set)) do v
-        if v in residual
-            v - first(residual) + 1
-        else
-            length(residual) + searchsortedfirst(seperator, v)
-        end
-    end
+function find_clique(jtree::JunctionTree, vertices::AbstractVector)
+    find_supernode(jtree.stree, minimum(view(inv(Order(jtree)), vertices)))
 end
 
 
@@ -172,6 +121,55 @@ function Base.show(io::IO, ::MIME"text/plain", jtree::JunctionTree)
     
     print_tree(io, IndexNode(jtree)) do io, node
         show(IOContext(io, :compact => true, :limit => true), clique(jtree, node.index))
+    end
+end
+
+
+#########
+# Lifts #
+#########
+# In principal, cliques are subsets C ⊆ V. In practice, we represent them by vectors
+#    C: n → V
+# Given another vector S: m → V, we may wish to find a vector L: m → n satisfying
+#      C
+#    n → V
+#      ↖ ↑ S
+#      L m
+# The vector L is called a lift, and we write L: S → C.
+
+
+# Compute the lift L: seperator(i) → clique(i). This satisfies
+#    seperator(jtree, i) == clique(jtree, i)[lift_sep(jtree, i)]
+function lift_sep(jtree::JunctionTree, i::Integer)
+    residual = supernode(jtree.stree, i)
+    seperator = jtree.seperator[i]
+    length(residual) + 1:length(residual) + length(seperator)
+end
+
+# Compute the lift L: seperator(i) → clique(parent(i)). This satisfies
+#    seperator(jtree, i) == clique(jtree, parentindex(jtree, i)[lift_sep_par(jtree, i)]
+function lift_par(jtree::JunctionTree, i::Integer)
+    lift_ind(jtree, jtree.seperator[i], parentindex(jtree, i))
+end
+
+
+# Compute the lift L: vertices → clique(i). This satisfies
+#    vertices == clique(jtree, i)[lift(jtree, vertices, i)]
+function lift(jtree::JunctionTree, vertices::AbstractVector, i::Integer)
+    lift_ind(jtree, view(inv(Order(jtree)), vertices), i)
+end
+
+
+function lift_ind(jtree::JunctionTree, indices::AbstractVector, i::Integer)
+    residual = supernode(jtree.stree, i)
+    seperator = jtree.seperator[i]
+
+    map(indices) do v
+        if v in residual
+            v - first(residual) + 1
+        else
+            length(residual) + searchsortedfirst(seperator, v)
+        end
     end
 end
 

@@ -34,7 +34,7 @@ export Node, Maximal, Fundamental
 
 
 # Junction Trees
-export JunctionTree, treewidth, seperator, residual, clique, seperator_to_parent, seperator_to_clique, set_to_clique, find_node
+export JunctionTree, treewidth, seperator, residual, clique, find_clique, lift_par, lift_sep, lift
 
 
 include("junction_trees/orders.jl")

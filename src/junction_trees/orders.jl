@@ -27,15 +27,15 @@ function Order(order::AbstractVector)
 end
 
 
-# Construct a copy of a permutation.
-function Order(order::Order)
-    Order(order.order, order.index)
-end
-
-
 # Compose two permutations.
 function compose(left::Order, right::Order)
     Order(right.order[left.order], left.index[right.index])
+end
+
+
+# Construct a copy of a permutation.
+function Base.copy(order::Order)
+    Order(order.order, order.index)
 end
 
 

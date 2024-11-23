@@ -99,7 +99,7 @@ end
 Construct the permutation ``\\sigma``.
 """
 function Order(graph::OrderedGraph)
-    Order(graph.order)
+    copy(graph.order)
 end
 
 
@@ -158,6 +158,12 @@ function etree(graph::OrderedGraph)
 
     parent[n] = n
     parent
+end
+
+
+# Construct a copy of an ordered graph.
+function Base.copy(graph::OrderedGraph)
+    OrderedGraph(graph.lower, graph.upper, graph.order)
 end
 
 

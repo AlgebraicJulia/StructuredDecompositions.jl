@@ -310,12 +310,12 @@ function homomorphisms(graph::AbstractSymmetricGraph, jtree::JunctionTree)
     for i in 1:n - 1
         # seperator(i) → clique(parent(i))
         j = parentindex(jtree, i)
-        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], seperator_to_parent(jtree, i))
+        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], lift_par(jtree, i))
     end
     
     for i in 1:n - 1
         # seperator(i) → clique(i)
-        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], seperator_to_clique(jtree, i))
+        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], lift_sep(jtree, i))
     end
     
     subgraph, homomorphism
