@@ -18,11 +18,14 @@ function Base.iterate(iterator::ChildIndices, i::Integer)
 end
 
 
-#=
-function Base.IteratorSize(::ChildIndices)
+function Base.IteratorSize(::Type{ChildIndices})
     SizeUnknown()
 end
-=#
+
+
+function Base.eltype(::Type{ChildIndices})
+    Int
+end
 
 
 function AbstractTrees.childindices(tree::Tree, i::Integer)
