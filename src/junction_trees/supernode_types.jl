@@ -54,7 +54,7 @@ function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeT
         else
             new_in_clique[v] = i += 1
             push!(new, [v])
-            push!(parent, i)
+            push!(parent, 0)
             push!(first_anc, n)
         end
 

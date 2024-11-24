@@ -97,7 +97,6 @@ function etree(graph::OrderedGraph)
         end
     end
 
-    parent[n] = n
     parent
 end
 

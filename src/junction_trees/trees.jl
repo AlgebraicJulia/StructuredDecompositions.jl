@@ -18,7 +18,7 @@ function Tree(parent::AbstractVector)
     root = n
 
     for i in n:-1:1
-        if parent[i] == i
+        if iszero(parent[i])
             root = i
         else
             next[i] = head[parent[i]]
@@ -98,7 +98,7 @@ end
 function AbstractTrees.parentindex(tree::Tree, i::Integer)
     j = tree.parent[i]
 
-    if i != j
+    if !iszero(j)
         j
     end
 end

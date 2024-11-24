@@ -45,7 +45,7 @@ function PostorderTree(tree::Tree, order::Order)
         parent[i] = inv(order)[parentindex(tree, order[i])]
     end
     
-    parent[n] = n
+    parent[n] = 0
     PostorderTree(parent)
 end
 
