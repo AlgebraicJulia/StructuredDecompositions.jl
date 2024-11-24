@@ -19,7 +19,7 @@ end
 
 
 function Base.IteratorSize(::Type{ChildIndices})
-    SizeUnknown()
+    Base.SizeUnknown()
 end
 
 

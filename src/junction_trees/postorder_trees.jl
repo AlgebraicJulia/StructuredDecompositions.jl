@@ -88,7 +88,7 @@ end
 
 
 function AbstractTrees.rootindex(tree::PostorderTree)
-    rootindex(tree.tree, i)
+    rootindex(tree.tree)
 end
 
 
