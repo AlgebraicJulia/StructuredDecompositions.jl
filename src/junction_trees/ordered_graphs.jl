@@ -101,6 +101,92 @@ function etree(graph::OrderedGraph)
 end
 
 
+# An Efficient Algorithm to Compute Row and Column Counts for Sparse Cholesky Factorization
+# Gilbert, Ng, and Peyton
+# Figure 3: Implementation of algorithm to compute row and column counts.
+function supcnt(graph::OrderedGraph, tree::Tree)
+    order = postorder(tree)
+    rc, cc = supcnt(OrderedGraph(graph, order), PostorderTree(tree, order))
+    view(rc, inv(order)), view(cc, inv(order))
+end
+
+
+# An Efficient Algorithm to Compute Row and Column Counts for Sparse Cholesky Factorization
+# Gilbert, Ng, and Peyton
+# Figure 3: Implementation of algorithm to compute row and column counts.
+function supcnt(graph::OrderedGraph, tree::PostorderTree)
+    n = treesize(tree)
+    
+    #### Disjoint Set Union ####
+    
+    rvert = collect(1:n)
+    index = collect(1:n)
+    forest = IntDisjointSets(n)
+    
+    function find(u)
+        index[find_root!(forest, u)]
+    end
+    
+    function union(u, v)
+        w = max(u, v)
+        rvert[w] = root_union!(forest, rvert[u], rvert[v])
+        index[rvert[w]] = w
+    end
+    
+    ############################
+    
+    prev_p = zeros(Int, n)
+    prev_nbr = zeros(Int, n)
+    rc = ones(Int, n)
+    wt = ones(Int, n)
+
+    for u in 1:n - 1
+        wt[parentindex(tree, u)] = 0
+    end
+    
+    for p in 1:n - 1
+        wt[parentindex(tree, p)] -= 1
+
+        for u in outneighbors(graph, p)
+            if fdesc(tree, p) > prev_nbr[u]
+                wt[p] += 1
+                pp = prev_p[u]
+                
+                if iszero(pp)
+                    rc[u] += level(tree, p) - level(tree, u)
+                else
+                    q = find(pp)
+                    rc[u] += level(tree, p) - level(tree, q)
+                    wt[q] -= 1
+                end
+    
+                prev_p[u] = p
+            end
+
+            prev_nbr[u] = p
+        end
+
+        union(p, parentindex(tree, p))
+    end
+
+    cc = wt
+
+    for v in 1:n - 1
+        cc[parentindex(tree, v)] += cc[v]
+    end
+
+    rc, cc
+end
+
+
+# Compute higher degree of every vertex in the elimination graph of
+#    (G, σ).
+function outdegrees(graph::OrderedGraph, tree::Tree)
+    rc, cc = supcnt(graph, tree)
+    cc .- 1
+end
+
+
 # Construct a copy of an ordered graph.
 function Base.copy(graph::OrderedGraph)
     OrderedGraph(graph.symmetric, graph.lower, graph.upper, graph.order)

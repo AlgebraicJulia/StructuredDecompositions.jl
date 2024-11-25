@@ -21,7 +21,7 @@ function JunctionTree(
     ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
     stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-    JunctionTree(SupernodeTree(graph, ealg, stype))
+    JunctionTree(SupernodeTree(OrderedGraph(graph, ealg), stype))
 end
 
 

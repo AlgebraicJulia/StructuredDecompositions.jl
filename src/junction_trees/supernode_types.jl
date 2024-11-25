@@ -36,8 +36,8 @@ struct Fundamental <: SupernodeType end
 # Compact Clique Tree Data Structures in Sparse Matrix Factorizations
 # Pothen and Sun
 # Figure 4: The Clique Tree Algorithm 2
-function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeType)
-    n = treesize(etree.tree)
+function stree(tree::Tree, degree::AbstractVector, stype::SupernodeType)
+    n = treesize(tree)
     new_in_clique = Vector{Int}(undef, n)
     new = Vector{Int}[]
     parent = Int[]
@@ -46,7 +46,7 @@ function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeT
     i = 0
 
     for v in 1:n
-        u = child_in_supernode(etree, degree, stype, v)
+        u = child_in_supernode(tree, degree, stype, v)
  
         if !isnothing(u)
             new_in_clique[v] = new_in_clique[u]
@@ -58,7 +58,7 @@ function stree(etree::EliminationTree, degree::AbstractVector, stype::SupernodeT
             push!(first_anc, n)
         end
 
-        for s in childindices(etree.tree, v)
+        for s in childindices(tree, v)
             if s !== u
                 parent[new_in_clique[s]] = new_in_clique[v]
                 first_anc[new_in_clique[s]] = v
@@ -72,15 +72,15 @@ end
 
 # Find a child w of v such that v ∈ supernode(w).
 # If no such child exists, return nothing.
-function child_in_supernode(etree::EliminationTree, degree::AbstractVector, stype::Node, v::Integer) end
+function child_in_supernode(tree::Tree, degree::AbstractVector, stype::Node, v::Integer) end
 
 
 # Find a child w of v such that v ∈ supernode(w).
 # If no such child exists, return nothing.
-function child_in_supernode(etree::EliminationTree, degree::AbstractVector, stype::Maximal, v::Integer)
+function child_in_supernode(tree::Tree, degree::AbstractVector, stype::Maximal, v::Integer)
     u = nothing
 
-    for w in childindices(etree.tree, v)
+    for w in childindices(tree, v)
         if degree[w] == degree[v] + 1
             u = w
             break
@@ -93,10 +93,10 @@ end
 
 # Find a child w of v such that v ∈ supernode(w).
 # If no such child exists, return nothing.
-function child_in_supernode(etree::EliminationTree, degree::AbstractVector, stype::Fundamental, v::Integer)
+function child_in_supernode(tree::Tree, degree::AbstractVector, stype::Fundamental, v::Integer)
     u = nothing
 
-    for w in childindices(etree.tree, v)
+    for w in childindices(tree, v)
         if isnothing(u) && degree[w] == degree[v] + 1
             u = w
         else

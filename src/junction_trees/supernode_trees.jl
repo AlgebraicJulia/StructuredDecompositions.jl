@@ -17,12 +17,8 @@ end
 #    ealg     elimination algorithm
 #    stype    supernode type
 # ----------------------------------------
-function SupernodeTree(
-    graph,
-    ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
-    stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-
-    SupernodeTree(EliminationTree(graph, ealg), stype)
+function SupernodeTree(graph::OrderedGraph, stype::SupernodeType)
+    SupernodeTree(graph, Tree(etree(graph)), stype)
 end
 
 
@@ -31,9 +27,9 @@ end
 #    etree    elimination tree
 #    stype    supernode type
 # ----------------------------------------
-function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    degree = outdegrees(etree)
-    partition, supernode, parent, ancestor = stree(etree, degree, stype)
+function SupernodeTree(graph::OrderedGraph, tree::Tree, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    degree = outdegrees(graph, tree)
+    partition, supernode, parent, ancestor = stree(tree, degree, stype)
     tree = Tree(parent)
 
     order = postorder(tree)
@@ -43,7 +39,7 @@ function SupernodeTree(etree::EliminationTree, stype::SupernodeType=DEFAULT_SUPE
     ancestor = view(ancestor, order)
 
     order = Order(vcat(supernode...))
-    graph = OrderedGraph(etree.graph, order)
+    graph = OrderedGraph(graph, order)
     degree = view(degree, order)
     partition = view(partition, order)
     ancestor = view(inv(order), ancestor)
