@@ -5,10 +5,10 @@ An [ordered graph](https://en.wikipedia.org/wiki/Ordered_graph) ``(G, \\sigma)``
 This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
 """
 struct OrderedGraph <: AbstractSimpleGraph{Int}
-    adjmx::SparseMatrixCSC{Bool, Int} # adjacency matrix
-    lower::SparseMatrixCSC{Bool, Int} # adjacency matrix (lower triangular)
-    upper::SparseMatrixCSC{Bool, Int} # adjacency matrix (upper triangular)
-    order::Order                      # permutation
+    symmetric::SparseMatrixCSC{Bool, Int} # adjacency matrix (symmetric)
+    lower::SparseMatrixCSC{Bool, Int}     # adjacency matrix (lower triangular)
+    upper::SparseMatrixCSC{Bool, Int}     # adjacency matrix (upper triangular)
+    order::Order                          # permutation
 end
 
 
@@ -54,8 +54,8 @@ end
 # ----------------------------------------
 function OrderedGraph(graph::OrderedGraph, permutation::Order)
     order = compose(permutation, graph.order)
-    graph = OrderedGraph(graph.adjmx, permutation)
-    OrderedGraph(graph.adjmx, graph.lower, graph.upper, order)
+    graph = OrderedGraph(graph.symmetric, permutation)
+    OrderedGraph(graph.symmetric, graph.lower, graph.upper, order)
 end
 
 
@@ -103,7 +103,7 @@ end
 
 # Construct a copy of an ordered graph.
 function Base.copy(graph::OrderedGraph)
-    OrderedGraph(graph.adjmx, graph.lower, graph.upper, graph.order)
+    OrderedGraph(graph.symmetric, graph.lower, graph.upper, graph.order)
 end
 
 
@@ -150,7 +150,7 @@ end
 
 
 function SimpleGraphs.all_neighbors(graph::OrderedGraph, i::Integer)
-    view(rowvals(graph.adjmx), nzrange(graph.adjmx, i))
+    view(rowvals(graph.symmetric), nzrange(graph.symmetric, i))
 end
 
 
