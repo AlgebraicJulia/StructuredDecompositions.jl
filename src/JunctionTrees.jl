@@ -40,11 +40,10 @@ export JunctionTree, treewidth, seperator, residual, clique, find_clique, lift_p
 
 include("junction_trees/orders.jl")
 include("junction_trees/elimination_algorithms.jl")
-include("junction_trees/ordered_graphs.jl")
 include("junction_trees/trees.jl")
 include("junction_trees/child_indices.jl")
 include("junction_trees/postorder_trees.jl")
-include("junction_trees/elimination_trees.jl")
+include("junction_trees/ordered_graphs.jl")
 include("junction_trees/supernode_types.jl")
 include("junction_trees/supernode_trees.jl")
 include("junction_trees/junction_trees.jl")
