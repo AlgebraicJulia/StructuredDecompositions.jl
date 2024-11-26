@@ -7,7 +7,6 @@ This type implements the [indexed tree interface](https://juliacollections.githu
 struct JunctionTree
     order::Order                # elimination order
     tree::PostorderTree         # supernodal elimination tree
-    graph::OrderedGraph         # ordered graph
     representative::Vector{Int} # vector of representative vertices
     seperator::Vector{Vector{Int}} # vector of seperators
 
@@ -71,7 +70,7 @@ function JunctionTree(order::Order, graph::OrderedGraph, tree::Tree, stype::Supe
     representative[end] = representative[end - 1] + length(supernode[end])
 
     seperator = map(sort ∘ collect, seperators(graph, tree, representative, ancestor))
-    JunctionTree(order, tree, graph, representative, seperator, partition, degree)
+    JunctionTree(order, tree, representative, seperator, partition, degree)
 end
 
 
