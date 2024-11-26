@@ -1,14 +1,13 @@
 """
     OrderedGraph <: AbstractSimpleGraph{Int}
 
-An [ordered graph](https://en.wikipedia.org/wiki/Ordered_graph) ``(G, \\sigma)``.
+A directed simple graph whose edges i → j are oriented from lower to higher vertices.
 This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
 """
 struct OrderedGraph <: AbstractSimpleGraph{Int}
     symmetric::SparseMatrixCSC{Bool, Int} # adjacency matrix (symmetric)
     lower::SparseMatrixCSC{Bool, Int}     # adjacency matrix (lower triangular)
     upper::SparseMatrixCSC{Bool, Int}     # adjacency matrix (upper triangular)
-    order::Order                          # permutation
 end
 
 
@@ -42,30 +41,12 @@ end
 # ----------------------------------------
 function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
     graph = permute(graph, order, order)
-    OrderedGraph(graph, tril(graph), triu(graph), order)
+    OrderedGraph(graph, tril(graph), triu(graph))
 end
 
 
-# Given an ordered graph (G, σ) and permutation μ, construct the ordered graph
-#    (G, σ ∘ μ).
-# ----------------------------------------
-#    graph           ordered graph
-#    permutation     permutation
-# ----------------------------------------
-function OrderedGraph(graph::OrderedGraph, permutation::Order)
-    order = compose(permutation, graph.order)
-    graph = OrderedGraph(graph.symmetric, permutation)
-    OrderedGraph(graph.symmetric, graph.lower, graph.upper, order)
-end
-
-
-"""
-    Order(graph::OrderedGraph)
-
-Construct the permutation ``\\sigma``.
-"""
-function Order(graph::OrderedGraph)
-    copy(graph.order)
+function adjacencymatrix(graph::OrderedGraph)
+    graph.symmetric
 end
 
 
