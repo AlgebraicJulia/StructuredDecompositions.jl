@@ -1,10 +1,10 @@
 # A rooted tree.
 # This type implements the indexed tree interface.
 struct Tree
-    parent::Vector{Int} # vector of parents
-    head::Vector{Int}   # vector of first children
-    next::Vector{Int}   # vector of next siblings
-    root::Int           # root
+    parent::Vector{Int}  # vector of parents
+    child::Vector{Int}   # vector of first children
+    brother::Vector{Int} # vector of brother siblings
+    root::Int            # root
 end
 
 # Construct a tree from a list of parents.
@@ -13,20 +13,20 @@ end
 # ----------------------------------------
 function Tree(parent::AbstractVector)
     n = length(parent)
-    head = zeros(Int, n)
-    next = zeros(Int, n)
+    child = zeros(Int, n)
+    brother = zeros(Int, n)
     root = n
 
     for i in n:-1:1
         if iszero(parent[i])
             root = i
         else
-            next[i] = head[parent[i]]
-            head[parent[i]] = i
+            brother[i] = child[parent[i]]
+            child[parent[i]] = i
         end
     end
 
-    Tree(parent, head, next, root)
+    Tree(parent, child, brother, root)
 end
 
 
@@ -58,19 +58,19 @@ function postorder(tree::Tree)
     push(rootindex(tree))
     order = Vector{Int}(undef, n)
     index = Vector{Int}(undef, n)
-    head = copy(tree.head)
+    child = copy(tree.child)
     count = 1
 
     while !empty()
         j = pop()
-        i = head[j]
+        i = child[j]
 
         if iszero(i)
             order[count] = j
             index[j] = count
             count += 1
         else
-            head[j] = tree.next[i]
+            child[j] = tree.brother[i]
             push(j)
             push(i)
         end
@@ -105,7 +105,7 @@ end
 
 
 function AbstractTrees.nextsiblingindex(tree::Tree, i::Integer)
-    j = tree.next[i]
+    j = tree.brother[i]
 
     if !iszero(j)
         j

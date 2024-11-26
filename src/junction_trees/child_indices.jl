@@ -5,7 +5,7 @@ end
 
 
 function Base.iterate(iterator::ChildIndices)
-    iterate(iterator, iterator.tree.head[iterator.index])
+    iterate(iterator, iterator.tree.child[iterator.index])
 end
 
 
@@ -13,7 +13,7 @@ function Base.iterate(iterator::ChildIndices, i::Integer)
     if iszero(i)
         nothing
     else
-        i, iterator.tree.next[i]
+        i, iterator.tree.brother[i]
     end
 end
 
