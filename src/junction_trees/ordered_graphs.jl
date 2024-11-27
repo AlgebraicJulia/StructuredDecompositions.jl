@@ -1,7 +1,7 @@
 """
     OrderedGraph <: AbstractSimpleGraph{Int}
 
-A directed simple graph whose edges i → j are oriented from lower to higher vertices.
+A directed simple graph whose edges ``(i, j)`` satisfy the inequality ``i < j``.
 This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
 """
 struct OrderedGraph <: AbstractSimpleGraph{Int}
@@ -14,18 +14,16 @@ end
 """
     OrderedGraph(graph[, ealg::Union{Order, EliminationAlgorithm}])
 
-Construct an ordered graph, optionally specifying an elimination algorithm.
+Construct an ordered graph by permuting the vertices of a simple graph and directing them from lower to higher.
 """
 function OrderedGraph(graph, ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM)
     OrderedGraph(adjacencymatrix(graph), ealg)
 end
 
 
-# Given a graph G, construct the ordered graph
-#    (G, σ),
-# where σ is a permutation computed using an elimination algorithm.
+# Construct an ordered graph by permuting the vertices of a simple graph and directing them from lower to higher.
 # ----------------------------------------
-#    graph     simple connected graph
+#    graph     simple graph
 #    ealg      elimination algorithm
 # ----------------------------------------
 function OrderedGraph(graph::AbstractMatrix, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
@@ -33,10 +31,9 @@ function OrderedGraph(graph::AbstractMatrix, ealg::EliminationAlgorithm=DEFAULT_
 end
 
 
-# Given a graph H and permutation σ, construct the ordered graph
-#    (G, σ)
+# Construct an ordered graph by permuting the vertices of a simple graph and directing them from lower to higher.
 # ----------------------------------------
-#    graph     simple connected graph
+#    graph     simple graph
 #    order     vertex order
 # ----------------------------------------
 function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
@@ -45,6 +42,7 @@ function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
 end
 
 
+# Construct the adjacency matrix of an ordered graph.
 function adjacencymatrix(graph::OrderedGraph)
     graph.symmetric
 end
@@ -53,6 +51,9 @@ end
 # A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
 # Liu
 # Algorithm 4.2: Elimination Tree by Path Compression.
+# ----------------------------------------
+#    graph     simple connected graph
+# ----------------------------------------
 function etree(graph::OrderedGraph)
     n = nv(graph)
     parent = Vector{Int}(undef, n)
@@ -85,6 +86,10 @@ end
 # An Efficient Algorithm to Compute Row and Column Counts for Sparse Cholesky Factorization
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
+# ----------------------------------------
+#    graph     simple connected graph
+#    tree      elimination tree
+# ----------------------------------------
 function supcnt(graph::OrderedGraph, tree::Tree)
     order = postorder(tree)
     rc, cc = supcnt(OrderedGraph(graph, order), PostorderTree(tree, order))
@@ -95,6 +100,10 @@ end
 # An Efficient Algorithm to Compute Row and Column Counts for Sparse Cholesky Factorization
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
+# ----------------------------------------
+#    graph     simple connected graph
+#    tree      elimination tree
+# ----------------------------------------
 function supcnt(graph::OrderedGraph, tree::PostorderTree)
     n = treesize(tree)
     
@@ -160,17 +169,14 @@ function supcnt(graph::OrderedGraph, tree::PostorderTree)
 end
 
 
-# Compute higher degree of every vertex in the elimination graph of
-#    (G, σ).
+# Compute higher degree of every vertex in the elimination graph of an ordered graph.
+# ----------------------------------------
+#    graph     simple connected graph
+#    tree      elimination tree
+# ----------------------------------------
 function outdegrees(graph::OrderedGraph, tree::Tree)
     rc, cc = supcnt(graph, tree)
     cc .- 1
-end
-
-
-# Construct a copy of an ordered graph.
-function Base.copy(graph::OrderedGraph)
-    OrderedGraph(graph.symmetric, graph.lower, graph.upper, graph.order)
 end
 
 

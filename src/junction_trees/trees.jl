@@ -2,10 +2,11 @@
 # This type implements the indexed tree interface.
 struct Tree
     parent::Vector{Int}  # vector of parents
-    child::Vector{Int}   # vector of first children
-    brother::Vector{Int} # vector of brother siblings
+    child::Vector{Int}   # vector of left-children
+    brother::Vector{Int} # vector of right-siblings
     root::Int            # root
 end
+
 
 # Construct a tree from a list of parents.
 # ----------------------------------------
