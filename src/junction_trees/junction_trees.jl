@@ -12,7 +12,6 @@ struct JunctionTree
 
     # cache
     partition::Vector{Int}      # supernode partition
-    degree::Vector{Int}         # vector of higher degrees
 end
 
 
@@ -49,8 +48,7 @@ end
 #    stree    supernodal elimination tree
 # ----------------------------------------
 function JunctionTree(order::Order, graph::OrderedGraph, tree::Tree, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    degree = outdegrees(graph, tree)
-    partition, supernode, parent, ancestor = stree(tree, degree, stype)
+    partition, supernode, parent, ancestor = stree(tree, outdegrees(graph, tree), stype)
     tree = Tree(parent)
 
     order = postorder(tree)
@@ -61,7 +59,6 @@ function JunctionTree(order::Order, graph::OrderedGraph, tree::Tree, stype::Supe
 
     order = Order(vcat(supernode...))
     graph = OrderedGraph(graph, order)
-    degree = view(degree, order)
     partition = view(partition, order)
     ancestor = view(inv(order), ancestor)
 
@@ -70,7 +67,7 @@ function JunctionTree(order::Order, graph::OrderedGraph, tree::Tree, stype::Supe
     representative[end] = representative[end - 1] + length(supernode[end])
 
     seperator = map(sort ∘ collect, seperators(graph, tree, representative, ancestor))
-    JunctionTree(order, tree, representative, seperator, partition, degree)
+    JunctionTree(order, tree, representative, seperator, partition)
 end
 
 
@@ -130,7 +127,8 @@ end
 Compute the width of a junction tree.
 """
 function treewidth(jtree::JunctionTree)
-    maximum(jtree.degree)
+    n = treesize(jtree)
+    maximum(map(i -> length(residualindices(jtree, i)) + length(seperatorindices(jtree, i)) - 1, 1:n))
 end
 
 
