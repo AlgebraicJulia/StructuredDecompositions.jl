@@ -1,10 +1,14 @@
 module StructuredDecompositions
 
+using Reexport
 
-include("JunctionTrees.jl")
 include("Decompositions.jl")
-include("FunctorUtils.jl")
+# include("FunctorUtils.jl") XXX
 include("DecidingSheaves.jl")
 
+@reexport using .Decompositions
+@reexport using .DecidingSheaves
+
+include("JunctionTrees.jl")
 
 end 

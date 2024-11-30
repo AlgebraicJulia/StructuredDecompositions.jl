@@ -21,5 +21,4 @@ function skeleton(f::FinFunction)
   FinFunction(ℓ, skeleton(dd), skeleton(cc))
 end
 
-
 end

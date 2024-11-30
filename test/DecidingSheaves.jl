@@ -6,7 +6,6 @@ using MLStyle
 
 using StructuredDecompositions.Decompositions
 using StructuredDecompositions.DecidingSheaves
-using StructuredDecompositions.FunctorUtils
 
 using Catlab.Graphs
 using Catlab.ACSetInterface
