@@ -169,17 +169,6 @@ function supcnt(graph::OrderedGraph, tree::PostorderTree)
 end
 
 
-# Compute higher degree of every vertex in the elimination graph of an ordered graph.
-# ----------------------------------------
-#    graph     simple connected graph
-#    tree      elimination tree
-# ----------------------------------------
-function outdegrees(graph::OrderedGraph, tree::Tree)
-    rc, cc = supcnt(graph, tree)
-    cc .- 1
-end
-
-
 # Multiline printing.
 function Base.show(io::IO, ::MIME"text/plain", graph::OrderedGraph)
     print(io, "ordered graph:\n")

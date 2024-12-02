@@ -48,7 +48,7 @@ end
 #    stree    supernodal elimination tree
 # ----------------------------------------
 function JunctionTree(order::Order, graph::OrderedGraph, tree::Tree, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    partition, supernode, parent, ancestor = stree(tree, outdegrees(graph, tree), stype)
+    partition, supernode, parent, ancestor = stree(tree, last(supcnt(graph, tree)), stype)
     tree = Tree(parent)
 
     order = postorder(tree)
