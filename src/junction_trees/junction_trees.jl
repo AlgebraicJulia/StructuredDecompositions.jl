@@ -8,7 +8,7 @@ struct JunctionTree
     order::Order                # elimination order
     tree::PostorderTree         # supernodal elimination tree
     representative::Vector{Int} # vector of representative vertices
-    seperator::Vector{Vector{Int}} # vector of seperators
+    seperator::SparseMatrixCSC{Bool, Int}
 
     # cache
     partition::Vector{Int}      # supernode partition
@@ -66,7 +66,12 @@ function JunctionTree(order::Order, graph::OrderedGraph, tree::Tree, stype::Supe
     representative[1:end - 1] .= view(inv(order), map(first, supernode))
     representative[end] = representative[end - 1] + length(supernode[end])
 
-    seperator = map(sort ∘ collect, seperators(graph, tree, representative, ancestor))
+    seperator = seperators(graph, tree, representative, ancestor)
+    colptr = accumulate(+, [0, map(length, seperator)...]) .+ 1
+    rowval = reduce(vcat, map(sort ∘ collect, seperator))
+    nzval = ones(Bool, length(rowval))
+    seperator = SparseMatrixCSC(nv(graph), treesize(tree), colptr, rowval, nzval)
+
     JunctionTree(order, tree, representative, seperator, partition)
 end
 
@@ -139,7 +144,7 @@ end
 
 
 function seperatorindices(jtree::JunctionTree, i::Integer)
-    jtree.seperator[i]
+    view(rowvals(jtree.seperator), nzrange(jtree.seperator, i))
 end
 
 
