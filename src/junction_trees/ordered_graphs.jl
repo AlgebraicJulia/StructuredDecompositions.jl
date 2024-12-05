@@ -5,9 +5,8 @@ A directed simple graph whose edges ``(i, j)`` satisfy the inequality ``i < j``.
 This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
 """
 struct OrderedGraph <: AbstractOrderedGraph
-    symmetric::SparseMatrixCSC{Bool, Int} # adjacency matrix (symmetric)
-    lower::SparseMatrixCSC{Bool, Int}     # adjacency matrix (lower triangular)
-    upper::SparseMatrixCSC{Bool, Int}     # adjacency matrix (upper triangular)
+    matrix::SparseMatrixCSC{Bool, Int} # adjacency matrix (symmetric)
+    colptr::Vector{Int}
 end
 
 
@@ -37,14 +36,26 @@ end
 #    order     vertex order
 # ----------------------------------------
 function OrderedGraph(graph::AbstractSparseMatrixCSC, order::Order)
-    graph = permute(graph, order, order)
-    OrderedGraph(graph, tril(graph), triu(graph))
+    OrderedGraph(permute(graph, order, order))
 end
+
+
+function OrderedGraph(graph::AbstractSparseMatrixCSC)
+    n = size(graph, 1)
+    colptr = Vector{Int}(undef, n)
+
+    for i in 1:n
+        colptr[i] = graph.colptr[i] + searchsortedfirst(view(rowvals(graph), nzrange(graph, i)), i) - 1
+    end
+
+    OrderedGraph(graph, colptr)
+end
+
 
 
 # Construct the adjacency matrix of an ordered graph.
 function adjacencymatrix(graph::OrderedGraph)
-    graph.symmetric
+    graph.matrix
 end
 
 
@@ -172,7 +183,7 @@ end
 # Multiline printing.
 function Base.show(io::IO, ::MIME"text/plain", graph::OrderedGraph)
     print(io, "ordered graph:\n")
-    SparseArrays._show_with_braille_patterns(io, graph.lower)
+    SparseArrays._show_with_braille_patterns(io, graph.matrix)
 end 
 
 
@@ -181,26 +192,28 @@ end
 ############################
 
 
+#=
 function SimpleGraphs.ne(graph::OrderedGraph)
     last(graph.lower.colptr) - 1
 end
+=#
 
 
 function SimpleGraphs.nv(graph::OrderedGraph)
-    size(graph.lower, 1)
+    length(graph.colptr)
 end
 
 
 function SimpleGraphs.badj(graph::OrderedGraph, i::Integer)
-    view(rowvals(graph.upper), nzrange(graph.upper, i))
+    view(rowvals(graph.matrix), graph.matrix.colptr[i]:graph.colptr[i] - 1)
 end
 
 
 function SimpleGraphs.fadj(graph::OrderedGraph, i::Integer)
-    view(rowvals(graph.lower), nzrange(graph.lower, i))
+    view(rowvals(graph.matrix), graph.colptr[i]:graph.matrix.colptr[i + 1] - 1)
 end
 
 
 function SimpleGraphs.all_neighbors(graph::OrderedGraph, i::Integer)
-    view(rowvals(graph.symmetric), nzrange(graph.symmetric, i))
+    view(rowvals(graph.matrix), nzrange(graph.matrix, i))
 end
