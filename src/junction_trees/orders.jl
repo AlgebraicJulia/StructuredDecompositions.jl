@@ -18,11 +18,7 @@ Construct a permutation ``\\sigma`` from a sequence ``(\\sigma(1), \\dots, \\sig
 function Order(order::AbstractVector)
     n = length(order)
     index = Vector{Int}(undef, n)
-
-    for i in 1:n
-        index[order[i]] = i
-    end
-    
+    index[order] = 1:n
     Order(order, index)
 end
 

@@ -1,10 +1,10 @@
 """
-    OrderedGraph <: AbstractSimpleGraph{Int}
+    OrderedGraph <: AbstractOrderedGraph
 
 A directed simple graph whose edges ``(i, j)`` satisfy the inequality ``i < j``.
 This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
 """
-struct OrderedGraph <: AbstractSimpleGraph{Int}
+struct OrderedGraph <: AbstractOrderedGraph
     symmetric::SparseMatrixCSC{Bool, Int} # adjacency matrix (symmetric)
     lower::SparseMatrixCSC{Bool, Int}     # adjacency matrix (lower triangular)
     upper::SparseMatrixCSC{Bool, Int}     # adjacency matrix (upper triangular)
@@ -181,16 +181,6 @@ end
 ############################
 
 
-function SimpleGraphs.is_directed(::Type{OrderedGraph})
-    true
-end
-
-
-function SimpleGraphs.edgetype(graph::OrderedGraph)
-    SimpleEdge{Int}
-end
-
-
 function SimpleGraphs.ne(graph::OrderedGraph)
     last(graph.lower.colptr) - 1
 end
@@ -213,11 +203,4 @@ end
 
 function SimpleGraphs.all_neighbors(graph::OrderedGraph, i::Integer)
     view(rowvals(graph.symmetric), nzrange(graph.symmetric, i))
-end
-
-
-function SimpleGraphs.has_edge(graph::OrderedGraph, edge::SimpleEdge{Int})
-    i = src(edge)
-    j = dst(edge)
-    i < j && insorted(j, outneighbors(graph, i))
 end
