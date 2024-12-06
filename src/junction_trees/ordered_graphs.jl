@@ -193,11 +193,9 @@ end
 ############################
 
 
-#=
 function SimpleGraphs.ne(graph::OrderedGraph)
-    last(graph.lower.colptr) - 1
+    (last(graph.adjptr) - 1) ÷ 2
 end
-=#
 
 
 function SimpleGraphs.nv(graph::OrderedGraph)
