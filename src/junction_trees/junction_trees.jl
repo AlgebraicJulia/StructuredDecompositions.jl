@@ -110,7 +110,19 @@ end
 
 struct JunctionTree
     order::Order
-    homomorphism::OrderedGraphHomomorphism{OrderedGraph, FilledGraph}
+    tree::PostorderTree
+    partition::Vector{Int}
+
+    # supernodes
+    sndptr::Vector{Int}
+
+    # seperators
+    sepptr::Vector{Int}
+    sepval::Vector{Int}
+
+    # seperator → supernode
+    #relptr::Vector{Int}
+    #relval::Vector{Int}
 end
 
 
@@ -120,51 +132,50 @@ end
 
 
 function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    source = OrderedGraph(graph, order)
-    supernode, tree = stree(source, stype)
+    graph = OrderedGraph(graph, order)
+    supernode, tree = stree(graph, stype)
     
-    postorder = Order(undef, nv(source))
-    mapping = Vector{Int}(undef, nv(source))
-    indptr = Vector{Int}(undef, treesize(tree) + 1)
-    indptr[1] = 1
+    postorder = Order(undef, nv(graph))
+    partition = Vector{Int}(undef, nv(graph))
+    sndptr = Vector{Int}(undef, treesize(tree) + 1)
+    sndptr[1] = 1
 
-    for (i, S) in enumerate(supernode)
-        indptr[i + 1] = indptr[i] + length(S)
-        mapping[indptr[i]:indptr[i + 1] - 1] .= i
-        postorder[indptr[i]:indptr[i + 1] - 1] = S
+    for (i, snd) in enumerate(supernode)
+        sndptr[i + 1] = sndptr[i] + length(snd)
+        partition[sndptr[i]:sndptr[i + 1] - 1] .= i
+        postorder[sndptr[i]:sndptr[i + 1] - 1] = snd
     end
 
     order = compose(postorder, order)
-    source = OrderedGraph(source, postorder)
+    graph = OrderedGraph(graph, postorder)
 
-    rowval = Int[]
-    colptr = Vector{Int}(undef, treesize(tree) + 1)
-    colptr[1] = 1
+    sepval = Int[]
+    sepptr = Vector{Int}(undef, treesize(tree) + 1)
+    sepptr[1] = 1
 
     for j in 1:treesize(tree)
+        u = sndptr[j + 1] - 1
         column = Set{Int}()
 
-        for k in view(mapping, outneighbors(source, indptr[j]))
-            if j < k
-                push!(column, k)
+        for v in outneighbors(graph, sndptr[j])
+            if u < v
+                push!(column, v)
             end
         end
 
         for i in childindices(tree, j)
-            for k in view(rowval, colptr[i]:colptr[i + 1] - 1)
-                if j < k
-                    push!(column, k)
+            for v in view(sepval, sepptr[i]:sepptr[i + 1] - 1)
+                if u < v
+                    push!(column, v)
                 end
             end
         end
 
-        append!(rowval, sort(collect(column)))
-        colptr[j + 1] = colptr[j] + length(column)
+        append!(sepval, sort(collect(column)))
+        sepptr[j + 1] = sepptr[j] + length(column)
     end
 
-    target = FilledGraph(colptr, rowval, tree)
-    homomorphism = OrderedGraphHomomorphism(source, target, mapping, indptr)
-    JunctionTree(order, homomorphism)
+    JunctionTree(order, tree, partition, sndptr, sepptr, sepval)
 end
 
 
@@ -200,14 +211,12 @@ end
 
 
 function residualindices(jtree::JunctionTree, i::Integer)
-    jtree.homomorphism.indptr[i]:jtree.homomorphism.indptr[i + 1] - 1
+    jtree.sndptr[i]:jtree.sndptr[i + 1] - 1
 end
 
 
 function seperatorindices(jtree::JunctionTree, i::Integer)
-    mapreduce(vcat, outneighbors(jtree.homomorphism.target, i); init=Int[]) do j
-        jtree.homomorphism.indptr[j]:jtree.homomorphism.indptr[j + 1] - 1
-    end
+    view(jtree.sepval, jtree.sepptr[i]:jtree.sepptr[i + 1] - 1)
 end
 
 
@@ -319,27 +328,27 @@ end
 
 
 function AbstractTrees.treesize(jtree::JunctionTree)
-    treesize(jtree.homomorphism.target.tree)
+    treesize(jtree.tree)
 end
 
 
 function AbstractTrees.treeheight(jtree::JunctionTree)
-    treeheight(jtree.homomorphism.target.tree)
+    treeheight(jtree.tree)
 end
 
 
 function AbstractTrees.rootindex(jtree::JunctionTree)
-    rootindex(jtree.homomorphism.target.tree)
+    rootindex(jtree.tree)
 end
 
 
 function AbstractTrees.parentindex(jtree::JunctionTree, i::Integer)
-    parentindex(jtree.homomorphism.target.tree, i)
+    parentindex(jtree.tree, i)
 end
 
 
 function AbstractTrees.childindices(jtree::JunctionTree, i::Integer)
-    childindices(jtree.homomorphism.target.tree, i)
+    childindices(jtree.tree, i)
 end
 
 
