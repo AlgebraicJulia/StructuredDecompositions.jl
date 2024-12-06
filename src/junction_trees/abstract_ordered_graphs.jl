@@ -21,3 +21,11 @@ function SimpleGraphs.has_edge(graph::AbstractOrderedGraph, edge::SimpleEdge{Int
     j = dst(edge)
     i < j && insorted(j, outneighbors(graph, i))
 end
+
+
+# Multiline printing.
+function Base.show(io::IO, ::MIME"text/plain", graph::AbstractOrderedGraph)
+    print(io, "ordered graph:\n")
+    SparseArrays._show_with_braille_patterns(io, adjacencymatrix(graph))
+end 
+

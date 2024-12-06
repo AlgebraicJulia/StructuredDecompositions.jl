@@ -5,6 +5,12 @@ struct FilledGraph <: AbstractOrderedGraph
 end
 
 
+function adjacencymatrix(graph::FilledGraph)
+    lower = SparseMatrixCSC(nv(graph), nv(graph), graph.colptr, graph.rowval, ones(Bool, ne(graph)))
+    lower .|| lower'
+end
+
+
 ############################
 # Abstract Graph Interface #
 ############################

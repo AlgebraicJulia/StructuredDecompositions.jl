@@ -181,11 +181,6 @@ function supcnt(graph::OrderedGraph, tree::PostorderTree)
 end
 
 
-# Multiline printing.
-function Base.show(io::IO, ::MIME"text/plain", graph::OrderedGraph)
-    print(io, "ordered graph:\n")
-    SparseArrays._show_with_braille_patterns(io, adjacencymatrix(graph))
-end 
 
 
 ############################
