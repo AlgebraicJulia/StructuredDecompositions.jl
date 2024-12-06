@@ -2,11 +2,5 @@ struct OrderedGraphHomomorphism{Source <: AbstractOrderedGraph, Target <: Abstra
     source::Source
     target::Target
     mapping::Vector{Int}
-    index::Vector{Int}
-end
-
-
-struct JunctionTree
-    order::Order
-    homomorphism::OrderedGraphHomomorphism{OrderedGraph, FilledGraph}
+    indptr::Vector{Int}
 end

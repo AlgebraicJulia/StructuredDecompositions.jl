@@ -22,7 +22,7 @@ end
 
 
 function SimpleGraphs.nv(graph::FilledGraph)
-    length(graph.colptr)
+    length(graph.colptr) - 1
 end
 
 

@@ -36,7 +36,7 @@ struct Fundamental <: SupernodeType end
 # Compact Clique Tree Data Structures in Sparse Matrix Factorizations
 # Pothen and Sun
 # Figure 4: The Clique Tree Algorithm 2
-function stree(tree::Tree, colcount::AbstractVector, stype::SupernodeType)
+function cta(tree::Tree, colcount::AbstractVector, stype::SupernodeType)
     n = treesize(tree)
     new_in_clique = Vector{Int}(undef, n)
     new = Vector{Int}[]
@@ -66,7 +66,16 @@ function stree(tree::Tree, colcount::AbstractVector, stype::SupernodeType)
         end
     end
 
-    new_in_clique, new, parent, first_anc
+    new, Tree(parent)
+end
+
+
+function stree(graph::OrderedGraph, stype::SupernodeType)
+    tree = etree(graph)
+    rowcount, colcount = supcnt(graph, tree)
+    supernode, tree = cta(tree, colcount, stype)
+    order = postorder(tree)
+    view(supernode, order), PostorderTree(tree, order)
 end
 
 

@@ -55,12 +55,12 @@ end
 #############################
 
 
-function Base.getindex(order::Order, i::Integer)
+function Base.getindex(order::Order, i)
     order.order[i]
 end
 
 
-function Base.setindex!(order::Order, v::Integer, i::Integer)
+function Base.setindex!(order::Order, v, i)
     order.index[v] = i
     order.order[i] = v
 end

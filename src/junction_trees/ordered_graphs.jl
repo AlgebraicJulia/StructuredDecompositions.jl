@@ -91,7 +91,7 @@ function etree(graph::OrderedGraph)
         end
     end
 
-    parent
+    Tree(parent)
 end
 
 
@@ -181,8 +181,6 @@ function supcnt(graph::OrderedGraph, tree::PostorderTree)
 end
 
 
-
-
 ############################
 # Abstract Graph Interface #
 ############################
@@ -194,7 +192,7 @@ end
 
 
 function SimpleGraphs.nv(graph::OrderedGraph)
-    length(graph.colptr)
+    length(graph.adjptr) - 1
 end
 
 
