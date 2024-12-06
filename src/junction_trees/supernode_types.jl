@@ -70,9 +70,7 @@ function cta(tree::Tree, colcount::AbstractVector, stype::SupernodeType)
 end
 
 
-function stree(graph::OrderedGraph, stype::SupernodeType)
-    tree = etree(graph)
-    rowcount, colcount = supcnt(graph, tree)
+function stree(graph::OrderedGraph, tree::Tree, colcount::AbstractVector, stype::SupernodeType)
     supernode, tree = cta(tree, colcount, stype)
     order = postorder(tree)
     view(supernode, order), PostorderTree(tree, order)

@@ -133,7 +133,9 @@ end
 
 function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     graph = OrderedGraph(graph, order)
-    supernode, tree = stree(graph, stype)
+    tree = etree(graph)
+    rowcount, colcount = supcnt(graph, tree)
+    supernode, tree = stree(graph, tree, colcount, stype)
     
     postorder = Order(undef, nv(graph))
     partition = Vector{Int}(undef, nv(graph))
@@ -148,8 +150,9 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
 
     order = compose(postorder, order)
     graph = OrderedGraph(graph, postorder)
+    colcount = view(colcount, postorder)
 
-    sepval = Int[]
+    sepval = Vector{Int}(undef, sum(colcount[sndptr[2:end] .- 1]))
     sepptr = Vector{Int}(undef, treesize(tree) + 1)
     sepptr[1] = 1
 
@@ -171,8 +174,8 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
             end
         end
 
-        append!(sepval, sort(collect(column)))
         sepptr[j + 1] = sepptr[j] + length(column)
+        sepval[sepptr[j]:sepptr[j + 1] - 1] = sort(collect(column))
     end
 
     JunctionTree(order, tree, partition, sndptr, sepptr, sepval)
