@@ -57,8 +57,7 @@ function postorder(tree::Tree)
     ###############
 
     push(rootindex(tree))
-    order = Vector{Int}(undef, n)
-    index = Vector{Int}(undef, n)
+    order = Order(undef, n)
     child = copy(tree.child)
     count = 1
 
@@ -68,7 +67,6 @@ function postorder(tree::Tree)
 
         if iszero(i)
             order[count] = j
-            index[j] = count
             count += 1
         else
             child[j] = tree.brother[i]
@@ -77,7 +75,7 @@ function postorder(tree::Tree)
         end
     end
    
-    Order(order, index)
+    order
 end
 
 

@@ -23,6 +23,11 @@ function Order(order::AbstractVector)
 end
 
 
+function Order(::UndefInitializer, n::Integer)
+    Order(Vector{Int}(undef, n), Vector{Int}(undef, n))
+end
+
+
 # Compose two permutations.
 function compose(left::Order, right::Order)
     Order(right.order[left.order], left.index[right.index])
@@ -50,8 +55,14 @@ end
 #############################
 
 
-function Base.getindex(order::Order, i)
+function Base.getindex(order::Order, i::Integer)
     order.order[i]
+end
+
+
+function Base.setindex!(order::Order, v::Integer, i::Integer)
+    order.index[v] = i
+    order.order[i] = v
 end
 
 

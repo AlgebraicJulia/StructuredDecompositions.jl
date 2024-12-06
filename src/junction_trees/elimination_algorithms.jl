@@ -109,8 +109,7 @@ end
 
 # Construct an order using the maximum cardinality search algorithm.
 function Order(graph::AbstractMatrix, ealg::MCS)
-    order, index = mcs(graph)
-    Order(order, index)
+    mcs(graph)
 end
 
 
@@ -150,8 +149,7 @@ end
 # Maximum Cardinality Search
 function mcs(graph::AbstractSparseMatrixCSC)
     n = size(graph, 1)
-    α = Vector{Int}(undef, n)
-    β = Vector{Int}(undef, n)
+    α = Order(undef, n)
     len = Vector{Int}(undef, n)
     set = Vector{LinkedLists.LinkedList{Int}}(undef, n)
     pointer = Vector{LinkedLists.ListNode{Int}}(undef, n)
@@ -168,8 +166,7 @@ function mcs(graph::AbstractSparseMatrixCSC)
     while i >= 1
         v = first(set[j])
         deleteat!(set[j], pointer[v])        
-        α[v] = i
-        β[i] = v
+        α[i] = v
         len[v] = 0
 
         for w in view(rowvals(graph), nzrange(graph, v))
@@ -188,7 +185,7 @@ function mcs(graph::AbstractSparseMatrixCSC)
         end
     end
 
-    β, α
+    α
 end
 
 
