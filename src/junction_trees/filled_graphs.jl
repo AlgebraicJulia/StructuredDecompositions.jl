@@ -1,5 +1,6 @@
 struct FilledGraph <: AbstractSimpleGraph{Int}
-    lower::SparseMatrixCSC{Bool, Int}
+    colptr::Vector{Int}
+    rowval::Vector{Int}
     tree::PostorderTree
 end
 
@@ -9,26 +10,30 @@ end
 ############################
 
 
+#=
 function SimpleGraphs.ne(graph::OrderedGraph)
     last(graph.lower.colptr) - 1
 end
+=#
 
 
 function SimpleGraphs.nv(graph::OrderedGraph)
-    size(graph.lower, 1)
+    length(graph.colptr)
 end
 
 
 function SimpleGraphs.badj(graph::OrderedGraph, i::Integer)
-    view(rowvals(graph.upper), nzrange(graph.upper, i))
+    descendantindices(graph.tree, i)
 end
 
 
 function SimpleGraphs.fadj(graph::OrderedGraph, i::Integer)
-    view(rowvals(graph.lower), nzrange(graph.lower, i))
+    view(graph.rowval, graph.colptr[i]:graph.colptr[i + 1] - 1)
 end
 
 
+#=
 function SimpleGraphs.all_neighbors(graph::OrderedGraph, i::Integer)
-    view(rowvals(graph.symmetric), nzrange(graph.symmetric, i))
+    view(graph.rowval, graph.adjptr[i]:graph.adjptr[i + 1] - 1)
 end
+=#

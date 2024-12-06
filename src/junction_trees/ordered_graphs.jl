@@ -150,7 +150,7 @@ function supcnt(graph::OrderedGraph, tree::PostorderTree)
         wt[parentindex(tree, p)] -= 1
 
         for u in outneighbors(graph, p)
-            if fdesc(tree, p) > prev_nbr[u]
+            if first(descendantindices(tree, p)) > prev_nbr[u]
                 wt[p] += 1
                 pp = prev_p[u]
                 

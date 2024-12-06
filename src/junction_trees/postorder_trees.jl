@@ -56,9 +56,8 @@ function level(tree::PostorderTree, i::Integer)
 end
 
 
-# Get the first descendant of a node i.
-function fdesc(tree::PostorderTree, i::Integer)
-    tree.fdesc[i]
+function descendantindices(tree::PostorderTree, i::Integer)
+    tree.fdesc[i]:i - 1
 end
 
 
