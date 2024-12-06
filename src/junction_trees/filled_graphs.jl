@@ -1,4 +1,4 @@
-struct FilledGraph <: AbstractSimpleGraph{Int}
+struct FilledGraph <: AbstractOrderedGraph
     colptr::Vector{Int}
     rowval::Vector{Int}
     tree::PostorderTree
