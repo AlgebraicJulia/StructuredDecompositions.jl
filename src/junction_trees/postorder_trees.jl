@@ -17,15 +17,21 @@ function PostorderTree(parent::AbstractVector)
     level = Vector{Int}(undef, n)
     fdesc = Vector{Int}(undef, n)
     level[n] = 0
-    fdesc[n] = n
+    fdesc[n] = 0
 
     for i in n - 1:-1:1
-        level[i] = level[parentindex(tree, i)] + 1
+        j = parentindex(tree, i)
+        level[i] = level[j] + 1
         fdesc[i] = i
+        fdesc[j] = 0
     end
 
     for i in 1:n - 1
-        fdesc[parentindex(tree, i)] = min(fdesc[i], fdesc[parentindex(tree, i)])
+        j = parentindex(tree, i)
+
+        if iszero(fdesc[j])
+            fdesc[j] = fdesc[i]
+        end
     end
     
     PostorderTree(tree, level, fdesc)
