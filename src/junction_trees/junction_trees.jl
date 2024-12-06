@@ -113,14 +113,14 @@ struct JunctionTree
     tree::PostorderTree
     partition::Vector{Int}
 
-    # supernodes
+    # supernode(i)
     sndptr::Vector{Int}
 
-    # seperators
+    # seperator(i)
     sepptr::Vector{Int}
     sepval::Vector{Int}
 
-    # seperator → supernode
+    # seperator(i) → clique(parent(i))
     #relptr::Vector{Int}
     #relval::Vector{Int}
 end
@@ -136,7 +136,8 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
     tree = etree(graph)
     rowcount, colcount = supcnt(graph, tree)
     supernode, tree = stree(graph, tree, colcount, stype)
-    
+
+    n = 0    
     postorder = Order(undef, nv(graph))
     partition = Vector{Int}(undef, nv(graph))
     sndptr = Vector{Int}(undef, treesize(tree) + 1)
@@ -146,13 +147,13 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
         sndptr[i + 1] = sndptr[i] + length(snd)
         partition[sndptr[i]:sndptr[i + 1] - 1] .= i
         postorder[sndptr[i]:sndptr[i + 1] - 1] = snd
+        n += colcount[snd[end]] - 1
     end
 
     order = compose(postorder, order)
     graph = OrderedGraph(graph, postorder)
-    colcount = view(colcount, postorder)
 
-    sepval = Vector{Int}(undef, sum(colcount[sndptr[2:end] .- 1]))
+    sepval = Vector{Int}(undef, n)
     sepptr = Vector{Int}(undef, treesize(tree) + 1)
     sepptr[1] = 1
 
