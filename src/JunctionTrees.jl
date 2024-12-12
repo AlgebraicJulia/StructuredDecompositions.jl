@@ -38,6 +38,8 @@ export Node, Maximal, Fundamental
 export JunctionTree, treewidth, seperator, residual, clique, find_clique, lift_par, lift_sep, lift
 
 
+include("junction_trees/fixed_stacks.jl")
+include("junction_trees/disjoint_sets.jl")
 include("junction_trees/orders.jl")
 include("junction_trees/elimination_algorithms.jl")
 include("junction_trees/trees.jl")
@@ -45,8 +47,6 @@ include("junction_trees/child_indices.jl")
 include("junction_trees/postorder_trees.jl")
 include("junction_trees/abstract_ordered_graphs.jl")
 include("junction_trees/ordered_graphs.jl")
-include("junction_trees/filled_graphs.jl")
-include("junction_trees/ordered_graph_homomorphisms.jl")
 include("junction_trees/supernode_types.jl")
 include("junction_trees/junction_trees.jl")
 

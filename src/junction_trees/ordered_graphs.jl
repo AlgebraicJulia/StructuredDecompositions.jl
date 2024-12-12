@@ -118,24 +118,7 @@ end
 # ----------------------------------------
 function supcnt(graph::OrderedGraph, tree::PostorderTree)
     n = treesize(tree)
-    
-    #### Disjoint Set Union ####
-    
-    rvert = collect(1:n)
-    index = collect(1:n)
-    forest = IntDisjointSets(n)
-    
-    function find(u)
-        index[find_root!(forest, u)]
-    end
-    
-    function union(u, v)
-        w = max(u, v)
-        rvert[w] = root_union!(forest, rvert[u], rvert[v])
-        index[rvert[w]] = w
-    end
-    
-    ############################
+    sets = DisjointSets(n)
     
     prev_p = zeros(Int, n)
     prev_nbr = zeros(Int, n)
@@ -157,7 +140,7 @@ function supcnt(graph::OrderedGraph, tree::PostorderTree)
                 if iszero(pp)
                     rc[u] += level(tree, p) - level(tree, u)
                 else
-                    q = find(pp)
+                    q = find!(sets, pp)
                     rc[u] += level(tree, p) - level(tree, q)
                     wt[q] -= 1
                 end
@@ -168,7 +151,7 @@ function supcnt(graph::OrderedGraph, tree::PostorderTree)
             prev_nbr[u] = p
         end
 
-        union(p, parentindex(tree, p))
+        union!(sets, p, parentindex(tree, p))
     end
 
     cc = wt
