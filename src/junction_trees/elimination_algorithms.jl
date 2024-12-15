@@ -102,7 +102,7 @@ function Order(graph::AbstractSparseMatrixCSC, ealg::TreeWidthSolverJL_BT)
 
     bitgraph = TreeWidthSolver.MaskedBitGraph(bitfadjlist, fadjlist, TreeWidthSolver.bmask(T, 1:n))
     decomposition = TreeWidthSolver.bt_algorithm(bitgraph, TreeWidthSolver.all_pmc_enmu(bitgraph, false), ones(n), false, true)
-    order = reverse(vcat(TreeWidthSolver.EliminationOrder(decomposition.tree).order...))
+    order = reverse(reduce(vcat, TreeWidthSolver.EliminationOrder(decomposition.tree).order))
     Order(order)
 end
 
@@ -115,26 +115,18 @@ end
 
 # Construct the adjacency matrix of a graph.
 function adjacencymatrix(graph::BasicGraphs.AbstractSymmetricGraph)
-    m = BasicGraphs.ne(graph)
-    n = BasicGraphs.nv(graph)
-    colptr = Vector{Int}(undef, n + 1)
-    rowval = Vector{Int}(undef, m)
-    count = 1
+    rowval = Vector{Int}(undef, BasicGraphs.ne(graph))
+    colptr = Vector{Int}(undef, BasicGraphs.nv(graph) + 1)
+    colptr[1] = 1
 
-    for i in 1:n
-        colptr[i] = count
-        neighbor = collect(BasicGraphs.all_neighbors(graph, i))
-        sort!(neighbor)
-
-        for j in neighbor
-            rowval[count] = j
-            count += 1
-        end
+    for i in BasicGraphs.vertices(graph)
+        column = collect(BasicGraphs.all_neighbors(graph, i))
+        colptr[i + 1] = colptr[i] + length(column)
+        rowval[colptr[i]:colptr[i + 1] - 1] = sort!(column)
     end
 
-    colptr[n + 1] = m + 1
-    nzval = ones(Bool, m)
-    SparseMatrixCSC(n, n, colptr, rowval, nzval)
+    nzval = ones(Bool, BasicGraphs.ne(graph))
+    SparseMatrixCSC(BasicGraphs.nv(graph), BasicGraphs.nv(graph), colptr, rowval, nzval)
 end
 
 
