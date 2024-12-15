@@ -4,7 +4,7 @@
 A directed simple graph whose edges ``(i, j)`` satisfy the inequality ``i < j``.
 This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
 """
-struct OrderedGraph <: AbstractOrderedGraph
+struct OrderedGraph <: AbstractSimpleGraph{Int}
     colptr::Vector{Int}
     adjptr::Vector{Int}
     rowval::Vector{Int}
@@ -164,6 +164,13 @@ function supcnt(graph::OrderedGraph, tree::PostorderTree)
 end
 
 
+# Multiline printing.
+function Base.show(io::IO, ::MIME"text/plain", graph::OrderedGraph)
+    print(io, "ordered graph:\n")
+    SparseArrays._show_with_braille_patterns(io, adjacencymatrix(graph))
+end 
+
+
 ############################
 # Abstract Graph Interface #
 ############################
@@ -191,4 +198,21 @@ end
 
 function SimpleGraphs.all_neighbors(graph::OrderedGraph, i::Integer)
     view(graph.rowval, graph.adjptr[i]:graph.adjptr[i + 1] - 1)
+end
+
+
+function SimpleGraphs.is_directed(::Type{OrderedGraph})
+    true
+end
+
+
+function SimpleGraphs.edgetype(graph::OrderedGraph)
+    SimpleEdge{Int}
+end
+
+
+function SimpleGraphs.has_edge(graph::OrderedGraph, edge::SimpleEdge{Int})
+    i = src(edge)
+    j = dst(edge)
+    i < j && insorted(j, outneighbors(graph, i))
 end
