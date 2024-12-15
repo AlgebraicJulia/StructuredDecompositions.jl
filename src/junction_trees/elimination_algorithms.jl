@@ -120,9 +120,9 @@ function adjacencymatrix(graph::BasicGraphs.AbstractSymmetricGraph)
     colptr[1] = 1
 
     for i in BasicGraphs.vertices(graph)
-        column = collect(BasicGraphs.all_neighbors(graph, i))
+        column = BasicGraphs.all_neighbors(graph, i)
         colptr[i + 1] = colptr[i] + length(column)
-        rowval[colptr[i]:colptr[i + 1] - 1] = sort!(column)
+        rowval[colptr[i]:colptr[i + 1] - 1] = sort!(collect(column))
     end
 
     nzval = ones(Bool, BasicGraphs.ne(graph))
