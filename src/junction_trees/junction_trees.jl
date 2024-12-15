@@ -42,7 +42,7 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
     end
 
     permute!(order, postorder)
-    graph = OrderedGraph(graph, postorder)
+    permute!(graph, postorder)
 
     sepval = Vector{Int}(undef, n)
     sepptr = Vector{Int}(undef, treesize(tree) + 1)

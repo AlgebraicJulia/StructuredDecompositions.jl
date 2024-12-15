@@ -52,6 +52,16 @@ function OrderedGraph(graph::AbstractSparseMatrixCSC)
 end
 
 
+function Base.permute!(graph::OrderedGraph, permutation::AbstractVector)
+    permute!(graph.matrix, permutation, permutation)
+
+    map!(graph.colptr, vertices(graph)) do i
+        first(nzrange(graph.matrix, i)) + searchsortedfirst(all_neighbors(graph, i), i) - 1
+    end
+
+    graph 
+end
+
 
 # Construct the adjacency matrix of an ordered graph.
 function adjacencymatrix(graph::OrderedGraph)
