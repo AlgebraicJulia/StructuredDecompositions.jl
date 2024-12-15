@@ -16,9 +16,8 @@ end
 Construct a permutation ``\\sigma`` from a sequence ``(\\sigma(1), \\dots, \\sigma(n))``.
 """
 function Order(order::AbstractVector)
-    n = length(order)
-    index = Vector{Int}(undef, n)
-    index[order] = 1:n
+    index = Vector{Int}(undef, length(order))
+    index[order] = eachindex(order)
     Order(order, index)
 end
 
@@ -28,15 +27,21 @@ function Order(::UndefInitializer, n::Integer)
 end
 
 
-# Compose two permutations.
-function compose(left::Order, right::Order)
-    Order(right.order[left.order], left.index[right.index])
+function Base.permute!(order::Order, permutation::AbstractVector)
+    permute!(order.order, permutation)
+    order.index[order.order] = eachindex(order.order)
+    order
 end
 
 
 # Construct a copy of a permutation.
 function Base.copy(order::Order)
     Order(order.order, order.index)
+end
+
+
+function Base.deepcopy(order::Order)
+    Order(copy(order.order), copy(order.index))
 end
 
 

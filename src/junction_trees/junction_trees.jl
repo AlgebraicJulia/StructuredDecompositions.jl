@@ -22,6 +22,7 @@ end
 
 
 function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    order = deepcopy(order)
     graph = OrderedGraph(graph, order)
     tree = etree(graph)
     rowcount, colcount = supcnt(graph, tree)
@@ -40,7 +41,7 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
         n += colcount[snd[end]] - 1
     end
 
-    order = compose(postorder, order)
+    permute!(order, postorder)
     graph = OrderedGraph(graph, postorder)
 
     sepval = Vector{Int}(undef, n)
