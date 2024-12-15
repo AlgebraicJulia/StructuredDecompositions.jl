@@ -5,9 +5,8 @@ A directed simple graph whose edges ``(i, j)`` satisfy the inequality ``i < j``.
 This type implements the [abstract graph interface](https://juliagraphs.org/Graphs.jl/stable/core_functions/interface/).
 """
 struct OrderedGraph <: AbstractSimpleGraph{Int}
+    matrix::SparseMatrixCSC{Bool, Int}
     colptr::Vector{Int}
-    adjptr::Vector{Int}
-    rowval::Vector{Int}
 end
 
 
@@ -49,14 +48,14 @@ function OrderedGraph(graph::AbstractSparseMatrixCSC)
         colptr[i] = graph.colptr[i] + searchsortedfirst(view(rowvals(graph), nzrange(graph, i)), i) - 1
     end
 
-    OrderedGraph(colptr, graph.colptr, graph.rowval)
+    OrderedGraph(graph, colptr)
 end
 
 
 
 # Construct the adjacency matrix of an ordered graph.
 function adjacencymatrix(graph::OrderedGraph)
-    SparseMatrixCSC(nv(graph), nv(graph), graph.adjptr, graph.rowval, ones(Bool, length(graph.rowval)))
+    graph.matrix
 end
 
 
@@ -177,27 +176,27 @@ end
 
 
 function SimpleGraphs.ne(graph::OrderedGraph)
-    (last(graph.adjptr) - 1) ÷ 2
+    nnz(graph.matrix) ÷ 2
 end
 
 
 function SimpleGraphs.nv(graph::OrderedGraph)
-    length(graph.adjptr) - 1
+    size(graph.matrix, 1)
 end
 
 
 function SimpleGraphs.badj(graph::OrderedGraph, i::Integer)
-    view(graph.rowval, graph.adjptr[i]:graph.colptr[i] - 1)
+    view(rowvals(graph.matrix), graph.matrix.colptr[i]:graph.colptr[i] - 1)
 end
 
 
 function SimpleGraphs.fadj(graph::OrderedGraph, i::Integer)
-    view(graph.rowval, graph.colptr[i]:graph.adjptr[i + 1] - 1)
+    view(rowvals(graph.matrix), graph.colptr[i]:graph.matrix.colptr[i + 1] - 1)
 end
 
 
 function SimpleGraphs.all_neighbors(graph::OrderedGraph, i::Integer)
-    view(graph.rowval, graph.adjptr[i]:graph.adjptr[i + 1] - 1)
+    view(rowvals(graph.matrix), nzrange(graph.matrix, i))
 end
 
 
