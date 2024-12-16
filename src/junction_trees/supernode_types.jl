@@ -39,9 +39,9 @@ struct Fundamental <: SupernodeType end
 function pothensun(etree::Tree, colcount::AbstractVector, stype::SupernodeType)
     n = treesize(etree)
     new_in_clique = Vector{Int}(undef, n)
-    new = Vector{Int}[]
-    parent = Int[]
-    first_anc = Int[]
+    new = sizehint!(Vector{Int}[], n)
+    parent = sizehint!(Int[], n)
+    first_anc = sizehint!(Int[], n)
 
     i = 0
 
