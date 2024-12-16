@@ -24,34 +24,15 @@ end
 function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     order = deepcopy(order)
     graph = OrderedGraph(graph, order)
-    etree = etree!(order, graph)
-
-    rowcount, colcount = supcnt(graph, etree)
-    supernode, tree = stree(graph, etree, colcount, stype)
-
-    n = 0    
-    postorder = Order(undef, nv(graph))
-    partition = Vector{Int}(undef, nv(graph))
-    sndptr = Vector{Int}(undef, treesize(tree) + 1)
-    sndptr[1] = 1
-
-    for (i, snd) in enumerate(supernode)
-        sndptr[i + 1] = sndptr[i] + length(snd)
-        partition[sndptr[i]:sndptr[i + 1] - 1] .= i
-        postorder[sndptr[i]:sndptr[i + 1] - 1] = snd
-        n += colcount[snd[end]] - 1
-    end
-
-    permute!(order, postorder)
-    permute!(graph, postorder)
+    stree, sndptr, partition, n = stree!(order, graph, stype)
 
     sepval = Vector{Int}(undef, n)
-    sepptr = Vector{Int}(undef, treesize(tree) + 1)
+    sepptr = Vector{Int}(undef, treesize(stree) + 1)
     sepptr[1] = 1
 
     fullarray = zeros(Int, nv(graph))
 
-    for j in 1:treesize(tree)
+    for j in 1:treesize(stree)
         u = sndptr[j + 1] - 1
         column = Int[]
 
@@ -62,7 +43,7 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
             end
         end
 
-        for i in childindices(tree, j)
+        for i in childindices(stree, j)
             for v in view(sepval, sepptr[i]:sepptr[i + 1] - 1)
                 if u < v && fullarray[v] != j
                     push!(column, v)
@@ -75,7 +56,7 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
         sepval[sepptr[j]:sepptr[j + 1] - 1] = sort(column)
     end
 
-    JunctionTree(order, tree, partition, sndptr, sepptr, sepval)
+    JunctionTree(order, stree, partition, sndptr, sepptr, sepval)
 end
 
 
