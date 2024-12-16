@@ -39,53 +39,63 @@ struct Fundamental <: SupernodeType end
 function pothensun(etree::Tree, colcount::AbstractVector, stype::SupernodeType)
     n = treesize(etree)
     new_in_clique = Vector{Int}(undef, n)
-    new = sizehint!(Vector{Int}[], n)
+    new_first = sizehint!(Int[], n)
+    new_last = sizehint!(Int[], n)
     parent = sizehint!(Int[], n)
-    first_anc = sizehint!(Int[], n)
+    # first_anc = sizehint!(Int[], n)
 
     for v in 1:n
         u = child_in_supernode(etree, colcount, stype, v)
  
         if !isnothing(u)
             new_in_clique[v] = new_in_clique[u]
-            push!(new[new_in_clique[v]], v)
+            new_last[new_in_clique[v]] = v
         else
-            new_in_clique[v] = length(new) + 1
-            push!(new, [v])
+            new_in_clique[v] = length(new_first) + 1
+            push!(new_first, v)
+            push!(new_last, v)
             push!(parent, 0)
-            push!(first_anc, 0)
+            # push!(first_anc, 0)
         end
 
         for s in childindices(etree, v)
             if s !== u
                 parent[new_in_clique[s]] = new_in_clique[v]
-                first_anc[new_in_clique[s]] = v
+                # first_anc[new_in_clique[s]] = v
             end
         end
     end
 
-    new, Tree(parent)
+    new_first, new_last, Tree(parent)
 end
 
 
 function stree!(order::Order, graph::OrderedGraph, stype::SupernodeType, etree::Tree=etree!(order, graph))
     rowcount, colcount = supcnt(graph, etree)
-    supernode, stree = pothensun(etree, colcount, stype)
-    
+    new_first, new_last, stree = pothensun(etree, colcount, stype)
+ 
     sndptr = Vector{Int}(undef, treesize(stree) + 1)
     sepptr = Vector{Int}(undef, treesize(stree) + 1)
-    postorder = Vector{Int}(undef, nv(graph))
+    sndval = Vector{Int}(undef, nv(graph))
     sndptr[1] = sepptr[1] = 1
 
     for (i, j) in enumerate(postorder!(stree))
-        residual = supernode[j]
-        sndptr[i + 1] = sndptr[i] + length(residual)
-        sepptr[i + 1] = sepptr[i] + colcount[last(residual)] - 1
-        postorder[sndptr[i]:sndptr[i + 1] - 1] = residual
+        sndptr[i + 1] = sndptr[i] + colcount[new_first[j]] - colcount[new_last[j]] + 1
+        sepptr[i + 1] = sepptr[i] + colcount[new_last[j]] - 1
+
+        k = new_first[j]
+        l = sndptr[i]
+        sndval[l] = k
+
+        while k != new_last[j]
+            k = parentindex(etree, k)
+            l += 1
+            sndval[l] = k
+        end
     end
 
-    permute!(order, postorder)
-    permute!(graph, postorder)
+    permute!(order, sndval)
+    permute!(graph, sndval)
     stree, sndptr, sepptr
 end
 
