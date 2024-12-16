@@ -76,10 +76,9 @@ function stree!(order::Order, graph::OrderedGraph, stype::SupernodeType, etree::
     
     sndptr = Vector{Int}(undef, treesize(stree) + 1)
     sepptr = Vector{Int}(undef, treesize(stree) + 1)
-    postorder = Order(undef, nv(graph))
+    postorder = Vector{Int}(undef, nv(graph))
     partition = Vector{Int}(undef, nv(graph))
-    sndptr[1] = 1
-    sepptr[1] = 1
+    sndptr[1] = sepptr[1] = 1
 
     for (i, j) in enumerate(postorder!(stree))
         residual = supernode[j]
