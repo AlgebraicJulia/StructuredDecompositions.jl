@@ -74,23 +74,24 @@ function stree!(order::Order, graph::OrderedGraph, stype::SupernodeType, etree::
     rowcount, colcount = supcnt(graph, etree)
     supernode, stree = pothensun(etree, colcount, stype)
     
-    n = 0
+    sndptr = Vector{Int}(undef, treesize(stree) + 1)
+    sepptr = Vector{Int}(undef, treesize(stree) + 1)
     postorder = Order(undef, nv(graph))
     partition = Vector{Int}(undef, nv(graph))
-    sndptr = Vector{Int}(undef, treesize(stree) + 1)
     sndptr[1] = 1
+    sepptr[1] = 1
 
     for (i, j) in enumerate(postorder!(stree))
         residual = supernode[j]
         sndptr[i + 1] = sndptr[i] + length(residual)
+        sepptr[i + 1] = sepptr[i] + colcount[last(residual)] - 1
         partition[sndptr[i]:sndptr[i + 1] - 1] .= i
         postorder[sndptr[i]:sndptr[i + 1] - 1] = residual
-        n += colcount[residual[end]] - 1
     end
 
     permute!(order, postorder)
     permute!(graph, postorder)
-    stree, sndptr, partition, n
+    stree, sndptr, sepptr, partition
 end
 
 
