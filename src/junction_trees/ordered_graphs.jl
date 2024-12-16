@@ -104,6 +104,15 @@ function etree(graph::OrderedGraph)
 end
 
 
+function etree!(order::Order, graph::OrderedGraph)
+    tree = etree(graph)
+    postorder = postorder!(tree)
+    permute!(order, postorder)
+    permute!(graph, postorder)
+    tree
+end
+
+
 # An Efficient Algorithm to Compute Row and Column Counts for Sparse Cholesky Factorization
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
