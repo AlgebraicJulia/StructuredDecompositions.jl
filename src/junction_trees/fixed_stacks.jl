@@ -11,12 +11,14 @@ end
 function Base.push!(stack::FixedStack, v)
     stack.top[] += 1
     stack.items[stack.top[]] = v
+    v
 end
 
 
 function Base.pop!(stack::FixedStack)
+    v = stack.items[stack.top[]]
     stack.top[] -= 1
-    stack.items[stack.top[] + 1]
+    v
 end
 
 
