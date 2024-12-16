@@ -39,40 +39,37 @@ struct Fundamental <: SupernodeType end
 function pothensun(etree::Tree, colcount::AbstractVector, stype::SupernodeType)
     n = treesize(etree)
     new_in_clique = Vector{Int}(undef, n)
-    new_first = sizehint!(Int[], n)
-    new_last = sizehint!(Int[], n)
+    new = sizehint!(Int[], n)
     parent = sizehint!(Int[], n)
-    # first_anc = sizehint!(Int[], n)
+    ancestor = sizehint!(Int[], n)
 
     for v in 1:n
         u = child_in_supernode(etree, colcount, stype, v)
  
         if !isnothing(u)
             new_in_clique[v] = new_in_clique[u]
-            new_last[new_in_clique[v]] = v
         else
-            new_in_clique[v] = length(new_first) + 1
-            push!(new_first, v)
-            push!(new_last, v)
+            new_in_clique[v] = length(new) + 1
+            push!(new, v)
             push!(parent, 0)
-            # push!(first_anc, 0)
+            push!(ancestor, 0)
         end
 
         for s in childindices(etree, v)
             if s !== u
                 parent[new_in_clique[s]] = new_in_clique[v]
-                # first_anc[new_in_clique[s]] = v
+                ancestor[new_in_clique[s]] = v
             end
         end
     end
 
-    new_first, new_last, Tree(parent)
+    new, ancestor, Tree(parent)
 end
 
 
 function stree!(order::Order, graph::OrderedGraph, stype::SupernodeType, etree::Tree=etree!(order, graph))
     rowcount, colcount = supcnt(graph, etree)
-    new_first, new_last, stree = pothensun(etree, colcount, stype)
+    new, ancestor, stree = pothensun(etree, colcount, stype)
  
     sndptr = Vector{Int}(undef, treesize(stree) + 1)
     sepptr = Vector{Int}(undef, treesize(stree) + 1)
@@ -80,18 +77,17 @@ function stree!(order::Order, graph::OrderedGraph, stype::SupernodeType, etree::
     sndptr[1] = sepptr[1] = 1
 
     for (i, j) in enumerate(postorder!(stree))
-        v = new_first[j]
+        v = new[j]
         p = sndptr[i]
-        sndval[p] = v
 
-        while v != new_last[j]
+        while !isnothing(v) && v != ancestor[j]
+            sndval[p] = v
             v = parentindex(etree, v)
             p += 1
-            sndval[p] = v
         end
 
-        sndptr[i + 1] = p + 1
-        sepptr[i + 1] = sndptr[i] + sepptr[i] + colcount[new_first[j]] - p - 1
+        sndptr[i + 1] = p
+        sepptr[i + 1] = sndptr[i] + sepptr[i] + colcount[new[j]] - p
     end
 
     permute!(order, sndval)
