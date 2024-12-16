@@ -16,6 +16,7 @@ MLStyle = "d8e11817-5142-5d16-987a-aa16d5891078"
 Metis = "2679e427-3c69-5b7f-982b-ece356f1e94b"
 PartialFunctions = "570af359-4316-4cb7-8c74-252c00c2016b"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SymRCM = "286e6d88-80af-4590-acc9-0001b223b9bd"
 TreeWidthSolver = "7d267fc5-9ace-409f-a54c-cd2374872a55"
 
 [compat]

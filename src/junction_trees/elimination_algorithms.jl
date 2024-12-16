@@ -3,6 +3,7 @@
 
 A graph elimination algorithm. The options are
 - [`CuthillMcKeeJL_RCM`](@ref)
+- [`SymRCMJL_RCM`](@ref)
 - [`AMDJL_AMD`](@ref)
 - [`MetisJL_ND`](@ref)
 - [`TreeWidthSolverJL_BT`](@ref)
@@ -17,6 +18,14 @@ abstract type EliminationAlgorithm end
 The reverse Cuthill-McKee algorithm. Uses CuthillMckee.jl.
 """
 struct CuthillMcKeeJL_RCM <: EliminationAlgorithm end
+
+
+"""
+    SymRCMJL_RCM <: EliminationAlgorithm
+
+The reverse Cuthill-McKee algorithm. Uses SymRCM.jl.
+"""
+struct SymRCMJL_RCM <: EliminationAlgorithm end
 
 
 """
@@ -70,6 +79,12 @@ end
 # Construct an order using the reverse Cuthill-McKee algorithm. Uses CuthillMcKee.jl.
 function Order(graph::AbstractMatrix, ealg::CuthillMcKeeJL_RCM)
     order = CuthillMcKee.symrcm(graph)
+    Order(order)
+end
+
+
+function Order(graph::AbstractMatrix, ealg::SymRCMJL_RCM)
+    order = SymRCM.symrcm(graph)
     Order(order)
 end
 

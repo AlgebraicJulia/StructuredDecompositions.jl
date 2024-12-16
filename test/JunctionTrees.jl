@@ -16,22 +16,25 @@ add_edges!(graph,
     [1, 1, 1, 1,  2, 2, 5, 5,  6, 6,  7, 7, 7,  10, 10, 10, 10, 12, 12, 12, 12, 15],
     [3, 4, 5, 15, 3, 4, 9, 16, 9, 16, 8, 9, 15, 11, 13, 14, 17, 13, 14, 16, 17, 17])
 
-order = JunctionTrees.Order(graph, CuthillMcKeeJL_RCM())
+order = Order(graph, CuthillMcKeeJL_RCM())
 @test length(order) == 17
 
-order = JunctionTrees.Order(graph, AMDJL_AMD())
+order = Order(graph, SymRCMJL_RCM())
 @test length(order) == 17
 
-order = JunctionTrees.Order(graph, MetisJL_ND())
+order = Order(graph, AMDJL_AMD())
 @test length(order) == 17
 
-order = JunctionTrees.Order(graph, TreeWidthSolverJL_BT())
+order = Order(graph, MetisJL_ND())
 @test length(order) == 17
 
-order = JunctionTrees.Order(graph, MCS())
+order = Order(graph, TreeWidthSolverJL_BT())
 @test length(order) == 17
 
-order = JunctionTrees.Order(1:17)
+order = Order(graph, MCS())
+@test length(order) == 17
+
+order = Order(1:17)
 @test length(order) == 17
 
 # Figure 4.3

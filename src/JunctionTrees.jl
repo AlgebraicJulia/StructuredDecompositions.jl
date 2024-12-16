@@ -6,6 +6,7 @@ import Catlab.BasicGraphs
 import CuthillMcKee
 import LinkedLists: ListNode, LinkedList
 import Metis
+import SymRCM
 import TreeWidthSolver
 
 using AbstractTrees
@@ -23,7 +24,7 @@ export Order
 
 
 # Elimination Algorithms
-export AMDJL_AMD, CuthillMcKeeJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS
+export AMDJL_AMD, CuthillMcKeeJL_RCM, SymRCMJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS
 
 
 # Ordered Graphs
