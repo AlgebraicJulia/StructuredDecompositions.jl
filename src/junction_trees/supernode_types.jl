@@ -72,8 +72,8 @@ end
 
 function stree(graph::OrderedGraph, tree::Tree, colcount::AbstractVector, stype::SupernodeType)
     supernode, tree = cta(tree, colcount, stype)
-    order = postorder(tree)
-    view(supernode, order), PostorderTree(tree, order)
+    order = postorder!(tree)
+    view(supernode, order), tree
 end
 
 

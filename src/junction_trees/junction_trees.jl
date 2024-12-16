@@ -1,6 +1,6 @@
 struct JunctionTree
     order::Order
-    tree::PostorderTree
+    tree::Tree
     partition::Vector{Int}
 
     # supernode(i)
