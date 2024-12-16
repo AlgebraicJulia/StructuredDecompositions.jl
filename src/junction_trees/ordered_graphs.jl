@@ -111,21 +111,7 @@ end
 #    graph     simple connected graph
 #    tree      elimination tree
 # ----------------------------------------
-function supcnt(graph::OrderedGraph, tree::Tree)
-    order = postorder(tree)
-    rc, cc = supcnt(OrderedGraph(graph, order), PostorderTree(tree, order))
-    view(rc, inv(order)), view(cc, inv(order))
-end
-
-
-# An Efficient Algorithm to Compute Row and Column Counts for Sparse Cholesky Factorization
-# Gilbert, Ng, and Peyton
-# Figure 3: Implementation of algorithm to compute row and column counts.
-# ----------------------------------------
-#    graph     simple connected graph
-#    tree      elimination tree
-# ----------------------------------------
-function supcnt(graph::OrderedGraph, tree::PostorderTree)
+function supcnt(graph::OrderedGraph, tree::Tree, level::AbstractVector=levels(tree), fdesc::AbstractVector=firstdescendants(tree))
     n = treesize(tree)
     sets = DisjointSets(n)
     
@@ -142,15 +128,15 @@ function supcnt(graph::OrderedGraph, tree::PostorderTree)
         wt[parentindex(tree, p)] -= 1
 
         for u in outneighbors(graph, p)
-            if first(descendantindices(tree, p)) > prev_nbr[u]
+            if fdesc[p] > prev_nbr[u]
                 wt[p] += 1
                 pp = prev_p[u]
                 
                 if iszero(pp)
-                    rc[u] += level(tree, p) - level(tree, u)
+                    rc[u] += level[p] - level[u]
                 else
                     q = find!(sets, pp)
-                    rc[u] += level(tree, p) - level(tree, q)
+                    rc[u] += level[p] - level[q]
                     wt[q] -= 1
                 end
     

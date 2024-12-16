@@ -80,7 +80,7 @@ function postorder!(tree::Tree)
 end
 
 
-function level(tree::Tree)
+function levels(tree::Tree)
     n = treesize(tree)
     level = Vector{Int}(undef, n)
     level[n] = 0
@@ -94,7 +94,7 @@ function level(tree::Tree)
 end
 
 
-function fdesc(tree::Tree)
+function firstdescendants(tree::Tree)
     n = treesize(tree)
     fdesc = collect(1:n)
 

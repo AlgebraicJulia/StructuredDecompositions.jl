@@ -25,6 +25,11 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
     order = deepcopy(order)
     graph = OrderedGraph(graph, order)
     tree = etree(graph)
+
+    postorder = postorder!(tree)
+    permute!(order, postorder)
+    permute!(graph, postorder)        
+
     rowcount, colcount = supcnt(graph, tree)
     supernode, tree = stree(graph, tree, colcount, stype)
 
