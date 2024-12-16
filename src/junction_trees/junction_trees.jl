@@ -31,11 +31,12 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
 
     for j in 1:treesize(stree)
         u = sndptr[j + 1] - 1
-        column = Int[]
+        column = Vector{Int}(undef, sepptr[j + 1] - sepptr[j])
+        count = 0
 
         for v in outneighbors(graph, sndptr[j])
             if u < v
-                push!(column, v)
+                column[count += 1] = v
                 fullarray[v] = j
             end
         end
@@ -43,13 +44,13 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
         for i in childindices(stree, j)
             for v in view(sepval, sepptr[i]:sepptr[i + 1] - 1)
                 if u < v && fullarray[v] != j
-                    push!(column, v)
+                    column[count += 1] = v
                     fullarray[v] = j
                 end
             end
         end
 
-        sepval[sepptr[j]:sepptr[j + 1] - 1] = sort(column)
+        sepval[sepptr[j]:sepptr[j + 1] - 1] = sort!(column)
     end
 
     JunctionTree(order, stree, partition, sndptr, sepptr, sepval)
