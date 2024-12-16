@@ -4,7 +4,7 @@ module JunctionTrees
 import AMD
 import Catlab.BasicGraphs
 import CuthillMcKee
-import LinkedLists
+import LinkedLists: ListNode, LinkedList
 import Metis
 import TreeWidthSolver
 
