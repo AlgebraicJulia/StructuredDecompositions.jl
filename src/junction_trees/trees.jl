@@ -60,12 +60,11 @@ end
 
 function postorder!(tree::Tree)
     order = postorder(tree)
-    index = inv(order)
     parent = copy(tree.parent)
 
     map!(tree.parent, order) do i
         j = parent[i]
-        iszero(j) ? 0 : index[j]
+        iszero(j) ? 0 : inv(order)[j]
     end
 
     n = treesize(tree)
