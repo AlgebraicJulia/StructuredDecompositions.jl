@@ -80,18 +80,18 @@ function stree!(order::Order, graph::OrderedGraph, stype::SupernodeType, etree::
     sndptr[1] = sepptr[1] = 1
 
     for (i, j) in enumerate(postorder!(stree))
-        sndptr[i + 1] = sndptr[i] + colcount[new_first[j]] - colcount[new_last[j]] + 1
-        sepptr[i + 1] = sepptr[i] + colcount[new_last[j]] - 1
+        v = new_first[j]
+        p = sndptr[i]
+        sndval[p] = v
 
-        k = new_first[j]
-        l = sndptr[i]
-        sndval[l] = k
-
-        while k != new_last[j]
-            k = parentindex(etree, k)
-            l += 1
-            sndval[l] = k
+        while v != new_last[j]
+            v = parentindex(etree, v)
+            p += 1
+            sndval[p] = v
         end
+
+        sndptr[i + 1] = p + 1
+        sepptr[i + 1] = sndptr[i] + sepptr[i] + colcount[new_first[j]] - p - 1
     end
 
     permute!(order, sndval)
