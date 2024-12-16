@@ -43,8 +43,6 @@ function pothensun(etree::Tree, colcount::AbstractVector, stype::SupernodeType)
     parent = sizehint!(Int[], n)
     first_anc = sizehint!(Int[], n)
 
-    i = 0
-
     for v in 1:n
         u = child_in_supernode(etree, colcount, stype, v)
  
@@ -52,7 +50,7 @@ function pothensun(etree::Tree, colcount::AbstractVector, stype::SupernodeType)
             new_in_clique[v] = new_in_clique[u]
             push!(new[new_in_clique[v]], v)
         else
-            new_in_clique[v] = i += 1
+            new_in_clique[v] = length(new) + 1
             push!(new, [v])
             push!(parent, 0)
             push!(first_anc, 0)

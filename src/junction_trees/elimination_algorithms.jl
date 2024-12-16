@@ -143,12 +143,12 @@ function mcs(graph::AbstractSparseMatrixCSC)
     n = size(graph, 1)
     α = Order(undef, n)
     len = Vector{Int}(undef, n)
-    set = Vector{LinkedLists.LinkedList{Int}}(undef, n)
-    pointer = Vector{LinkedLists.ListNode{Int}}(undef, n)
+    set = Vector{LinkedList{Int}}(undef, n)
+    pointer = Vector{ListNode{Int}}(undef, n)
 
     for i in 1:n
         len[i] = 1
-        set[i] = LinkedLists.LinkedList{Int}()
+        set[i] = LinkedList{Int}()
         pointer[i] = push!(set[1], i)
     end
 
