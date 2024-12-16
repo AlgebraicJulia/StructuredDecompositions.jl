@@ -1,7 +1,6 @@
 struct JunctionTree
     order::Order
     tree::Tree
-    partition::Vector{Int}
 
     # supernode(i)
     sndptr::Vector{Int}
@@ -24,7 +23,7 @@ end
 function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     order = deepcopy(order)
     graph = OrderedGraph(graph, order)
-    stree, sndptr, sepptr, partition = stree!(order, graph, stype)
+    stree, sndptr, sepptr = stree!(order, graph, stype)
 
     sepval = Vector{Int}(undef, last(sepptr) - 1)
     fullarray = zeros(Int, nv(graph))
@@ -53,7 +52,7 @@ function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNOD
         sepval[sepptr[j]:sepptr[j + 1] - 1] = sort!(column)
     end
 
-    JunctionTree(order, stree, partition, sndptr, sepptr, sepval)
+    JunctionTree(order, stree, sndptr, sepptr, sepval)
 end
 
 

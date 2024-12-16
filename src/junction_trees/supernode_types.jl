@@ -77,20 +77,18 @@ function stree!(order::Order, graph::OrderedGraph, stype::SupernodeType, etree::
     sndptr = Vector{Int}(undef, treesize(stree) + 1)
     sepptr = Vector{Int}(undef, treesize(stree) + 1)
     postorder = Vector{Int}(undef, nv(graph))
-    partition = Vector{Int}(undef, nv(graph))
     sndptr[1] = sepptr[1] = 1
 
     for (i, j) in enumerate(postorder!(stree))
         residual = supernode[j]
         sndptr[i + 1] = sndptr[i] + length(residual)
         sepptr[i + 1] = sepptr[i] + colcount[last(residual)] - 1
-        partition[sndptr[i]:sndptr[i + 1] - 1] .= i
         postorder[sndptr[i]:sndptr[i + 1] - 1] = residual
     end
 
     permute!(order, postorder)
     permute!(graph, postorder)
-    stree, sndptr, sepptr, partition
+    stree, sndptr, sepptr
 end
 
 
