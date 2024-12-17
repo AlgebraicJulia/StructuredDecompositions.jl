@@ -214,7 +214,7 @@ end
 #    jtree    junction tree
 # ----------------------------------------
 function StrDecomp(graph::AbstractSymmetricGraph, jtree::JunctionTree)
-    n = length(jtree)
+    n = treesize(jtree)
     tree = Graph(n)
     
     for i in 1:n - 1
@@ -293,7 +293,7 @@ end
 
 
 function homomorphisms(graph::AbstractSymmetricGraph, jtree::JunctionTree)
-    n = length(jtree)
+    n = treesize(jtree)
     subgraph = Vector{Any}(undef, 2n - 1)
     homomorphism = Vector{Any}(undef, 2n - 2)
     
@@ -310,12 +310,12 @@ function homomorphisms(graph::AbstractSymmetricGraph, jtree::JunctionTree)
     for i in 1:n - 1
         # seperator(i) → clique(parent(i))
         j = parentindex(jtree, i)
-        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], seperator_to_parent(jtree, i))
+        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], lift_par(jtree, i))
     end
     
     for i in 1:n - 1
         # seperator(i) → clique(i)
-        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], seperator_to_self(jtree, i))
+        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], lift_sep(jtree, i))
     end
     
     subgraph, homomorphism
@@ -323,7 +323,7 @@ end
 
 
 function induced_order(order::Order, elements::AbstractVector)
-    Order(sortperm(inverse(order, elements)))
+    Order(sortperm(view(inv(order), elements)))
 end
 
 

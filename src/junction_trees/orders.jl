@@ -1,7 +1,8 @@
 """
     Order <: AbstractVector{Int}
 
-A permutation of the set ``\\{1, \\dots, n\\}.``
+A [permutation](https://en.wikipedia.org/wiki/Permutation) ``\\sigma`` of the set ``\\{1, \\dots, n\\}``.
+This type implements the [abstract array interface](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array).
 """
 struct Order <: AbstractVector{Int}
     order::Vector{Int} # permutation
@@ -12,43 +13,45 @@ end
 """
     Order(order::AbstractVector)
 
-Construct a permutation ``\\sigma`` from a sequence ``(\\sigma(1), \\dots, \\sigma(n)).``
+Construct a permutation ``\\sigma`` from a sequence ``(\\sigma(1), \\dots, \\sigma(n))``.
 """
 function Order(order::AbstractVector)
-    n = length(order)
-    index = Vector{Int}(undef, n)
-
-    for i in 1:n
-        index[order[i]] = i
-    end
-    
+    index = Vector{Int}(undef, length(order))
+    index[order] = eachindex(order)
     Order(order, index)
 end
 
 
-# Determine if i < j, where
-#    u = σ(i)
-#    v = σ(j)
-function (order::Order)(u, v)
-    inverse(order, u) < inverse(order, v)
+function Order(::UndefInitializer, n::Integer)
+    Order(Vector{Int}(undef, n), Vector{Int}(undef, n))
 end
 
 
-# Compose two permutations.
-function compose(left::Order, right::Order)
-    Order(right.order[left.order], left.index[right.index])
+function Base.permute!(order::Order, permutation::AbstractVector)
+    permute!(order.order, permutation)
+    order.index[order.order] = eachindex(order.order)
+    order
 end
 
 
-# Construct the inverse permutation.
-function inverse(order::Order)
+# Construct a copy of a permutation.
+function Base.copy(order::Order)
+    Order(order.order, order.index)
+end
+
+
+function Base.deepcopy(order::Order)
+    Order(copy(order.order), copy(order.index))
+end
+
+
+"""
+    inverse(order::Order)
+
+Construct the inverse permutation ``\\sigma^{-1}``.
+"""
+function Base.inv(order::Order)
     Order(order.index, order.order)
-end
-
-
-# Get the index σ⁻¹(v),
-function inverse(order::Order, v)
-    order.index[v]
 end
 
 
@@ -62,6 +65,12 @@ function Base.getindex(order::Order, i)
 end
 
 
+function Base.setindex!(order::Order, v, i)
+    order.index[v] = i
+    order.order[i] = v
+end
+
+
 function Base.IndexStyle(::Type{Order})
     IndexLinear()
 end
@@ -69,9 +78,4 @@ end
 
 function Base.size(order::Order)
     (length(order.order),)
-end
-
-
-function Base.deepcopy(order::Order)
-    Order(copy(order.order), copy(order.index))
 end
