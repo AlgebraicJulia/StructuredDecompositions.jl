@@ -41,6 +41,26 @@ function epis(gs::Vector{Graph})
     return Dict(the_tuples)
 end
 
+
+#=
+    In: a tree T and an integer w
+    Out: all codecompositions with shape T and width w.
+    
+    Alg: 
+        for each node v of T choose a graph Gᵥ on at most w vertices
+        for each edge e=tu in T, make a list of all cospans (using function epis above) of the form 
+            Gₜ -->> ? <<-- Gᵤ 
+        then any combination of such choices of elements in these lists determine a codecompostion of 
+        width w and shape T.  
+=#
+
+#=
+    In: integer n, width 
+    Out: all codecompositions of width w whose shape is a tree on n nodes. 
+
+    Alg: enumerate trees on n nodes, pass them into previous function
+=#
+
 K₃ = k(3)
 subK₃ = sub(K₃)
 
