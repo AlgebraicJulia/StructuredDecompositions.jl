@@ -1,30 +1,31 @@
 module JunctionTrees
 
 
-import AMD
-import Catlab.BasicGraphs
-import CuthillMcKee
-import LinkedLists: ListNode, LinkedList
-import Metis
-import SymRCM
-import TreeWidthSolver
-
 using AbstractTrees
 using Base.Order: Ordering
 using DataStructures
-using Graphs
-using Graphs.SimpleGraphs
 using LinearAlgebra
 using SparseArrays
 using SparseArrays: AbstractSparseMatrixCSC
 
 
-# Orders
-export Order
+import AMD
+import Base.Iterators
+import Catlab
+import CuthillMcKee
+import Graphs
+import LinkedLists: ListNode, LinkedList
+import Metis
+import SymRCM
+import TreeWidthSolver
+
+
+# Permutations
+export Permutation
 
 
 # Elimination Algorithms
-export AMDJL_AMD, CuthillMcKeeJL_RCM, SymRCMJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS
+export AMDJL_AMD, AMDJL_SYMAMD, CuthillMcKeeJL_RCM, SymRCMJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS, DFS
 
 
 # Ordered Graphs
@@ -36,18 +37,25 @@ export Node, Maximal, Fundamental
 
 
 # Junction Trees
-export JunctionTree, treewidth, seperator, residual, clique, find_clique, lift_par, lift_sep, lift
+export JunctionTree, jtree, treewidth, seperator, residual, clique, relative
 
 
+include("junction_trees/elimination_algorithms.jl")
+include("junction_trees/supernode_types.jl")
 include("junction_trees/fixed_stacks.jl")
 include("junction_trees/disjoint_sets.jl")
-include("junction_trees/orders.jl")
-include("junction_trees/elimination_algorithms.jl")
-include("junction_trees/trees.jl")
-include("junction_trees/child_indices.jl")
-include("junction_trees/ordered_graphs.jl")
-include("junction_trees/supernode_types.jl")
+include("junction_trees/sum_vectors.jl")
+include("junction_trees/permutations.jl")
+include("junction_trees/trees/abstract_trees.jl")
+include("junction_trees/trees/trees.jl")
+include("junction_trees/trees/tree_edges.jl")
+include("junction_trees/trees/tree_children.jl")
+include("junction_trees/trees/tree_parent.jl")
+include("junction_trees/graphs/abstract_graphs.jl")
+include("junction_trees/graphs/ordered_graphs.jl")
+include("junction_trees/graphs/ordered_graph_edges.jl")
 include("junction_trees/junction_trees.jl")
+include("junction_trees/utilities.jl")
 
 
 end

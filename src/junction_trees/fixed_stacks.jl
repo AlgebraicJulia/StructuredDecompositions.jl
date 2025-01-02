@@ -1,3 +1,5 @@
+# A stack of fixed size.
+# This type implements the abstract vector interface.
 struct FixedStack{T} <: AbstractVector{T}
     top::Array{Int, 0}
     items::Vector{T}
@@ -9,7 +11,7 @@ end
 
 
 function Base.push!(stack::FixedStack, v)
-    stack.top .+= 1
+    stack.top[] += 1
     stack.items[stack.top[]] = v
     v
 end
@@ -17,7 +19,7 @@ end
 
 function Base.pop!(stack::FixedStack)
     v = stack.items[stack.top[]]
-    stack.top .-= 1
+    stack.top[] -= 1
     v
 end
 

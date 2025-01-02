@@ -5,7 +5,7 @@ using PartialFunctions
 
 using StructuredDecompositions.Decompositions 
 using StructuredDecompositions.FunctorUtils
-using StructuredDecompositions.JunctionTrees: Order, Maximal
+using StructuredDecompositions.JunctionTrees: Permutation, Maximal
 
 using Catlab.Graphics
 using Catlab.Graphs
@@ -112,7 +112,7 @@ add_edges!(graph,
     [1, 1, 1, 1,  2, 2, 5, 5,  6, 6,  7, 7, 7,  10, 10, 10, 10, 12, 12, 12, 12, 15],
     [3, 4, 5, 15, 3, 4, 9, 16, 9, 16, 8, 9, 15, 11, 13, 14, 17, 13, 14, 16, 17, 17])
 
-decomposition = StrDecomp(graph, Order(1:17), Maximal())
+decomposition = StrDecomp(graph, Permutation(1:17), Maximal())
 
 
 @test decomposition.decomp_shape == @acset Graph begin
@@ -156,5 +156,6 @@ end
     ACSetTransformation(induced_subgraph(graph, [15, 16]),     induced_subgraph(graph, [5, 9, 15, 16]),       V=[3, 4],    E=Int[]), # o p   → e i o p
     ACSetTransformation(induced_subgraph(graph, [16, 17]),     induced_subgraph(graph, [15, 16, 17]),         V=[2, 3],    E=Int[]), # p q   → o p q
 ]
+
 
 end

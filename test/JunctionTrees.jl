@@ -16,33 +16,35 @@ add_edges!(graph,
     [1, 1, 1, 1,  2, 2, 5, 5,  6, 6,  7, 7, 7,  10, 10, 10, 10, 12, 12, 12, 12, 15],
     [3, 4, 5, 15, 3, 4, 9, 16, 9, 16, 8, 9, 15, 11, 13, 14, 17, 13, 14, 16, 17, 17])
 
-order = Order(graph, CuthillMcKeeJL_RCM())
+order = Permutation(graph, CuthillMcKeeJL_RCM())
 @test length(order) == 17
 
-order = Order(graph, SymRCMJL_RCM())
+order = Permutation(graph, SymRCMJL_RCM())
 @test length(order) == 17
 
-order = Order(graph, AMDJL_AMD())
+order = Permutation(graph, AMDJL_AMD())
 @test length(order) == 17
 
-order = Order(graph, MetisJL_ND())
+order = Permutation(graph, AMDJL_SYMAMD())
 @test length(order) == 17
 
-order = Order(graph, TreeWidthSolverJL_BT())
+order = Permutation(graph, MetisJL_ND())
 @test length(order) == 17
 
-order = Order(graph, MCS())
+order = Permutation(graph, TreeWidthSolverJL_BT())
 @test length(order) == 17
 
-order = Order(1:17)
+order = Permutation(graph, MCS())
+@test length(order) == 17
+
+order = Permutation(1:17)
 @test length(order) == 17
 
 # Figure 4.3
-jtree = JunctionTree(graph, order, Node())
-@test treewidth(jtree) == 4
-@test treesize(jtree) == 17
+permutation, tree = jtree(graph, order, Node())
+@test treewidth(tree) == 4
 
-@test map(i -> parentindex(jtree, i), 1:17)  == [
+@test map(i -> parentindex(tree, i), 1:17)  == [
     2,
     4,
     4,
@@ -62,7 +64,7 @@ jtree = JunctionTree(graph, order, Node())
     nothing,
 ]
 
-@test map(i -> collect(childindices(jtree, i)), 1:17) == [
+@test map(i -> collect(childindices(tree, i)), 1:17) == [
     [],
     [1],
     [],
@@ -82,7 +84,7 @@ jtree = JunctionTree(graph, order, Node())
     [16],
 ]
 
-@test map(i -> residual(jtree, i), 1:17) == [
+@test map(i -> view(permutation, residual(tree, i)), 1:17) == [
     [10], # j
     [11], # k
     [12], # l
@@ -102,7 +104,7 @@ jtree = JunctionTree(graph, order, Node())
     [17], # q
 ]
 
-@test map(i -> seperator(jtree, i), 1:17) == [
+@test map(i -> view(permutation, seperator(tree, i)), 1:17) == [
     [11, 13, 14, 17], # k m n q
     [13, 14, 17],     # m n q
     [13, 14, 16, 17], # m n p q
@@ -124,11 +126,10 @@ jtree = JunctionTree(graph, order, Node())
 
 
 # Figure 4.7 (left)
-jtree = JunctionTree(graph, order, Maximal())
-@test treewidth(jtree) == 4
-@test treesize(jtree) == 8
+permutation, tree = jtree(graph, order, Maximal())
+@test treewidth(tree) == 4
 
-@test map(i -> parentindex(jtree, i), 1:8)  == [
+@test map(i -> parentindex(tree, i), 1:8)  == [
     8,
     3,
     6,
@@ -139,7 +140,7 @@ jtree = JunctionTree(graph, order, Maximal())
     nothing
 ]
 
-@test map(i -> collect(childindices(jtree, i)), 1:8)  == [
+@test map(i -> collect(childindices(tree, i)), 1:8)  == [
     [],
     [],
     [2],
@@ -150,7 +151,7 @@ jtree = JunctionTree(graph, order, Maximal())
     [1, 7],
 ]
 
-@test map(i -> residual(jtree, i), 1:8) == [
+@test map(i -> view(permutation, residual(tree, i)), 1:8) == [
     [10, 11],             # j k
     [2],                  # b
     [1, 3, 4],            # a c d
@@ -161,7 +162,7 @@ jtree = JunctionTree(graph, order, Maximal())
     [12, 13, 14, 16, 17], # l m n p q
 ]
 
-@test map(i -> seperator(jtree, i), 1:8) == [
+@test map(i -> view(permutation, seperator(tree, i)), 1:8) == [
     [13, 14, 17], # m n q
     [3, 4],       # c d
     [5, 15],      # e o
@@ -173,11 +174,10 @@ jtree = JunctionTree(graph, order, Maximal())
 ]
 
 # Figure 4.9
-jtree = JunctionTree(graph, order, Fundamental())
-@test treewidth(jtree) == 4
-@test treesize(jtree) == 12
+permutation, tree = jtree(graph, order, Fundamental())
+@test treewidth(tree) == 4
 
-@test map(i -> parentindex(jtree, i), 1:12)  == [
+@test map(i -> parentindex(tree, i), 1:12)  == [
     3,
     3,
     12,
@@ -192,7 +192,7 @@ jtree = JunctionTree(graph, order, Fundamental())
     nothing,
 ]
 
-@test map(i -> collect(childindices(jtree, i)), 1:12)  == [
+@test map(i -> collect(childindices(tree, i)), 1:12)  == [
     [],
     [],
     [1, 2],
@@ -207,7 +207,7 @@ jtree = JunctionTree(graph, order, Fundamental())
     [3, 11],
 ]
 
-@test map(i -> residual(jtree, i), 1:12) == [
+@test map(i -> view(permutation, residual(tree, i)), 1:12) == [
     [10, 11], # j k
     [12],     # l
     [13, 14], # m n
@@ -222,7 +222,7 @@ jtree = JunctionTree(graph, order, Fundamental())
     [16, 17], # p q
 ]
 
-@test map(i -> seperator(jtree, i), 1:12) == [
+@test map(i -> view(permutation, seperator(tree, i)), 1:12) == [
     [13, 14, 17],     # m n q
     [13, 14, 16, 17], # m n p q
     [16, 17],         # p q

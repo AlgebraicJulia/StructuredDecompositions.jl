@@ -200,8 +200,8 @@ Construct a structured decomposition of a simple graph, optionally specifying an
 supernode type.
 """
 function StrDecomp(
-    graph::AbstractSymmetricGraph,
-    ealg::Union{Order, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
+    graph::HasGraph,
+    ealg::Union{Permutation, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
     stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
     merge_decompositions(decompositions(graph, ealg, stype))
@@ -213,16 +213,16 @@ end
 #    graph    simple connected graph
 #    jtree    junction tree
 # ----------------------------------------
-function StrDecomp(graph::AbstractSymmetricGraph, jtree::JunctionTree)
-    n = treesize(jtree)
-    tree = Graph(n)
+function StrDecomp(graph::HasGraph, order::Permutation, tree::JunctionTree)
+    n = JunctionTrees.nv(tree)
+    shape = Graph(n)
     
     for i in 1:n - 1
-        add_edge!(tree, i, parentindex(jtree, i))
+        add_edge!(shape, i, parentindex(tree, i))
     end
 
-    diagram = FinDomFunctor(homomorphisms(graph, jtree)..., ∫(tree))
-    StrDecomp(tree, diagram, Decomposition, dom(diagram))
+    diagram = FinDomFunctor(homomorphisms(graph, order, tree)..., ∫(shape))
+    StrDecomp(shape, diagram, Decomposition, dom(diagram))
 end
 
 
@@ -262,7 +262,7 @@ function merge_decompositions(decomposition::AbstractVector)
 end
 
 
-function decompositions(graph::AbstractSymmetricGraph, ealg::EliminationAlgorithm, stype::SupernodeType)
+function decompositions(graph::HasGraph, ealg::EliminationAlgorithm, stype::SupernodeType)
     component = connected_components(graph)
 
     n = length(component)
@@ -270,14 +270,14 @@ function decompositions(graph::AbstractSymmetricGraph, ealg::EliminationAlgorith
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, JunctionTree(subgraph, ealg, stype))
+        decomposition[i] = StrDecomp(subgraph, jtree(subgraph, ealg, stype)...)
     end
     
     decomposition
 end
 
 
-function decompositions(graph::AbstractSymmetricGraph, order::Order, stype::SupernodeType)
+function decompositions(graph::HasGraph, order::Permutation, stype::SupernodeType)
     component = connected_components(graph)
 
     n = length(component)
@@ -285,49 +285,49 @@ function decompositions(graph::AbstractSymmetricGraph, order::Order, stype::Supe
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, JunctionTree(subgraph, induced_order(order, component[i]), stype))
+        decomposition[i] = StrDecomp(subgraph, jtree(subgraph, induced_order(order, component[i]), stype)...)
     end
     
     decomposition
 end
 
 
-function homomorphisms(graph::AbstractSymmetricGraph, jtree::JunctionTree)
-    n = treesize(jtree)
+function homomorphisms(graph::HasGraph, order::Permutation, jtree::JunctionTree)
+    n = JunctionTrees.nv(jtree)
     subgraph = Vector{Any}(undef, 2n - 1)
     homomorphism = Vector{Any}(undef, 2n - 2)
     
     for i in 1:n
         # clique(i)
-        subgraph[i] = induced_subgraph(graph, clique(jtree, i))
+        subgraph[i] = induced_subgraph(graph, view(order, clique(jtree, i)))
     end
   
     for i in 1:n - 1
         # seperator(i)
-        subgraph[n + i] = induced_subgraph(graph, seperator(jtree, i))
+        subgraph[n + i] = induced_subgraph(graph, view(order, seperator(jtree, i)))
     end
   
     for i in 1:n - 1
         # seperator(i) → clique(parent(i))
         j = parentindex(jtree, i)
-        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], lift_par(jtree, i))
+        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], relative(jtree, i))
     end
     
     for i in 1:n - 1
         # seperator(i) → clique(i)
-        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], lift_sep(jtree, i))
+        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], length(residual(jtree, i)) .+ eachindex(seperator(jtree, i)))
     end
     
     subgraph, homomorphism
 end
 
 
-function induced_order(order::Order, elements::AbstractVector)
-    Order(sortperm(view(inv(order), elements)))
+function induced_order(order::Permutation, elements::AbstractVector)
+    Permutation(sortperm(view(invperm(order), elements)))
 end
 
 
-function induced_homomorphism(domain::AbstractSymmetricGraph, codomain::AbstractSymmetricGraph, V::AbstractVector)
+function induced_homomorphism(domain::HasGraph, codomain::HasGraph, V::AbstractVector)
     index = Dict{Tuple{Int, Int}, Int}()
     sizehint!(index, ne(codomain))
     

@@ -1,201 +1,135 @@
-struct JunctionTree
-    order::Order
+# A junction tree.
+# This type implements the abstract graph and abstract tree interfaces.
+struct JunctionTree <: AbstractTree
     tree::Tree
-
-    # supernode(i)
     sndptr::Vector{Int}
-
-    # seperator(i)
     sepptr::Vector{Int}
     sepval::Vector{Int}
-
-    # seperator(i) → clique(parent(i))
-    #relptr::Vector{Int}
-    #relval::Vector{Int}
+    relval::Vector{Int}
 end
 
 
-function JunctionTree(graph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    JunctionTree(graph, Order(graph, ealg), stype)
+function JunctionTree()
+    JunctionTree(Tree(), Int[1], Int[1], Int[], Int[])
 end
 
 
-function JunctionTree(graph, order::Order, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+# Construct a junction tree. 
+function jtree(graph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    graph = adjacency_matrix(graph)
+    order = Permutation(graph, ealg)
+    order, jtree!(order, permute!(OrderedGraph(graph), order), stype)
+end
+
+
+# Construct a junction tree. 
+function jtree(graph, order::Permutation, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    jtree(adjacency_matrix(graph), order, stype)
+end
+
+
+# Construct a junction tree. 
+function jtree(graph::SparseMatrixCSC, order::Permutation, stype::SupernodeType)
     order = deepcopy(order)
-    graph = OrderedGraph(graph, order)
-    stree, sndptr, sepptr = stree!(order, graph, stype)
+    order, jtree!(order, permute!(OrderedGraph(graph), order), stype)
+end
 
+
+# Construct a junction tree. 
+function jtree!(order::Permutation, graph::OrderedGraph, stype::SupernodeType)
+    tree, sndptr, sepptr = stree!(order, graph, stype)
+    sepval = sepvals(graph, tree, sndptr, sepptr)
+    relval = relvals(tree, sndptr, sepptr, sepval)
+    JunctionTree(tree, sndptr, sepptr, sepval, relval)
+end
+
+
+# Get the seperators of every node of a supernodal elimination tree.
+function sepvals(graph::OrderedGraph, stree::Tree, sndptr::AbstractVector, sepptr::AbstractVector)
+    temporary = zeros(Int, nv(graph))
     sepval = Vector{Int}(undef, last(sepptr) - 1)
-    fullarray = zeros(Int, nv(graph))
+    p = 1
 
-    for j in 1:treesize(stree)
-        u = sndptr[j + 1] - 1
-        column = Vector{Int}(undef, sepptr[j + 1] - sepptr[j])
-        count = 0
-
-        for v in outneighbors(graph, sndptr[j])
-            if u < v
-                column[count += 1] = v
-                fullarray[v] = j
+    for j in vertices(stree)
+        for v in inneighbors(graph, sndptr[j])
+            if sndptr[j + 1] <= v
+                sepval[p] = v
+                temporary[v] = j
+                p += 1
             end
         end
 
-        for i in childindices(stree, j)
-            for v in view(sepval, sepptr[i]:sepptr[i + 1] - 1)
-                if u < v && fullarray[v] != j
-                    column[count += 1] = v
-                    fullarray[v] = j
-                end
+        for i in childindices(stree, j), v in view(sepval, sepptr[i]:sepptr[i + 1] - 1)
+            if sndptr[j + 1] <= v && temporary[v] != j
+                sepval[p] = v
+                temporary[v] = j
+                p += 1
             end
         end
 
-        sepval[sepptr[j]:sepptr[j + 1] - 1] = sort!(column)
+        sort!(view(sepval, sepptr[j]:sepptr[j + 1] - 1))
     end
 
-    JunctionTree(order, stree, sndptr, sepptr, sepval)
+    sepval
 end
 
 
-"""
-    Order(jtree::JunctionTree)
+# Get the relative indices of every node of a supernodal elimination tree.
+function relvals(stree::Tree, sndptr::AbstractVector, sepptr::AbstractVector, sepval::AbstractVector)
+    relval = Vector{Int}(undef, length(sepval))
+    p = 1
 
-Construct a perfect elimination ordering.
-"""
-function Order(jtree::JunctionTree)
-    Order(jtree.order) 
+    for edge in Graphs.edges(stree)
+        i = Graphs.dst(edge)
+        j = Graphs.src(edge)
+
+        while p < sepptr[i + 1] && sepval[p] < sndptr[j + 1]
+            relval[p] = sepval[p] - sndptr[j] + 1
+            p += 1
+        end
+
+        q = sepptr[j]
+
+        while p < sepptr[i + 1]
+            q += searchsortedfirst(view(sepval, q:sepptr[j + 1] - 1), sepval[p])
+            relval[p] = q - sepptr[j] - sndptr[j] + sndptr[j + 1]
+            p += 1
+        end
+    end
+
+    relval
 end
 
 
-"""
-    clique(jtree::JunctionTree, i::Integer)
-
-Get the clique at node ``i``.
-"""
-function clique(jtree::JunctionTree, i::Integer)
-    view(jtree.order, [residualindices(jtree, i); seperatorindices(jtree, i)])
+# Get the clique at node i.
+function clique(tree::JunctionTree, i::Integer)
+    SumVector(residual(tree, i), seperator(tree, i))
 end
 
 
-"""
-    treewidth(jtree::JunctionTree)
-
-Compute the width of a junction tree.
-"""
-function treewidth(jtree::JunctionTree)
-    n = treesize(jtree)
-    maximum(map(i -> length(residualindices(jtree, i)) + length(seperatorindices(jtree, i)) - 1, 1:n))
+# Compute the width of a junction tree
+function treewidth(tree::JunctionTree)
+    maximum(vertices(tree)) do i
+        length(residual(tree, i)) + length(seperator(tree, i)) - 1
+    end
 end
 
 
-function residualindices(jtree::JunctionTree, i::Integer)
+# Get the residual at node i.
+function residual(jtree::JunctionTree, i::Integer)
     jtree.sndptr[i]:jtree.sndptr[i + 1] - 1
 end
 
 
-function seperatorindices(jtree::JunctionTree, i::Integer)
+# Get the seperator at node i.
+function seperator(jtree::JunctionTree, i::Integer)
     view(jtree.sepval, jtree.sepptr[i]:jtree.sepptr[i + 1] - 1)
 end
 
 
-"""
-    seperator(jtree::JunctionTree, i::Integer)
-
-Get the seperator at node ``i``.
-"""
-function seperator(jtree::JunctionTree, i::Integer)
-    view(jtree.order, seperatorindices(jtree, i))
-end
-
-
-"""
-    residual(jtree::JunctionTree, i::Integer)
-
-Get the residual at node ``i``.
-"""
-function residual(jtree::JunctionTree, i::Integer)
-    view(jtree.order, residualindices(jtree, i))
-end
-
-
-#=
-"""
-    find_clique(jtree::JunctionTree, v::Integer)
-
-Find a node `i` safisfying `v ∈ clique(jtree, i)`.
-"""
-function find_clique(jtree::JunctionTree, v::Integer)
-    jtree.partition[inv(jtree.order)[v]]
-end
-
-
-"""
-    find_clique(jtree::JunctionTree, set::AbstractVector)
-
-Find a node `i` satisfying `vertices ⊆ clique(jtree, i)`.
-"""
-function find_clique(jtree::JunctionTree, vertices::AbstractVector)
-    jtree.partition[minimum(view(jtree.order, vertices))]
-end
-=#
-
-
-# Multiline printing.
-function Base.show(io::IO, ::MIME"text/plain", jtree::JunctionTree)
-    n = treewidth(jtree)
-    print(io, "width: $n\njunction tree:\n")
-    
-    print_tree(io, IndexNode(jtree)) do io, node
-        show(IOContext(io, :compact => true, :limit => true), clique(jtree, node.index))
-    end
-end
-
-
-#########
-# Lifts #
-#########
-# In principal, cliques are subsets C ⊆ V. In practice, we represent them by vectors
-#    C: n → V
-# Given another vector S: m → V, we may wish to find a vector L: m → n satisfying
-#      C
-#    n → V
-#      ↖ ↑ S
-#      L m
-# The vector L is called a lift, and we write L: S → C.
-
-
-# Compute the lift L: seperator(i) → clique(i). This satisfies
-#    seperator(jtree, i) == clique(jtree, i)[lift_sep(jtree, i)]
-function lift_sep(jtree::JunctionTree, i::Integer)
-    residual = residualindices(jtree, i)
-    seperator = seperatorindices(jtree, i)
-    length(residual) + 1:length(residual) + length(seperator)
-end
-
-# Compute the lift L: seperator(i) → clique(parent(i)). This satisfies
-#    seperator(jtree, i) == clique(jtree, parentindex(jtree, i)[lift_sep_par(jtree, i)]
-function lift_par(jtree::JunctionTree, i::Integer)
-    lift_ind(jtree, seperatorindices(jtree, i), parentindex(jtree, i))
-end
-
-
-# Compute the lift L: vertices → clique(i). This satisfies
-#    vertices == clique(jtree, i)[lift(jtree, vertices, i)]
-function lift(jtree::JunctionTree, vertices::AbstractVector, i::Integer)
-    lift_ind(jtree, view(inv(jtree.order), vertices), i)
-end
-
-
-function lift_ind(jtree::JunctionTree, indices::AbstractVector, i::Integer)
-    residual = residualindices(jtree, i)
-    seperator = seperatorindices(jtree,i)
-
-    map(indices) do v
-        if v in residual
-            v - first(residual) + 1
-        else
-            length(residual) + searchsortedfirst(seperator, v)
-        end
-    end
+# Get the relative indices at node i.
+function relative(jtree::JunctionTree, i::Integer)
+    view(jtree.relval, jtree.sepptr[i]:jtree.sepptr[i + 1] - 1)
 end
 
 
@@ -204,36 +138,36 @@ end
 ##########################
 
 
-function AbstractTrees.treesize(jtree::JunctionTree)
-    treesize(jtree.tree)
+function firstchildindex(tree::JunctionTree, i::Integer)
+    firstchildindex(tree.tree, i)
 end
 
 
-function AbstractTrees.treeheight(jtree::JunctionTree)
-    treeheight(jtree.tree)
+function AbstractTrees.rootindex(tree::JunctionTree)
+    rootindex(tree.tree)
 end
 
 
-function AbstractTrees.rootindex(jtree::JunctionTree)
-    rootindex(jtree.tree)
+function AbstractTrees.parentindex(tree::JunctionTree, i::Integer)
+    parentindex(tree.tree, i)
 end
 
 
-function AbstractTrees.parentindex(jtree::JunctionTree, i::Integer)
-    parentindex(jtree.tree, i)
+function AbstractTrees.nextsiblingindex(tree::JunctionTree, i::Integer)
+    nextsiblingindex(tree.tree, i)
 end
 
 
-function AbstractTrees.childindices(jtree::JunctionTree, i::Integer)
-    childindices(jtree.tree, i)
+function AbstractTrees.nodevalue(tree::JunctionTree, i::Integer)
+    clique(tree, i)
 end
 
 
-function AbstractTrees.NodeType(::Type{IndexNode{JunctionTree, Int}})
-    HasNodeType()
-end
+############################
+# Abstract Graph Interface #
+############################
 
 
-function AbstractTrees.nodetype(::Type{IndexNode{JunctionTree, Int}})
-    IndexNode{JunctionTree, Int}
+function Graphs.nv(tree::JunctionTree)
+    nv(tree.tree)
 end

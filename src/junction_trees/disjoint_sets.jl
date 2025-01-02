@@ -1,3 +1,4 @@
+# A collection of disjoint sets.
 struct DisjointSets
     sets::IntDisjointSets{Int}
     index::Vector{Int}

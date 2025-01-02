@@ -5,9 +5,11 @@ A graph elimination algorithm. The options are
 - [`CuthillMcKeeJL_RCM`](@ref)
 - [`SymRCMJL_RCM`](@ref)
 - [`AMDJL_AMD`](@ref)
+- [`AMDJL_SYMAMD`](@ref)
 - [`MetisJL_ND`](@ref)
 - [`TreeWidthSolverJL_BT`](@ref)
 - [`MCS`](@ref)
+- [`DFS`](@ref)
 """
 abstract type EliminationAlgorithm end
 
@@ -33,7 +35,18 @@ struct SymRCMJL_RCM <: EliminationAlgorithm end
 
 The approximate minimum degree algorithm. Uses AMD.jl.
 """
-struct AMDJL_AMD <: EliminationAlgorithm end
+struct AMDJL_AMD <: EliminationAlgorithm
+    meta::AMD.Amd
+end
+
+"""
+    AMDJL_SYMAMD <: EliminationAlgorithm
+
+The SYMAMD algorithm. Uses AMD.jl.
+"""
+struct AMDJL_SYMAMD{T} <: EliminationAlgorithm
+    meta::AMD.Colamd{T}
+end
 
 
 """
@@ -61,138 +74,25 @@ struct MCS <: EliminationAlgorithm end
 
 
 """
-    Order(graph[, ealg::EliminationAlgorithm])
+    DFS <: EliminationAlgorithm
 
-Construct an elimination order for a simple graph, optionally specifying an elimination algorithm.
+The descent-first search algorithm.
 """
-function Order(graph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    Order(adjacencymatrix(graph), ealg)
+struct DFS <: EliminationAlgorithm end
+
+
+function AMDJL_AMD()
+    AMDJL_AMD(AMD.Amd())
 end
 
 
-# Construct an elimination order.
-function Order(graph::AbstractMatrix)
-    Order(graph, DEFAULT_ELIMINATION_ALGORITHM)
+function AMDJL_SYMAMD{T}() where T
+    AMDJL_SYMAMD(AMD.Colamd{T}())
 end
 
 
-# Construct an order using the reverse Cuthill-McKee algorithm. Uses CuthillMcKee.jl.
-function Order(graph::AbstractMatrix, ealg::CuthillMcKeeJL_RCM)
-    order = CuthillMcKee.symrcm(graph)
-    Order(order)
-end
-
-
-function Order(graph::AbstractMatrix, ealg::SymRCMJL_RCM)
-    order = SymRCM.symrcm(graph)
-    Order(order)
-end
-
-
-# Construct an order using the approximate minimum degree algorithm. Uses AMD.jl.
-function Order(graph::AbstractMatrix, ealg::AMDJL_AMD)
-    order = AMD.symamd(graph)
-    Order(order)
-end
-
-
-# Construct an order using the nested dissection heuristic. Uses Metis.jl.
-function Order(graph::AbstractMatrix, ealg::MetisJL_ND)
-    order, index = Metis.permutation(graph)
-    Order(order, index)
-end
-
-
-# Construct an order using the Bouchitte-Todinca algorithm. Uses TreeWidthSolver.jl.
-function Order(graph::AbstractSparseMatrixCSC, ealg::TreeWidthSolverJL_BT)
-    n = size(graph, 1)
-    T = TreeWidthSolver.LongLongUInt{n ÷ 64 + 1}
-    fadjlist = Vector{Vector{Int}}(undef, n)
-    bitfadjlist = Vector{T}(undef, n)
-    
-    for i in 1:n
-        fadjlist[i] = rowvals(graph)[nzrange(graph, i)]
-        bitfadjlist[i] = TreeWidthSolver.bmask(T, fadjlist[i])
-    end
-
-    bitgraph = TreeWidthSolver.MaskedBitGraph(bitfadjlist, fadjlist, TreeWidthSolver.bmask(T, 1:n))
-    decomposition = TreeWidthSolver.bt_algorithm(bitgraph, TreeWidthSolver.all_pmc_enmu(bitgraph, false), ones(n), false, true)
-    order = reverse(reduce(vcat, TreeWidthSolver.EliminationOrder(decomposition.tree).order))
-    Order(order)
-end
-
-
-# Construct an order using the maximum cardinality search algorithm.
-function Order(graph::AbstractMatrix, ealg::MCS)
-    mcs(graph)
-end
-
-
-# Construct the adjacency matrix of a graph.
-function adjacencymatrix(graph::BasicGraphs.AbstractSymmetricGraph)
-    rowval = Vector{Int}(undef, BasicGraphs.ne(graph))
-    colptr = Vector{Int}(undef, BasicGraphs.nv(graph) + 1)
-    colptr[1] = 1
-
-    for i in BasicGraphs.vertices(graph)
-        column = BasicGraphs.all_neighbors(graph, i)
-        colptr[i + 1] = colptr[i] + length(column)
-        rowval[colptr[i]:colptr[i + 1] - 1] = sort!(collect(column))
-    end
-
-    nzval = ones(Bool, BasicGraphs.ne(graph))
-    SparseMatrixCSC(BasicGraphs.nv(graph), BasicGraphs.nv(graph), colptr, rowval, nzval)
-end
-
-
-# Construct the adjacency matrix of a graph.
-function adjacencymatrix(graph::AbstractGraph)
-    adjacency_matrix(graph; dir=:both)
-end
-
-
-# Simple Linear-Time Algorithms to Test Chordality of Graphs, Test Acyclicity of Hypergraphs, and Selectively Reduce Acyclic Hypergraphs
-# Tarjan and Yannakakis
-# Maximum Cardinality Search
-function mcs(graph::AbstractSparseMatrixCSC)
-    n = size(graph, 1)
-    α = Order(undef, n)
-    len = Vector{Int}(undef, n)
-    set = Vector{LinkedList{Int}}(undef, n)
-    pointer = Vector{ListNode{Int}}(undef, n)
-
-    for i in 1:n
-        len[i] = 1
-        set[i] = LinkedList{Int}()
-        pointer[i] = push!(set[1], i)
-    end
-
-    i = n
-    j = 1
-
-    while i >= 1
-        v = first(set[j])
-        deleteat!(set[j], pointer[v])        
-        α[i] = v
-        len[v] = 0
-
-        for w in view(rowvals(graph), nzrange(graph, v))
-            if len[w] >= 1
-                deleteat!(set[len[w]], pointer[w])
-                len[w] += 1
-                pointer[w] = push!(set[len[w]], w)
-            end
-        end
-
-        i -= 1
-        j += 1
-
-        while j >= 1 && isempty(set[j])
-            j -= 1
-        end
-    end
-
-    α
+function AMDJL_SYMAMD()
+    AMDJL_SYMAMD{Int}()
 end
 
 
