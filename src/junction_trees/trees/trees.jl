@@ -91,6 +91,11 @@ function pothensun(etree::AbstractTree, colcount::AbstractVector, stype::Superno
 end
 
 
+function Base.:(==)(left::Tree, right::Tree)
+    left.parent == right.parent
+end
+
+
 ##########################
 # Indexed Tree Interface #
 ##########################

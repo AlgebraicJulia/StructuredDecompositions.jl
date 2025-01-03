@@ -65,6 +65,20 @@ function stree!(labels::AbstractVector, graph::OrderedGraph, stype::SupernodeTyp
 end
 
 
+# Construct a postordered supernodal elimination tree.
+function stree!(labels::AbstractVector, graph::OrderedGraph, stype::Node, etree::Tree=etree!(labels, graph))
+    rowcount, colcount = supcnt(graph, etree)
+    sndptr = Base.OneTo(nv(etree) + 1)
+    sepptr = cumsum(vcat(1, colcount .- 1))
+    etree, sndptr, sepptr
+end
+
+
+function Base.:(==)(left::OrderedGraph, right::OrderedGraph)
+    left.lower == right.lower
+end
+
+
 function Base.show(io::IO, ::MIME"text/plain", graph::OrderedGraph)
     SparseArrays._show_with_braille_patterns(io, graph.lower)
 end 
