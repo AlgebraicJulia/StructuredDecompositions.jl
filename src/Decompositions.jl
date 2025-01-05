@@ -6,7 +6,7 @@ export StructuredDecomposition, StrDecomp,
       ∫
 
 using ..JunctionTrees
-using ..JunctionTrees: EliminationAlgorithm, SupernodeType, DEFAULT_ELIMINATION_ALGORITHM, DEFAULT_SUPERNODE_TYPE
+using ..JunctionTrees: PermutationOrAlgorithm, EliminationAlgorithm, SupernodeType, DEFAULT_ELIMINATION_ALGORITHM, DEFAULT_SUPERNODE_TYPE
 
 using PartialFunctions
 using MLStyle
@@ -196,14 +196,14 @@ end
 
 
 """
-    StrDecomp(graph::AbstractSymmetricGraph[, alg::Union{Order, EliminationAlgorithm}[, type::SupernodeType]])
+    StrDecomp(graph::AbstractSymmetricGraph[, alg::PermutationOrAlgorithm[, type::SupernodeType]])
 
 Construct a structured decomposition of a simple graph, optionally specifying an elimination algorithm and
 supernode type.
 """
 function StrDecomp(
     graph::HasGraph,
-    alg::Union{AbstractVector, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
+    alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
     type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
     merge_decompositions(decompositions(graph, alg, type))

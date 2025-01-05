@@ -13,6 +13,9 @@ A graph elimination algorithm. The options are
 abstract type EliminationAlgorithm end
 
 
+const PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
+
+
 """
     CuthillMcKeeJL_RCM <: EliminationAlgorithm
 
@@ -88,11 +91,11 @@ end
 
 
 """
-    permutation(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm})
+    permutation(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm)
 
 Construct a fill-reducing permutation of the vertices of a graph.
 """
-permutation(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm})
+permutation(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm)
 
 
 function permutation(matrix::SparseMatrixCSC, alg::AbstractVector)

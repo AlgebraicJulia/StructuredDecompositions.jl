@@ -15,7 +15,7 @@ end
 
 
 # Construct a junction tree. 
-function junctiontree(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM, type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+function junctiontree(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     label, index = permutation(matrix, alg)
     cache = triu(matrix)
     label, lower, tree, cache = junctiontree!(label, sympermute(cache, index), type, cache)
@@ -24,7 +24,7 @@ end
 
 
 # Construct a junction tree. 
-function junctiontree!(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM, type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+function junctiontree!(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     label, index = permutation(matrix, alg)
     cache = triu(matrix)
     label, lower, tree, cache = junctiontree!(label, sympermute!(matrix, cache, index), type, cache)
