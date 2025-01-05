@@ -34,7 +34,7 @@ export Node, Maximal, Fundamental
 
 
 # Junction Trees
-export JunctionTree, junctiontree, treewidth, separator, residual, relative
+export JunctionTree, junctiontree, junctiontree!, treewidth, separator, residual, relative
 
 
 include("junction_trees/stacks.jl")

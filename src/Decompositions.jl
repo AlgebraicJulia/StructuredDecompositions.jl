@@ -268,7 +268,7 @@ function decompositions(graph::HasGraph, alg::EliminationAlgorithm, type::Supern
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, junctiontree(adjacency_matrix(subgraph), alg, type)...)
+        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph), alg, type)...)
     end
     
     decomposition
@@ -283,7 +283,7 @@ function decompositions(graph::HasGraph, order::Permutation, type::SupernodeType
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, junctiontree(adjacency_matrix(subgraph), induced_order(order, component[i]), type)...)
+        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph), induced_order(order, component[i]), type)...)
     end
     
     decomposition
