@@ -29,40 +29,37 @@ matrix = sparse([
 ])
 
 
-order = Permutation(matrix, CuthillMcKeeJL_RCM())
+order, index = permutation(matrix, CuthillMcKeeJL_RCM())
 @test length(order) == 17
-@test isperm(order)
+@test order[index] == 1:17
 
-order = Permutation(matrix, SymRCMJL_RCM())
-@test length(order) == 17
-@test isperm(order)
 
-order = Permutation(matrix, AMDJL_AMD())
+order, index = permutation(matrix, SymRCMJL_RCM())
 @test length(order) == 17
-@test isperm(order)
+@test order[index] == 1:17
 
-order = Permutation(matrix, AMDJL_SYMAMD())
+order, index = permutation(matrix, AMDJL_AMD())
 @test length(order) == 17
-@test isperm(order)
+@test order[index] == 1:17
 
-order = Permutation(matrix, MetisJL_ND())
+order, index = permutation(matrix, AMDJL_SYMAMD())
 @test length(order) == 17
-@test isperm(order)
+@test order[index] == 1:17
 
-order = Permutation(matrix, TreeWidthSolverJL_BT())
+order, index = permutation(matrix, MetisJL_ND())
 @test length(order) == 17
-@test isperm(order)
+@test order[index] == 1:17
 
-order = Permutation(matrix, MCS())
+order, index = permutation(matrix, TreeWidthSolverJL_BT())
 @test length(order) == 17
-@test isperm(order)
+@test order[index] == 1:17
 
-order = Permutation(1:17)
+order, index = permutation(matrix, MCS())
 @test length(order) == 17
-@test isperm(order)
+@test order[index] == 1:17
 
 # Figure 4.3
-permutation, tree = junctiontree(matrix, order, Node())
+label, tree = junctiontree(matrix, 1:17, Node())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:17)  == [
@@ -105,7 +102,7 @@ permutation, tree = junctiontree(matrix, order, Node())
     [16],
 ]
 
-@test map(i -> view(permutation, residual(tree, i)), 1:17) == [
+@test map(i -> view(label, residual(tree, i)), 1:17) == [
     [10], # j
     [11], # k
     [12], # l
@@ -125,7 +122,7 @@ permutation, tree = junctiontree(matrix, order, Node())
     [17], # q
 ]
 
-@test map(i -> view(permutation, separator(tree, i)), 1:17) == [
+@test map(i -> view(label, separator(tree, i)), 1:17) == [
     [11, 13, 14, 17], # k m n q
     [13, 14, 17],     # m n q
     [13, 14, 16, 17], # m n p q
@@ -147,7 +144,7 @@ permutation, tree = junctiontree(matrix, order, Node())
 
 
 # Figure 4.7 (left)
-permutation, tree = junctiontree(matrix, order, Maximal())
+label, tree = junctiontree(matrix, 1:17, Maximal())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:8)  == [
@@ -172,7 +169,7 @@ permutation, tree = junctiontree(matrix, order, Maximal())
     [1, 7],
 ]
 
-@test map(i -> view(permutation, residual(tree, i)), 1:8) == [
+@test map(i -> view(label, residual(tree, i)), 1:8) == [
     [10, 11],             # j k
     [2],                  # b
     [1, 3, 4],            # a c d
@@ -183,7 +180,7 @@ permutation, tree = junctiontree(matrix, order, Maximal())
     [12, 13, 14, 16, 17], # l m n p q
 ]
 
-@test map(i -> view(permutation, separator(tree, i)), 1:8) == [
+@test map(i -> view(label, separator(tree, i)), 1:8) == [
     [13, 14, 17], # m n q
     [3, 4],       # c d
     [5, 15],      # e o
@@ -195,7 +192,7 @@ permutation, tree = junctiontree(matrix, order, Maximal())
 ]
 
 # Figure 4.9
-permutation, tree = junctiontree(matrix, order, Fundamental())
+label, tree = junctiontree(matrix, 1:17, Fundamental())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:12)  == [
@@ -228,7 +225,7 @@ permutation, tree = junctiontree(matrix, order, Fundamental())
     [3, 11],
 ]
 
-@test map(i -> view(permutation, residual(tree, i)), 1:12) == [
+@test map(i -> view(label, residual(tree, i)), 1:12) == [
     [10, 11], # j k
     [12],     # l
     [13, 14], # m n
@@ -243,7 +240,7 @@ permutation, tree = junctiontree(matrix, order, Fundamental())
     [16, 17], # p q
 ]
 
-@test map(i -> view(permutation, separator(tree, i)), 1:12) == [
+@test map(i -> view(label, separator(tree, i)), 1:12) == [
     [13, 14, 17],     # m n q
     [13, 14, 16, 17], # m n p q
     [16, 17],         # p q

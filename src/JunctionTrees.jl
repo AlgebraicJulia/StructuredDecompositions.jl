@@ -22,7 +22,7 @@ export Permutation
 
 
 # Elimination Algorithms
-export AMDJL_AMD, AMDJL_SYMAMD, CuthillMcKeeJL_RCM, SymRCMJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS
+export AMDJL_AMD, AMDJL_SYMAMD, CuthillMcKeeJL_RCM, SymRCMJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS, permutation
 
 
 # Ordered Graphs

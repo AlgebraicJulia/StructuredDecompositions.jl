@@ -87,4 +87,80 @@ function AMDJL_SYMAMD()
 end
 
 
+"""
+    permutation(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm})
+
+Construct a fill-reducing permutation of the vertices of a graph.
+"""
+permutation(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm})
+
+
+function permutation(matrix::SparseMatrixCSC, alg::AbstractVector)
+    order = collect(alg)
+    order, invperm(order)
+end
+
+
+# Construct an order using the reverse Cuthill-McKee algorithm. Uses CuthillMcKee.jl.
+function permutation(matrix::SparseMatrixCSC, alg::CuthillMcKeeJL_RCM)
+    order = CuthillMcKee.symrcm(matrix)
+    order, invperm(order)
+end
+
+
+# Construct an order using the reverse Cuthill-McKee algorithm. Uses SYMRCMJL_RCM.jl.
+function permutation(matrix::SparseMatrixCSC, alg::SymRCMJL_RCM)
+    order = SymRCM.symrcm(matrix)
+    order, invperm(order)
+end
+
+
+# Construct an order using the approximate minimum degree algorithm. Uses AMD.jl.
+function permutation(matrix::SparseMatrixCSC, alg::AMDJL_AMD)
+    order = AMD.amd(matrix, alg.meta)
+    order, invperm(order)
+end
+
+
+# Construct an order using the SYMAMD algorithm. Uses AMD.jl.
+function permutation(matrix::SparseMatrixCSC, alg::AMDJL_SYMAMD)
+    order = AMD.symamd(matrix, alg.meta)
+    order, invperm(order)
+end
+
+
+# Construct an order using the nested dissection heuristic. Uses Metis.jl.
+function permutation(matrix::SparseMatrixCSC, alg::MetisJL_ND)
+    order, index = Metis.permutation(matrix)
+    order, index
+end
+
+
+# Construct an order using the Bouchitte-Todinca algorithm. Uses TreeWidthSolver.jl.
+function permutation(matrix::SparseMatrixCSC, alg::TreeWidthSolverJL_BT)
+    T = TreeWidthSolver.LongLongUInt{size(matrix, 2) ÷ 64 + 1}
+    fadjlist = Vector{Vector{Int}}(undef, size(matrix, 2))
+    bitgraph = Vector{T}(undef, size(matrix, 2))
+
+    for j in axes(matrix, 2)
+        neighbors = getindex(rowvals(matrix), nzrange(matrix, j))
+        fadjlist[j] = neighbors
+        bitgraph[j] = TreeWidthSolver.bmask(T, neighbors)
+    end
+
+    graph = TreeWidthSolver.MaskedBitGraph(bitgraph, fadjlist, TreeWidthSolver.bmask(T, axes(matrix, 2)))
+    cliques = TreeWidthSolver.all_pmc_enmu(graph, false)
+    decomposition = TreeWidthSolver.bt_algorithm(graph, cliques, ones(size(matrix, 2)), false, true)
+    order = reverse!(reduce(vcat, TreeWidthSolver.EliminationOrder(decomposition.tree).order))
+    order, invperm(order)
+end
+
+
+# Construct an order using the maximum cardinality search algorithm.
+function permutation(matrix::SparseMatrixCSC, alg::MCS)
+    order = mcs(matrix)
+    order, invperm(order)
+end
+
+
 const DEFAULT_ELIMINATION_ALGORITHM = AMDJL_AMD()
