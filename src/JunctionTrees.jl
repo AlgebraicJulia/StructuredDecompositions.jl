@@ -1,6 +1,5 @@
 module JunctionTrees
 
-
 import AMD
 import CuthillMcKee
 import LinkedLists
@@ -24,22 +23,6 @@ import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map, colimit, limit
 using ..Decompositions
 import ..Decompositions: StrDecomp
 
-# Orders
-export Order, inverse
-
-
-# Elimination Algorithms
-export AMDJL_AMD, CuthillMcKeeJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS
-
-
-# Supernode Types
-export Node, Maximal, Fundamental 
-
-
-# Junction Trees
-export JunctionTree, width, height, seperator, residual, clique, seperator_to_parent, seperator_to_self
-
-
 include("junction_trees/orders.jl")
 include("junction_trees/elimination_algorithms.jl")
 include("junction_trees/ordered_graphs.jl")
@@ -53,7 +36,6 @@ include("junction_trees/junction_trees.jl")
 ##################################
 # Integration with JunctionTrees #
 ##################################
-
 
 """
     StrDecomp(graph::AbstractSymmetricGraph[, ealg::Union{Order, EliminationAlgorithm}[, stype::SupernodeType]])
@@ -69,7 +51,6 @@ function StrDecomp(
     merge_decompositions(decompositions(graph, ealg, stype))
 end
 
-
 # Construct a tree decomposition.
 # ----------------------------------------
 #    graph    simple connected graph
@@ -84,7 +65,6 @@ function StrDecomp(graph::AbstractSymmetricGraph, jtree::JunctionTree)
     end
 
     diagram = FinDomFunctor(homomorphisms(graph, jtree)..., ∫(tree))
-    @info "$(typeof(dom(diagram)))"
     StrDecomp(tree, diagram, Decomposition, dom(diagram))
 end
 # TODO this function needs a test

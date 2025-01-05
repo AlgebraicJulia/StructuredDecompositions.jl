@@ -31,10 +31,13 @@ function (c::Coloring)(f::ACSetTransformation)
   (cG₁, cG₂) = (c(G₁), c(G₂))
   FinFunction( λ₂ -> compose(f,λ₂), cG₂, cG₁ ) #note the contravariance
 end
+# TODO define as a sheaf which defines a "problem"
 
 skeletalColoring(n) = skeleton ∘ Coloring(n)
 
-colorability_test(n, the_test_case) = is_homomorphic(ob(colimit(the_test_case)), K(n)) == decide_sheaf_tree_shape(skeletalColoring(n), the_test_case)[1]
+function colorability_test(n, the_test_case)
+    is_homomorphic(ob(colimit(the_test_case)), K(n)) == decide_sheaf_tree_shape(skeletalColoring(n), the_test_case)[1]
+end
 
 # TODO: Remove me?
 # is_homomorphic(ob(colimit(my_decomp1)), K(2))

@@ -7,6 +7,7 @@ struct Order <: AbstractVector{Int}
     order::Vector{Int} # permutation
     index::Vector{Int} # inverse permutation
 end
+export Order
 
 
 """
@@ -39,6 +40,8 @@ function compose(left::Order, right::Order)
     Order(right.order[left.order], left.index[right.index])
 end
 
+function inverse end
+export inverse
 
 # Construct the inverse permutation.
 function inverse(order::Order)

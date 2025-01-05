@@ -17,7 +17,7 @@ abstract type EliminationAlgorithm end
 The reverse Cuthill-McKee algorithm. Uses CuthillMckee.jl.
 """
 struct CuthillMcKeeJL_RCM <: EliminationAlgorithm end
-
+export CuthillMcKeeJL_RCM
 
 """
     AMDJL_AMD <: EliminationAlgorithm
@@ -25,7 +25,7 @@ struct CuthillMcKeeJL_RCM <: EliminationAlgorithm end
 The approximate minimum degree algorithm. Uses AMD.jl.
 """
 struct AMDJL_AMD <: EliminationAlgorithm end
-
+export AMDJL_AMD
 
 """
     MetisJL_ND <: EliminationAlgorithm
@@ -33,7 +33,7 @@ struct AMDJL_AMD <: EliminationAlgorithm end
 The nested dissection heuristic. Uses Metis.jl.
 """
 struct MetisJL_ND <: EliminationAlgorithm end
-
+export MetisJL_ND
 
 """
     TreeWidthSolverJL_BT <: EliminationAlgorithm
@@ -41,7 +41,7 @@ struct MetisJL_ND <: EliminationAlgorithm end
 The Bouchitte-Todinca algorithm. Uses TreeWidthSolver.jl.
 """
 struct TreeWidthSolverJL_BT <: EliminationAlgorithm end
-
+export TreeWidthSolverJL_BT
 
 """
     MCS <: EliminationAlgorithm
@@ -49,7 +49,7 @@ struct TreeWidthSolverJL_BT <: EliminationAlgorithm end
 The maximum cardinality search algorithm.
 """
 struct MCS <: EliminationAlgorithm end
-
+export MCS
 
 """
     Order(graph::AbstractSymmetricGraph[, ealg::EliminationAlgorithm])

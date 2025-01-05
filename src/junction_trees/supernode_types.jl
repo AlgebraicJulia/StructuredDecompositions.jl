@@ -15,7 +15,7 @@ abstract type SupernodeType end
 A single-vertex supernode.
 """
 struct Node <: SupernodeType end
-
+export Node
 
 """
     Maximal <: Supernode
@@ -23,7 +23,7 @@ struct Node <: SupernodeType end
 A maximal supernode.
 """
 struct Maximal <: SupernodeType end
-
+export Maximal
 
 """
     Fundamental <: Supernode
@@ -31,7 +31,7 @@ struct Maximal <: SupernodeType end
 A fundamental supernode.
 """
 struct Fundamental <: SupernodeType end
-
+export Fundamental
 
 # Compact Clique Tree Data Structures in Sparse Matrix Factorizations
 # Pothen and Sun

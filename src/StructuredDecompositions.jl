@@ -10,5 +10,6 @@ include("DecidingSheaves.jl")
 @reexport using .DecidingSheaves
 
 include("JunctionTrees.jl")
+# include("StrTreeDecomp.jl")
 
 end 

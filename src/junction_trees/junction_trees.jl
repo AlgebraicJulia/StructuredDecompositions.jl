@@ -7,6 +7,7 @@ struct JunctionTree
     stree::SupernodeTree           # supernodal elimination tree
     seperator::Vector{Vector{Int}} # seperator
 end
+export JunctionTree
 
 
 """
@@ -41,7 +42,7 @@ Get the clique at node i.
 function clique(jtree::JunctionTree, i::Integer)
     [residual(jtree, i); seperator(jtree, i)]
 end
-
+export clique
 
 """
     seperator(jtree::JunctionTree, i::Integer)
@@ -51,7 +52,7 @@ Get the seperator at node i.
 function seperator(jtree::JunctionTree, i::Integer)
     permutation(jtree.stree.graph, jtree.seperator[i])
 end
-
+export seperator
 
 """
     residual(jtree::JunctionTree, i::Integer)
@@ -61,6 +62,7 @@ Get the residual at node i.
 function residual(jtree::JunctionTree, i::Integer)
     permutation(jtree.stree.graph, supernode(jtree.stree, i))
 end
+export residual
 
 
 # Construct the inclusion seperator(i) → clique(parent(i)).
@@ -84,6 +86,7 @@ function seperator_to_parent(jtree::JunctionTree, i::Integer)
 
     index
 end
+export seperator_to_parent
 
 
 # Construct the inclusion seperator(i) → clique(i).
@@ -92,7 +95,7 @@ function seperator_to_self(jtree::JunctionTree, i::Integer)
     res = supernode(jtree.stree, i)
     length(res) + 1:length(res) + length(sep)
 end
-
+export seperator_to_self
 
 """
     length(jtree::JunctionTree)
@@ -112,7 +115,7 @@ Compute the height of a junction tree.
 function height(jtree::JunctionTree)
     height(jtree.stree.tree)
 end
-
+export height
 
 """
     width(jtree::JunctionTree)
@@ -122,7 +125,7 @@ Compute the width of a junction tree.
 function width(jtree::JunctionTree)
     width(jtree.stree)
 end
-
+export width
 
 function Base.show(io::IO, jtree::JunctionTree)
     n = width(jtree)
