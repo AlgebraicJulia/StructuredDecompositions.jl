@@ -57,7 +57,7 @@ function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, uppe
         p = sndptr[i]
 
         while !isnothing(v) && v != ancestor[j]
-            sndval[p] = v
+            sndval[v] = p
             v = parentindex(etree, v)
             p += 1
         end
@@ -66,8 +66,8 @@ function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, uppe
         sepptr[i + 1] = sndptr[i] + sepptr[i] + colcount[new[j]] - p
     end
 
-    permute!(labels, sndval)
-    symperm!(temporary, lower, sndval, ReverseOrdering()), permute!(tree, order), sndptr, sepptr
+    invpermute!(labels, sndval)
+    invsymperm!(temporary, lower, sndval, ReverseOrdering()), permute!(tree, order), sndptr, sepptr
 end
 
 

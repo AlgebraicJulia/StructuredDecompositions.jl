@@ -107,6 +107,13 @@ function Base.permute!(permutation::Permutation, other::AbstractVector)
 end
 
 
+function Base.invpermute!(permutation::Permutation, other::AbstractVector)
+    invpermute!(permutation.inner, other)
+    permutation.index[permutation.inner] = eachindex(permutation.inner)
+    permutation
+end
+
+
 function Base.convert(::Type{Vector{Int}}, permutation::Permutation)
     permutation.inner
 end
