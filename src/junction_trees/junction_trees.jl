@@ -93,7 +93,7 @@ end
 
 # Get the separators of every node of a supernodal elimination tree.
 function sepvals(lower::SparseMatrixCSC, tree::Tree, sndptr::AbstractVector, sepptr::AbstractVector)
-    cache = zeros(Int, size(lower, 1))
+    index = zeros(Int, size(lower, 1))
     sepval = Vector{Int}(undef, last(sepptr) - 1)
     p = 1
 
@@ -101,15 +101,15 @@ function sepvals(lower::SparseMatrixCSC, tree::Tree, sndptr::AbstractVector, sep
         for v in view(rowvals(lower), nzrange(lower, sndptr[j]))
             if sndptr[j + 1] <= v
                 sepval[p] = v
-                cache[v] = j
+                index[v] = j
                 p += 1
             end
         end
 
         for i in childindices(tree, j), v in view(sepval, sepptr[i]:sepptr[i + 1] - 1)
-            if sndptr[j + 1] <= v && cache[v] != j
+            if sndptr[j + 1] <= v && index[v] != j
                 sepval[p] = v
-                cache[v] = j
+                index[v] = j
                 p += 1
             end
         end
