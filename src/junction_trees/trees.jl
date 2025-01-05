@@ -37,9 +37,9 @@ end
 # Pothen and Sun
 # Figure 4: The Clique Tree Algorithm 2
 function stree(tree::Tree, colcount::AbstractVector, type::Maximal)
-    new = FixedStack{Int}(length(tree))
-    parent = FixedStack{Int}(length(tree))
-    ancestor = FixedStack{Int}(length(tree))
+    new = Stack{Int}(length(tree))
+    parent = Stack{Int}(length(tree))
+    ancestor = Stack{Int}(length(tree))
     new_in_clique = Vector{Int}(undef, length(tree))
 
     for v in tree
@@ -80,9 +80,9 @@ end
 
 # Compute the fundamental supernode partition.
 function stree(tree::Tree, colcount::AbstractVector, type::Fundamental)
-    new = FixedStack{Int}(length(tree))
-    parent = FixedStack{Int}(length(tree))
-    ancestor = FixedStack{Int}(length(tree))
+    new = Stack{Int}(length(tree))
+    parent = Stack{Int}(length(tree))
+    ancestor = Stack{Int}(length(tree))
     new_in_clique = Vector{Int}(undef, length(tree))
 
     for v in tree
@@ -190,8 +190,8 @@ end
 # Compute a postordering of a rooted tree.
 function dfs(tree::Tree)
     head = copy(tree.child)
-    order = FixedStack{Int}(length(tree))
-    stack = FixedStack{Int}(length(tree))
+    order = Stack{Int}(length(tree))
+    stack = Stack{Int}(length(tree))
     push!(stack, tree.root[])
 
     while !isempty(stack)
