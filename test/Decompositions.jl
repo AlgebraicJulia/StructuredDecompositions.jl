@@ -12,69 +12,63 @@ using Catlab.Graphs
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra
 
-#using Catlab.Graph
 
-#Define the instance#######################
-#bag 1
+# Define the instance #######################
+# bag 1
 H₁ = @acset Graph begin
-  V = 3
-  E = 2
-  src = [1, 2]
-  tgt = [2, 3]
+    V = 3
+    E = 2
+    src = [1, 2]
+    tgt = [2, 3]
 end
 
-#to_graphviz(H₁)
-
-#adhesion 1,2
+# adhesion 1, 2
 H₁₂ = @acset Graph begin
-  V = 2
+    V = 2
 end
 
-#bag 2
+# bag 2
 H₂ = @acset Graph begin
-  V = 4
-  E = 3
-  src = [1, 2, 3]
-  tgt = [2, 3, 4]
+    V = 4
+    E = 3
+    src = [1, 2, 3]
+    tgt = [2, 3, 4]
 end
 
-#adhesion 2,3
+# adhesion 2, 3
 H₂₃ = @acset Graph begin
-  V = 1
+    V = 1
 end
 
-#bag 3
+# bag 3
 H₃ = @acset Graph begin
-  V = 2
-  E = 1
-  src = [1]
-  tgt = [2]
+    V = 2
+    E = 1
+    src = [1]
+    tgt = [2]
 end
 
 # Make the decomp ###########
-#The shape
+# The shape
 G = @acset Graph begin
-  V = 3
-  E = 2
-  src = [1, 2]
-  tgt = [2, 3]
+    V = 3
+    E = 2
+    src = [1, 2]
+    tgt = [2, 3]
 end
 
-#to_graphviz( graph( elements(G)) )
-
-#the functor
+# the functor
 Γ₀ = Dict(1 => H₁, 2 => H₂, 3 => H₃, 4 => H₁₂, 5 => H₂₃)
 Γ = FinDomFunctor(
-  Γ₀,
-  Dict(
-    1 => ACSetTransformation(Γ₀[4], Γ₀[1], V=[1, 3]),
-    2 => ACSetTransformation(Γ₀[5], Γ₀[2], V=[1]   ),
-    3 => ACSetTransformation(Γ₀[4], Γ₀[2], V=[4, 1]),
-    4 => ACSetTransformation(Γ₀[5], Γ₀[3], V=[1]   )
-  ),
-  ∫(G)
-)
-#the decomposition
+    Γ₀,
+    Dict(
+        1 => ACSetTransformation(Γ₀[4], Γ₀[1], V=[1, 3]),
+        2 => ACSetTransformation(Γ₀[5], Γ₀[2], V=[1]   ),
+        3 => ACSetTransformation(Γ₀[4], Γ₀[2], V=[4, 1]),
+        4 => ACSetTransformation(Γ₀[5], Γ₀[3], V=[1]   )),
+    ∫(G))
+
+# the decomposition
 bigdecomp = StrDecomp(G, Γ)
 
 #f = ACSetTransformation(Γ₀[4], Γ₀[1], V=[1, 3])
@@ -85,20 +79,18 @@ bigdecomp = StrDecomp(G, Γ)
 
 bigdecomp_to_sets = 𝐃ᵥ(bigdecomp)
 @test all( 
-          s -> dom(s[1]) == dom(s[2]), 
-          adhesionSpans(bigdecomp_to_sets)
-        )
+    s -> dom(s[1]) == dom(s[2]), 
+    adhesionSpans(bigdecomp_to_sets))
 
-𝐃ₛ = 𝐃 $ skeleton    
+𝐃ₛ = 𝐃 $ skeleton
 
 bigdecomp_skeleton = 𝐃ₛ(bigdecomp_to_sets)
 
 @test bags(bigdecomp_skeleton) == map(FinSet, [3,4,2])
-@test  adhesions(bigdecomp_skeleton) == map(FinSet, [2,1])
+@test adhesions(bigdecomp_skeleton) == map(FinSet, [2,1])
 @test all( 
-          s -> dom(s[1]) == dom(s[2]), 
-          adhesionSpans(bigdecomp_skeleton)
-        )
+    s -> dom(s[1]) == dom(s[2]), 
+    adhesionSpans(bigdecomp_skeleton))
 
 
 ##################################
@@ -116,10 +108,10 @@ decomposition = StrDecomp(graph, Permutation(1:17), Maximal())
 
 
 @test decomposition.decomp_shape == @acset Graph begin
-  V = 8
-  E = 7
-  src = [1, 2, 3, 4, 5, 6, 7]
-  tgt = [8, 3, 6, 6, 6, 7, 8]
+    V = 8
+    E = 7
+    tgt = [1, 2, 3, 4, 5, 6, 7]
+    src = [8, 3, 6, 6, 6, 7, 8]
 end
 
 @test map(i -> ob_map(decomposition.diagram, i), 1:15) == [

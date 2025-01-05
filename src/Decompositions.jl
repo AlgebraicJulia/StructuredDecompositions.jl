@@ -12,12 +12,14 @@ using PartialFunctions
 using MLStyle
 
 using AbstractTrees
+using Base: DEFAULT_STABLE, ForwardOrdering
 using Base.Threads
 using Catlab
 using Catlab.CategoricalAlgebra
 using Catlab.Graphs
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra.Diagrams
+using SparseArrays
 
 import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map, colimit, limit
 
@@ -194,31 +196,27 @@ end
 
 
 """
-    StrDecomp(graph::AbstractSymmetricGraph[, ealg::Union{Order, EliminationAlgorithm}[, stype::SupernodeType]])
+    StrDecomp(graph::AbstractSymmetricGraph[, alg::Union{Order, EliminationAlgorithm}[, type::SupernodeType]])
 
 Construct a structured decomposition of a simple graph, optionally specifying an elimination algorithm and
 supernode type.
 """
 function StrDecomp(
     graph::HasGraph,
-    ealg::Union{Permutation, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
-    stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    alg::Union{Permutation, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
+    type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-    merge_decompositions(decompositions(graph, ealg, stype))
+    merge_decompositions(decompositions(graph, alg, type))
 end
 
 
 # Construct a tree decomposition.
-# ----------------------------------------
-#    graph    simple connected graph
-#    jtree    junction tree
-# ----------------------------------------
 function StrDecomp(graph::HasGraph, order::Permutation, tree::JunctionTree)
-    n = JunctionTrees.nv(tree)
+    n = length(tree)
     shape = Graph(n)
     
     for i in 1:n - 1
-        add_edge!(shape, i, parentindex(tree, i))
+        add_edge!(shape, parentindex(tree, i), i)
     end
 
     diagram = FinDomFunctor(homomorphisms(graph, order, tree)..., ∫(shape))
@@ -262,7 +260,7 @@ function merge_decompositions(decomposition::AbstractVector)
 end
 
 
-function decompositions(graph::HasGraph, ealg::EliminationAlgorithm, stype::SupernodeType)
+function decompositions(graph::HasGraph, alg::EliminationAlgorithm, type::SupernodeType)
     component = connected_components(graph)
 
     n = length(component)
@@ -270,14 +268,14 @@ function decompositions(graph::HasGraph, ealg::EliminationAlgorithm, stype::Supe
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, jtree(subgraph, ealg, stype)...)
+        decomposition[i] = StrDecomp(subgraph, junctiontree(adjacency_matrix(subgraph), alg, type)...)
     end
     
     decomposition
 end
 
 
-function decompositions(graph::HasGraph, order::Permutation, stype::SupernodeType)
+function decompositions(graph::HasGraph, order::Permutation, type::SupernodeType)
     component = connected_components(graph)
 
     n = length(component)
@@ -285,37 +283,38 @@ function decompositions(graph::HasGraph, order::Permutation, stype::SupernodeTyp
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, jtree(subgraph, induced_order(order, component[i]), stype)...)
+        decomposition[i] = StrDecomp(subgraph, junctiontree(adjacency_matrix(subgraph), induced_order(order, component[i]), type)...)
     end
     
     decomposition
 end
 
 
-function homomorphisms(graph::HasGraph, order::Permutation, jtree::JunctionTree)
-    n = JunctionTrees.nv(jtree)
+function homomorphisms(graph::HasGraph, order::Permutation, tree::JunctionTree)
+    n = length(tree)
     subgraph = Vector{Any}(undef, 2n - 1)
     homomorphism = Vector{Any}(undef, 2n - 2)
     
     for i in 1:n
-        # clique(i)
-        subgraph[i] = induced_subgraph(graph, view(order, clique(jtree, i)))
+        # bag(i)
+        subgraph[i] = induced_subgraph(graph, view(order, getindex(tree, i)))
     end
-  
-    for i in 1:n - 1
-        # seperator(i)
-        subgraph[n + i] = induced_subgraph(graph, view(order, seperator(jtree, i)))
+ 
+    for i in 1:n - 1 
+        # separator(i)
+        subgraph[n + i] = induced_subgraph(graph, view(order, separator(tree, i)))
     end
-  
-    for i in 1:n - 1
-        # seperator(i) → clique(parent(i))
-        j = parentindex(jtree, i)
-        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], relative(jtree, i))
+ 
+    for i in 1:n - 1 
+        # separator(i) → bag(j)
+        j = parentindex(tree, i)
+        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], relative(tree, i))
     end
-    
-    for i in 1:n - 1
-        # seperator(i) → clique(i)
-        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], length(residual(jtree, i)) .+ eachindex(seperator(jtree, i)))
+
+    for i in 1:n - 1    
+        # separator(i) → bag(i)
+        j = parentindex(tree, i)
+        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], length(residual(tree, i)) .+ eachindex(separator(tree, i)))
     end
     
     subgraph, homomorphism
@@ -342,6 +341,53 @@ function induced_homomorphism(domain::HasGraph, codomain::HasGraph, V::AbstractV
     end
     
     ACSetTransformation(domain, codomain; V, E)
+end
+
+
+# Construct the adjacency matrix of an undirected graph.
+function adjacency_matrix(graph::HasGraph, neighbors::Function, ne::Function)
+    rowval = Vector{Int}(undef, 2ne(graph))
+    colptr = Vector{Int}(undef, nv(graph) + 1)
+    colptr[1] = 1
+
+    for i in vertices(graph)
+        p = colptr[i]
+
+        for j in neighbors(graph, i)
+            rowval[p] = j
+            p += 1
+        end
+
+        colptr[i + 1] = p
+        sort!(rowval, colptr[i], colptr[i + 1] - 1, DEFAULT_STABLE, ForwardOrdering())
+    end
+
+    nzval = ones(Bool, 2ne(graph))
+    SparseMatrixCSC(nv(graph), nv(graph), colptr, rowval, nzval)
+end
+
+
+function adjacency_matrix(graph::AbstractGraph)
+    function neighbors(graph, v)
+        i = view(view(graph, :tgt), incident(graph, v, :src))
+        o = view(view(graph, :src), incident(graph, v, :tgt))
+        Iterators.flatten((i, o))
+    end
+
+    adjacency_matrix(graph, neighbors, ne)
+end
+
+
+function adjacency_matrix(graph::AbstractSymmetricGraph)
+    function neighbors(graph, v)
+        view(view(graph, :tgt), incident(graph, v, :src))
+    end
+
+    function ne(graph)
+        nparts(graph, :E) ÷ 2
+    end
+
+    adjacency_matrix(graph, neighbors, ne)
 end
 
 

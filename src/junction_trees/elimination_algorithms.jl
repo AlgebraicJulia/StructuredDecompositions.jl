@@ -9,7 +9,6 @@ A graph elimination algorithm. The options are
 - [`MetisJL_ND`](@ref)
 - [`TreeWidthSolverJL_BT`](@ref)
 - [`MCS`](@ref)
-- [`DFS`](@ref)
 """
 abstract type EliminationAlgorithm end
 
@@ -71,14 +70,6 @@ struct TreeWidthSolverJL_BT <: EliminationAlgorithm end
 The maximum cardinality search algorithm.
 """
 struct MCS <: EliminationAlgorithm end
-
-
-"""
-    DFS <: EliminationAlgorithm
-
-The descent-first search algorithm.
-"""
-struct DFS <: EliminationAlgorithm end
 
 
 function AMDJL_AMD()
