@@ -38,6 +38,7 @@ export JunctionTree, junctiontree, treewidth, separator, residual, relative
 
 
 include("junction_trees/stacks.jl")
+include("junction_trees/indices.jl")
 include("junction_trees/disjoint_trees.jl")
 include("junction_trees/disjoint_lists.jl")
 include("junction_trees/sparse.jl")

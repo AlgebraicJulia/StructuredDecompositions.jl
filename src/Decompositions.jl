@@ -211,7 +211,7 @@ end
 
 
 # Construct a tree decomposition.
-function StrDecomp(graph::HasGraph, order::Permutation, tree::JunctionTree)
+function StrDecomp(graph::HasGraph, order::AbstractVector, tree::JunctionTree)
     n = length(tree)
     shape = Graph(n)
     
@@ -290,7 +290,7 @@ function decompositions(graph::HasGraph, order::Permutation, type::SupernodeType
 end
 
 
-function homomorphisms(graph::HasGraph, order::Permutation, tree::JunctionTree)
+function homomorphisms(graph::HasGraph, order::AbstractVector, tree::JunctionTree)
     n = length(tree)
     subgraph = Vector{Any}(undef, 2n - 1)
     homomorphism = Vector{Any}(undef, 2n - 2)

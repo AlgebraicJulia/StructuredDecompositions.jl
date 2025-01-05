@@ -16,15 +16,15 @@ end
 
 # Construct a junction tree. 
 function junctiontree(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM, type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    order = Permutation(matrix, alg)
+    label, index = permutation(matrix, alg)
     upper = triu(matrix)
-    order, junctiontree!(upper, order, symperm(upper, order), type)
+    label, junctiontree!(upper, label, invsymperm(upper, index), type)
 end
 
 
 # Construct a junction tree. 
-function junctiontree!(temporary::SparseMatrixCSC, labels::AbstractVector, upper::SparseMatrixCSC, type::SupernodeType)
-    lower, tree, sndptr, sepptr = supernodetree!(temporary, labels, upper, type)
+function junctiontree!(temporary::SparseMatrixCSC, label::AbstractVector, upper::SparseMatrixCSC, type::SupernodeType)
+    lower, tree, sndptr, sepptr = supernodetree!(temporary, label, upper, type)
     sepval = sepvals(lower, tree, sndptr, sepptr)
     relval = relvals(tree, sndptr, sepptr, sepval)
     JunctionTree(tree, sndptr, sepptr, sepval, relval)
@@ -32,17 +32,17 @@ end
 
 
 # Construct a postordered elimination tree.
-function eliminationtree!(temporary::SparseMatrixCSC, labels::AbstractVector, upper::SparseMatrixCSC)
+function eliminationtree!(temporary::SparseMatrixCSC, label::AbstractVector, upper::SparseMatrixCSC)
     tree = etree(upper)
     index = dfs(tree)
-    invpermute!(labels, index)
+    invpermute!(label, index)
     transpose!(upper, invsymperm!(temporary, upper, index)), invpermute!(tree, index)
 end
 
 
 # Construct a postordered supernodal elimination tree.
-function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, upper::SparseMatrixCSC, type::SupernodeType)
-    lower, etree = eliminationtree!(temporary, labels, upper)
+function supernodetree!(temporary::SparseMatrixCSC, label::AbstractVector, upper::SparseMatrixCSC, type::SupernodeType)
+    lower, etree = eliminationtree!(temporary, label, upper)
     _, colcount = supcnt(lower, etree)
     new, ancestor, tree = stree(etree, colcount, type)
     index = dfs(tree)
@@ -66,14 +66,14 @@ function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, uppe
         sepptr[i + 1] = sndptr[i] + sepptr[i] + colcount[new[j]] - p
     end
 
-    invpermute!(labels, sndval)
+    invpermute!(label, sndval)
     invsymperm!(temporary, lower, sndval, ReverseOrdering()), invpermute!(tree, index), sndptr, sepptr
 end
 
 
 # Construct a postordered supernodal elimination tree.
-function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, upper::SparseMatrixCSC, type::Node)
-    lower, tree = eliminationtree!(temporary, labels, upper)
+function supernodetree!(temporary::SparseMatrixCSC, label::AbstractVector, upper::SparseMatrixCSC, type::Node)
+    lower, tree = eliminationtree!(temporary, label, upper)
     _, colcount = supcnt(lower, tree)
     sndptr = OneTo(size(lower, 1) + 1)
     sepptr = cumsum(vcat(1, colcount .- 1))

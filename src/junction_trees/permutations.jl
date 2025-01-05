@@ -95,6 +95,12 @@ function Permutation(matrix::SparseMatrixCSC, alg::MCS)
 end
 
 
+function permutation(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm})
+    order = Permutation(matrix, alg)
+    order.inner, order.index
+end
+
+
 function Base.invperm(permutation::Permutation)
     Permutation(permutation.index, permutation.inner)
 end
