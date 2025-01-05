@@ -203,7 +203,7 @@ supernode type.
 """
 function StrDecomp(
     graph::HasGraph,
-    alg::Union{Permutation, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
+    alg::Union{AbstractVector, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM,
     type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
     merge_decompositions(decompositions(graph, alg, type))
@@ -211,7 +211,7 @@ end
 
 
 # Construct a tree decomposition.
-function StrDecomp(graph::HasGraph, order::AbstractVector, tree::JunctionTree)
+function StrDecomp(graph::HasGraph, label::AbstractVector, tree::JunctionTree)
     n = length(tree)
     shape = Graph(n)
     
@@ -219,7 +219,7 @@ function StrDecomp(graph::HasGraph, order::AbstractVector, tree::JunctionTree)
         add_edge!(shape, parentindex(tree, i), i)
     end
 
-    diagram = FinDomFunctor(homomorphisms(graph, order, tree)..., ∫(shape))
+    diagram = FinDomFunctor(homomorphisms(graph, label, tree)..., ∫(shape))
     StrDecomp(shape, diagram, Decomposition, dom(diagram))
 end
 
@@ -275,7 +275,7 @@ function decompositions(graph::HasGraph, alg::EliminationAlgorithm, type::Supern
 end
 
 
-function decompositions(graph::HasGraph, order::Permutation, type::SupernodeType)
+function decompositions(graph::HasGraph, alg::AbstractVector, type::SupernodeType)
     component = connected_components(graph)
 
     n = length(component)
@@ -283,26 +283,26 @@ function decompositions(graph::HasGraph, order::Permutation, type::SupernodeType
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph), induced_order(order, component[i]), type)...)
+        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph), induced_order(invperm(alg), component[i]), type)...)
     end
     
     decomposition
 end
 
 
-function homomorphisms(graph::HasGraph, order::AbstractVector, tree::JunctionTree)
+function homomorphisms(graph::HasGraph, label::AbstractVector, tree::JunctionTree)
     n = length(tree)
     subgraph = Vector{Any}(undef, 2n - 1)
     homomorphism = Vector{Any}(undef, 2n - 2)
     
     for i in 1:n
         # bag(i)
-        subgraph[i] = induced_subgraph(graph, view(order, getindex(tree, i)))
+        subgraph[i] = induced_subgraph(graph, view(label, getindex(tree, i)))
     end
  
     for i in 1:n - 1 
         # separator(i)
-        subgraph[n + i] = induced_subgraph(graph, view(order, separator(tree, i)))
+        subgraph[n + i] = induced_subgraph(graph, view(label, separator(tree, i)))
     end
  
     for i in 1:n - 1 
@@ -321,8 +321,8 @@ function homomorphisms(graph::HasGraph, order::AbstractVector, tree::JunctionTre
 end
 
 
-function induced_order(order::Permutation, elements::AbstractVector)
-    Permutation(sortperm(view(invperm(order), elements)))
+function induced_order(index::AbstractVector, elements::AbstractVector)
+    sortperm(elements; by=i -> index[i])
 end
 
 

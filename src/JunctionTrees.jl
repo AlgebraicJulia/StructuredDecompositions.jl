@@ -17,10 +17,6 @@ import SymRCM
 import TreeWidthSolver
 
 
-# Permutations
-export Permutation
-
-
 # Elimination Algorithms
 export AMDJL_AMD, AMDJL_SYMAMD, CuthillMcKeeJL_RCM, SymRCMJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS, permutation
 
@@ -44,7 +40,6 @@ include("junction_trees/disjoint_lists.jl")
 include("junction_trees/sparse.jl")
 include("junction_trees/elimination_algorithms.jl")
 include("junction_trees/supernode_types.jl")
-include("junction_trees/permutations.jl")
 include("junction_trees/children.jl")
 include("junction_trees/trees.jl")
 include("junction_trees/bags.jl")
