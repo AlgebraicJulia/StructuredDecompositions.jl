@@ -10,7 +10,7 @@ end
 
 
 function Bag(tree::JunctionTree, i::Integer)
-    Bag(residual(tree, i), seperator(tree, i))
+    Bag(residual(tree, i), separator(tree, i))
 end
 
 
@@ -81,7 +81,7 @@ function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, uppe
 end
 
 
-# Get the seperators of every node of a supernodal elimination tree.
+# Get the separators of every node of a supernodal elimination tree.
 function sepvals(lower::SparseMatrixCSC, tree::Tree, sndptr::AbstractVector, sepptr::AbstractVector)
     temporary = zeros(Int, size(lower, 1))
     sepval = Vector{Int}(undef, last(sepptr) - 1)
@@ -149,8 +149,8 @@ function residual(tree::JunctionTree, i::Integer)
 end
 
 
-# Get the seperator at node i.
-function seperator(tree::JunctionTree, i::Integer)
+# Get the separator at node i.
+function separator(tree::JunctionTree, i::Integer)
     view(tree.sepval, tree.sepptr[i]:tree.sepptr[i + 1] - 1)
 end
 

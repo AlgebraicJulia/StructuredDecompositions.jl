@@ -1,6 +1,16 @@
 struct Bag <: AbstractVector{Int}
     residual::UnitRange{Int}
-    seperator::SubArray{Int, 1, Vector{Int}, Tuple{UnitRange{Int}}, true}
+    separator::SubArray{Int, 1, Vector{Int}, Tuple{UnitRange{Int}}, true}
+end
+
+
+function residual(bag::Bag)
+    bag.residual
+end
+
+
+function separator(bag::Bag)
+    bag.separator
 end
 
 
@@ -11,7 +21,7 @@ end
 
 function Base.getindex(bag::Bag, i::Integer)
     res = residual(bag)
-    sep = seperator(bag)
+    sep = separator(bag)
     i in eachindex(res) ? res[i] : sep[i - length(res)]
 end
 
@@ -22,15 +32,6 @@ end
 
 
 function Base.size(bag::Bag)
-    (length(residual(bag)) + length(seperator(bag)),)
+    (length(residual(bag)) + length(separator(bag)),)
 end
 
-
-function residual(bag::Bag)
-    bag.residual
-end
-
-
-function seperator(bag::Bag)
-    bag.seperator
-end

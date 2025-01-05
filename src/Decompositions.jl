@@ -301,20 +301,20 @@ function homomorphisms(graph::HasGraph, order::Permutation, tree::JunctionTree)
     end
  
     for i in 1:n - 1 
-        # seperator(i)
-        subgraph[n + i] = induced_subgraph(graph, view(order, seperator(tree, i)))
+        # separator(i)
+        subgraph[n + i] = induced_subgraph(graph, view(order, separator(tree, i)))
     end
  
     for i in 1:n - 1 
-        # seperator(i) → bag(j)
+        # separator(i) → bag(j)
         j = parentindex(tree, i)
         homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], relative(tree, i))
     end
 
     for i in 1:n - 1    
-        # seperator(i) → bag(i)
+        # separator(i) → bag(i)
         j = parentindex(tree, i)
-        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], length(residual(tree, i)) .+ eachindex(seperator(tree, i)))
+        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], length(residual(tree, i)) .+ eachindex(separator(tree, i)))
     end
     
     subgraph, homomorphism

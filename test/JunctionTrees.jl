@@ -117,7 +117,7 @@ permutation, tree = junctiontree(matrix, order, Node())
     [17], # q
 ]
 
-@test map(i -> view(permutation, seperator(tree, i)), 1:17) == [
+@test map(i -> view(permutation, separator(tree, i)), 1:17) == [
     [11, 13, 14, 17], # k m n q
     [13, 14, 17],     # m n q
     [13, 14, 16, 17], # m n p q
@@ -175,7 +175,7 @@ permutation, tree = junctiontree(matrix, order, Maximal())
     [12, 13, 14, 16, 17], # l m n p q
 ]
 
-@test map(i -> view(permutation, seperator(tree, i)), 1:8) == [
+@test map(i -> view(permutation, separator(tree, i)), 1:8) == [
     [13, 14, 17], # m n q
     [3, 4],       # c d
     [5, 15],      # e o
@@ -235,7 +235,7 @@ permutation, tree = junctiontree(matrix, order, Fundamental())
     [16, 17], # p q
 ]
 
-@test map(i -> view(permutation, seperator(tree, i)), 1:12) == [
+@test map(i -> view(permutation, separator(tree, i)), 1:12) == [
     [13, 14, 17],     # m n q
     [13, 14, 16, 17], # m n p q
     [16, 17],         # p q
