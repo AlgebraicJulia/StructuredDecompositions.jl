@@ -18,7 +18,7 @@ end
 function junctiontree(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM, type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     label, index = permutation(matrix, alg)
     upper = triu(matrix)
-    label, junctiontree!(upper, label, invsymperm(upper, index), type)
+    label, junctiontree!(upper, label, sympermute(upper, index), type)
 end
 
 
@@ -36,7 +36,7 @@ function eliminationtree!(temporary::SparseMatrixCSC, label::AbstractVector, upp
     tree = etree(upper)
     index = dfs(tree)
     invpermute!(label, index)
-    transpose!(upper, invsymperm!(temporary, upper, index)), invpermute!(tree, index)
+    transpose!(upper, sympermute!(temporary, upper, index)), invpermute!(tree, index)
 end
 
 
@@ -67,7 +67,7 @@ function supernodetree!(temporary::SparseMatrixCSC, label::AbstractVector, upper
     end
 
     invpermute!(label, sndval)
-    invsymperm!(temporary, lower, sndval, ReverseOrdering()), invpermute!(tree, index), sndptr, sepptr
+    sympermute!(temporary, lower, sndval, ReverseOrdering()), invpermute!(tree, index), sndptr, sepptr
 end
 
 

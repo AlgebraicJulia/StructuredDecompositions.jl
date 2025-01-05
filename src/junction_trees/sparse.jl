@@ -1,25 +1,13 @@
 # Permute a symmetric matrix.
-function symperm(matrix::SparseMatrixCSC, permutation::AbstractVector, order::Ordering=ForwardOrdering())
-    invsymperm(matrix, invperm(permutation), order)
-end
-
-
-# Permute a symmetric matrix.
-function invsymperm(matrix::SparseMatrixCSC, index::AbstractVector, order::Ordering=ForwardOrdering())
-    invsymperm!(similar(matrix), matrix, index, order)
-end
-
-
-# Permute a symmetric matrix.
-function symperm!(target::SparseMatrixCSC, source::SparseMatrixCSC, permutation::AbstractVector, order::Ordering=ForwardOrdering())
-    invsymperm!(target, source, invperm(permutation), order)
+function sympermute(matrix::SparseMatrixCSC, index::AbstractVector, order::Ordering=ForwardOrdering())
+    sympermute!(similar(matrix), matrix, index, order)
 end
 
 
 # Direct Methods for Sparse Linear Systems §2.11
 # Davis
 # cs_symperm
-function invsymperm!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::AbstractVector, order::Ordering=ForwardOrdering())
+function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::AbstractVector, order::Ordering=ForwardOrdering())
     count = similar(source.colptr)
     count[1] = 1
     count[2:end] .= 0
