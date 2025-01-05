@@ -190,7 +190,7 @@ end
 # Compute a postordering of a rooted tree.
 function dfs(tree::Tree)
     head = copy(tree.child)
-    order = Stack{Int}(length(tree))
+    order = Index(length(tree))
     stack = Stack{Int}(length(tree))
     push!(stack, tree.root[])
 
@@ -206,7 +206,7 @@ function dfs(tree::Tree)
         end
     end
 
-    order.items
+    order.index
 end
 
 

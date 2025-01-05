@@ -34,9 +34,9 @@ end
 # Construct a postordered elimination tree.
 function eliminationtree!(temporary::SparseMatrixCSC, labels::AbstractVector, upper::SparseMatrixCSC)
     tree = etree(upper)
-    order = Permutation(dfs(tree))
-    permute!(labels, order)
-    transpose!(upper, symperm!(temporary, upper, order)), permute!(tree, order)
+    index = dfs(tree)
+    invpermute!(labels, index)
+    transpose!(upper, invsymperm!(temporary, upper, index)), invpermute!(tree, index)
 end
 
 
@@ -45,14 +45,14 @@ function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, uppe
     lower, etree = eliminationtree!(temporary, labels, upper)
     _, colcount = supcnt(lower, etree)
     new, ancestor, tree = stree(etree, colcount, type)
-    order = Permutation(dfs(tree))
+    index = dfs(tree)
 
     sndptr = Vector{Int}(undef, length(tree) + 1)
     sepptr = Vector{Int}(undef, length(tree) + 1)
     sndval = Vector{Int}(undef, size(lower, 1))
     sndptr[1] = sepptr[1] = 1
 
-    for (i, j) in enumerate(order)
+    for (i, j) in enumerate(invperm(index))
         v = new[j]
         p = sndptr[i]
 
@@ -67,7 +67,7 @@ function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, uppe
     end
 
     invpermute!(labels, sndval)
-    invsymperm!(temporary, lower, sndval, ReverseOrdering()), permute!(tree, order), sndptr, sepptr
+    invsymperm!(temporary, lower, sndval, ReverseOrdering()), invpermute!(tree, index), sndptr, sepptr
 end
 
 
