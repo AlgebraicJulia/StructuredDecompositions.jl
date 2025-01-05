@@ -31,27 +31,35 @@ matrix = sparse([
 
 order = Permutation(matrix, CuthillMcKeeJL_RCM())
 @test length(order) == 17
+@test isperm(order)
 
 order = Permutation(matrix, SymRCMJL_RCM())
 @test length(order) == 17
+@test isperm(order)
 
 order = Permutation(matrix, AMDJL_AMD())
 @test length(order) == 17
+@test isperm(order)
 
 order = Permutation(matrix, AMDJL_SYMAMD())
 @test length(order) == 17
+@test isperm(order)
 
 order = Permutation(matrix, MetisJL_ND())
 @test length(order) == 17
+@test isperm(order)
 
 order = Permutation(matrix, TreeWidthSolverJL_BT())
 @test length(order) == 17
+@test isperm(order)
 
 order = Permutation(matrix, MCS())
 @test length(order) == 17
+@test isperm(order)
 
 order = Permutation(1:17)
 @test length(order) == 17
+@test isperm(order)
 
 # Figure 4.3
 permutation, tree = junctiontree(matrix, order, Node())
