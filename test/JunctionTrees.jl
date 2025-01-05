@@ -2,46 +2,59 @@ using StructuredDecompositions.JunctionTrees
 
 
 using AbstractTrees
-using Catlab.BasicGraphs
-using Catlab.RelationalPrograms
-using Catlab.UndirectedWiringDiagrams
+using SparseArrays
 using Test
 
 
 # Chordal Graphs and Semidefinite Optimization
 # Vandenberghe and Andersen
-graph = SymmetricGraph(17)
+matrix = sparse([
+    0  0  1  1  1  0  0  0  0  0  0  0  0  0  1  0  0
+    0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0
+    1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+    1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+    1  0  0  0  0  0  0  0  1  0  0  0  0  0  0  1  0
+    0  0  0  0  0  0  0  0  1  0  0  0  0  0  0  1  0
+    0  0  0  0  0  0  0  1  1  0  0  0  0  0  1  0  0
+    0  0  0  0  0  0  1  0  0  0  0  0  0  0  0  0  0
+    0  0  0  0  1  1  1  0  0  0  0  0  0  0  0  0  0
+    0  0  0  0  0  0  0  0  0  0  1  0  1  1  0  0  1
+    0  0  0  0  0  0  0  0  0  1  0  0  0  0  0  0  0
+    0  0  0  0  0  0  0  0  0  0  0  0  1  1  0  1  1
+    0  0  0  0  0  0  0  0  0  1  0  1  0  0  0  0  0
+    0  0  0  0  0  0  0  0  0  1  0  1  0  0  0  0  0
+    1  0  0  0  0  0  1  0  0  0  0  0  0  0  0  0  1
+    0  0  0  0  1  1  0  0  0  0  0  1  0  0  0  0  0
+    0  0  0  0  0  0  0  0  0  1  0  1  0  0  1  0  0
+])
 
-add_edges!(graph,
-    [1, 1, 1, 1,  2, 2, 5, 5,  6, 6,  7, 7, 7,  10, 10, 10, 10, 12, 12, 12, 12, 15],
-    [3, 4, 5, 15, 3, 4, 9, 16, 9, 16, 8, 9, 15, 11, 13, 14, 17, 13, 14, 16, 17, 17])
 
-order = Permutation(graph, CuthillMcKeeJL_RCM())
+order = Permutation(matrix, CuthillMcKeeJL_RCM())
 @test length(order) == 17
 
-order = Permutation(graph, SymRCMJL_RCM())
+order = Permutation(matrix, SymRCMJL_RCM())
 @test length(order) == 17
 
-order = Permutation(graph, AMDJL_AMD())
+order = Permutation(matrix, AMDJL_AMD())
 @test length(order) == 17
 
-order = Permutation(graph, AMDJL_SYMAMD())
+order = Permutation(matrix, AMDJL_SYMAMD())
 @test length(order) == 17
 
-order = Permutation(graph, MetisJL_ND())
+order = Permutation(matrix, MetisJL_ND())
 @test length(order) == 17
 
-order = Permutation(graph, TreeWidthSolverJL_BT())
+order = Permutation(matrix, TreeWidthSolverJL_BT())
 @test length(order) == 17
 
-order = Permutation(graph, MCS())
+order = Permutation(matrix, MCS())
 @test length(order) == 17
 
 order = Permutation(1:17)
 @test length(order) == 17
 
 # Figure 4.3
-permutation, tree = jtree(graph, order, Node())
+permutation, tree = junctiontree(matrix, order, Node())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:17)  == [
@@ -126,7 +139,7 @@ permutation, tree = jtree(graph, order, Node())
 
 
 # Figure 4.7 (left)
-permutation, tree = jtree(graph, order, Maximal())
+permutation, tree = junctiontree(matrix, order, Maximal())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:8)  == [
@@ -174,7 +187,7 @@ permutation, tree = jtree(graph, order, Maximal())
 ]
 
 # Figure 4.9
-permutation, tree = jtree(graph, order, Fundamental())
+permutation, tree = junctiontree(matrix, order, Fundamental())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:12)  == [

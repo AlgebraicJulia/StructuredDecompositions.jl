@@ -29,8 +29,13 @@ end
 #############################
 
 
-function Base.getindex(stack::FixedStack, i)
+function Base.getindex(stack::FixedStack, i::Integer)
     stack.items[i]
+end
+
+
+function Base.setindex!(stack::FixedStack, v, i::Integer)
+    stack.items[i] = v
 end
 
 

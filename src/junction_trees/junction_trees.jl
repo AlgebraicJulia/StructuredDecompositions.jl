@@ -1,6 +1,6 @@
 # A junction tree.
 # This type implements the abstract graph and abstract tree interfaces.
-struct JunctionTree <: AbstractTree
+struct JunctionTree <: AbstractVector{Bag}
     tree::Tree
     sndptr::Vector{Int}
     sepptr::Vector{Int}
@@ -9,49 +9,86 @@ struct JunctionTree <: AbstractTree
 end
 
 
-function JunctionTree()
-    JunctionTree(Tree(), Int[1], Int[1], Int[], Int[])
+function Bag(tree::JunctionTree, i::Integer)
+    Bag(residual(tree, i), seperator(tree, i))
 end
 
 
 # Construct a junction tree. 
-function jtree(graph, ealg::EliminationAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    graph = adjacency_matrix(graph)
-    order = Permutation(graph, ealg)
-    order, jtree!(order, permute!(OrderedGraph(graph), order), stype)
+function junctiontree(matrix::SparseMatrixCSC, alg::Union{AbstractVector, EliminationAlgorithm}=DEFAULT_ELIMINATION_ALGORITHM, type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    order = Permutation(matrix, alg)
+    upper = triu(matrix)
+    order, junctiontree!(upper, order, symperm(upper, order), type)
 end
 
 
 # Construct a junction tree. 
-function jtree(graph, order::Permutation, stype::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    jtree(adjacency_matrix(graph), order, stype)
-end
-
-
-# Construct a junction tree. 
-function jtree(graph::SparseMatrixCSC, order::Permutation, stype::SupernodeType)
-    order = deepcopy(order)
-    order, jtree!(order, permute!(OrderedGraph(graph), order), stype)
-end
-
-
-# Construct a junction tree. 
-function jtree!(order::Permutation, graph::OrderedGraph, stype::SupernodeType)
-    tree, sndptr, sepptr = stree!(order, graph, stype)
-    sepval = sepvals(graph, tree, sndptr, sepptr)
+function junctiontree!(temporary::SparseMatrixCSC, labels::AbstractVector, upper::SparseMatrixCSC, type::SupernodeType)
+    lower, tree, sndptr, sepptr = supernodetree!(temporary, labels, upper, type)
+    sepval = sepvals(lower, tree, sndptr, sepptr)
     relval = relvals(tree, sndptr, sepptr, sepval)
     JunctionTree(tree, sndptr, sepptr, sepval, relval)
 end
 
 
+# Construct a postordered elimination tree.
+function eliminationtree!(temporary::SparseMatrixCSC, labels::AbstractVector, upper::SparseMatrixCSC)
+    tree = etree(upper)
+    order = Permutation(dfs(tree))
+    permute!(labels, order)
+    transpose!(upper, symperm!(temporary, upper, order)), permute!(tree, order)
+end
+
+
+# Construct a postordered supernodal elimination tree.
+function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, upper::SparseMatrixCSC, type::SupernodeType)
+    lower, etree = eliminationtree!(temporary, labels, upper)
+    _, colcount = supcnt(lower, etree)
+    new, ancestor, tree = stree(etree, colcount, type)
+    order = Permutation(dfs(tree))
+
+    sndptr = Vector{Int}(undef, length(tree) + 1)
+    sepptr = Vector{Int}(undef, length(tree) + 1)
+    sndval = Vector{Int}(undef, size(lower, 1))
+    sndptr[1] = sepptr[1] = 1
+
+    for (i, j) in enumerate(order)
+        v = new[j]
+        p = sndptr[i]
+
+        while !isnothing(v) && v != ancestor[j]
+            sndval[p] = v
+            v = parentindex(etree, v)
+            p += 1
+        end
+
+        sndptr[i + 1] = p
+        sepptr[i + 1] = sndptr[i] + sepptr[i] + colcount[new[j]] - p
+    end
+
+    permute!(labels, sndval)
+    symperm!(temporary, lower, sndval, ReverseOrdering()), permute!(tree, order), sndptr, sepptr
+end
+
+
+# Construct a postordered supernodal elimination tree.
+function supernodetree!(temporary::SparseMatrixCSC, labels::AbstractVector, upper::SparseMatrixCSC, type::Node)
+    lower, tree = eliminationtree!(temporary, labels, upper)
+    _, colcount = supcnt(lower, tree)
+    sndptr = OneTo(size(lower, 1) + 1)
+    sepptr = cumsum(vcat(1, colcount .- 1))
+    lower, tree, sndptr, sepptr
+end
+
+
 # Get the seperators of every node of a supernodal elimination tree.
-function sepvals(graph::OrderedGraph, stree::Tree, sndptr::AbstractVector, sepptr::AbstractVector)
-    temporary = zeros(Int, nv(graph))
+function sepvals(lower::SparseMatrixCSC, tree::Tree, sndptr::AbstractVector, sepptr::AbstractVector)
+    temporary = zeros(Int, size(lower, 1))
     sepval = Vector{Int}(undef, last(sepptr) - 1)
     p = 1
 
-    for j in vertices(stree)
-        for v in inneighbors(graph, sndptr[j])
+    for j in tree
+        for v in view(rowvals(lower), nzrange(lower, sndptr[j]))
             if sndptr[j + 1] <= v
                 sepval[p] = v
                 temporary[v] = j
@@ -59,7 +96,7 @@ function sepvals(graph::OrderedGraph, stree::Tree, sndptr::AbstractVector, seppt
             end
         end
 
-        for i in childindices(stree, j), v in view(sepval, sepptr[i]:sepptr[i + 1] - 1)
+        for i in childindices(tree, j), v in view(sepval, sepptr[i]:sepptr[i + 1] - 1)
             if sndptr[j + 1] <= v && temporary[v] != j
                 sepval[p] = v
                 temporary[v] = j
@@ -67,7 +104,7 @@ function sepvals(graph::OrderedGraph, stree::Tree, sndptr::AbstractVector, seppt
             end
         end
 
-        sort!(view(sepval, sepptr[j]:sepptr[j + 1] - 1))
+        sort!(sepval, sepptr[j], sepptr[j + 1] - 1, DEFAULT_STABLE, ForwardOrdering())
     end
 
     sepval
@@ -75,13 +112,12 @@ end
 
 
 # Get the relative indices of every node of a supernodal elimination tree.
-function relvals(stree::Tree, sndptr::AbstractVector, sepptr::AbstractVector, sepval::AbstractVector)
+function relvals(tree::Tree, sndptr::AbstractVector, sepptr::AbstractVector, sepval::AbstractVector)
     relval = Vector{Int}(undef, length(sepval))
     p = 1
 
-    for edge in Graphs.edges(stree)
-        i = Graphs.dst(edge)
-        j = Graphs.src(edge)
+    for i in tree[1:end - 1]
+        j = parentindex(tree, i)
 
         while p < sepptr[i + 1] && sepval[p] < sndptr[j + 1]
             relval[p] = sepval[p] - sndptr[j] + 1
@@ -91,7 +127,7 @@ function relvals(stree::Tree, sndptr::AbstractVector, sepptr::AbstractVector, se
         q = sepptr[j]
 
         while p < sepptr[i + 1]
-            q += searchsortedfirst(view(sepval, q:sepptr[j + 1] - 1), sepval[p])
+            q = searchsortedfirst(sepval, sepval[p], q, sepptr[j + 1] - 1, ForwardOrdering()) + 1
             relval[p] = q - sepptr[j] - sndptr[j] + sndptr[j + 1]
             p += 1
         end
@@ -101,41 +137,33 @@ function relvals(stree::Tree, sndptr::AbstractVector, sepptr::AbstractVector, se
 end
 
 
-# Get the clique at node i.
-function clique(tree::JunctionTree, i::Integer)
-    SumVector(residual(tree, i), seperator(tree, i))
-end
-
-
 # Compute the width of a junction tree
 function treewidth(tree::JunctionTree)
-    maximum(vertices(tree)) do i
-        length(residual(tree, i)) + length(seperator(tree, i)) - 1
-    end
+    maximum(length, tree) - 1
 end
 
 
 # Get the residual at node i.
-function residual(jtree::JunctionTree, i::Integer)
-    jtree.sndptr[i]:jtree.sndptr[i + 1] - 1
+function residual(tree::JunctionTree, i::Integer)
+    tree.sndptr[i]:tree.sndptr[i + 1] - 1
 end
 
 
 # Get the seperator at node i.
-function seperator(jtree::JunctionTree, i::Integer)
-    view(jtree.sepval, jtree.sepptr[i]:jtree.sepptr[i + 1] - 1)
+function seperator(tree::JunctionTree, i::Integer)
+    view(tree.sepval, tree.sepptr[i]:tree.sepptr[i + 1] - 1)
 end
 
 
 # Get the relative indices at node i.
-function relative(jtree::JunctionTree, i::Integer)
-    view(jtree.relval, jtree.sepptr[i]:jtree.sepptr[i + 1] - 1)
+function relative(tree::JunctionTree, i::Integer)
+    view(tree.relval, tree.sepptr[i]:tree.sepptr[i + 1] - 1)
 end
 
 
-##########################
-# Indexed Tree Interface #
-##########################
+###########################
+# Abstract Tree Interface #
+###########################
 
 
 function firstchildindex(tree::JunctionTree, i::Integer)
@@ -158,16 +186,46 @@ function AbstractTrees.nextsiblingindex(tree::JunctionTree, i::Integer)
 end
 
 
-function AbstractTrees.nodevalue(tree::JunctionTree, i::Integer)
-    clique(tree, i)
+function AbstractTrees.childindices(tree::JunctionTree, i::Integer)
+    childindices(tree.tree, i)
 end
 
 
-############################
-# Abstract Graph Interface #
-############################
+function AbstractTrees.ParentLinks(::Type{IndexNode{JunctionTree, Int}})
+    StoredParents()
+end
 
 
-function Graphs.nv(tree::JunctionTree)
-    nv(tree.tree)
+function AbstractTrees.SiblingLinks(::Type{IndexNode{JunctionTree, Int}})
+    StoredSiblings()
+end
+
+
+function AbstractTrees.NodeType(::Type{IndexNode{JunctionTree, Int}})
+    HasNodeType()
+end
+
+
+function AbstractTrees.nodetype(::Type{IndexNode{JunctionTree, Int}})
+    IndexNode{JunctionTree, Int}
+end
+
+
+#############################
+# Abstract Vector Interface #
+#############################
+
+
+function Base.getindex(tree::JunctionTree, i::Integer)
+    Bag(tree, i)
+end
+
+
+function Base.IndexStyle(::Type{JunctionTree})
+    IndexLinear()
+end
+
+
+function Base.size(tree::JunctionTree)
+    size(tree.tree)
 end
