@@ -13,7 +13,7 @@ end
 function Base.push!(stack::Stack, v)
     stack.top[] += 1
     stack.items[stack.top[]] = v
-    v
+    stack
 end
 
 
