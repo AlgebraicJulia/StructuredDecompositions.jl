@@ -142,7 +142,7 @@ end
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
 function supcnt(lower::SparseMatrixCSC, tree::Tree, level::AbstractVector=levels(tree), fdesc::AbstractVector=firstdescendants(tree))
-    sets = DisjointSets(size(lower, 1))
+    sets = DisjointTrees(size(lower, 1))
     prev_p = zeros(Int, size(lower, 1))
     prev_nbr = zeros(Int, size(lower, 1))
     rc = ones(Int, size(lower, 1))

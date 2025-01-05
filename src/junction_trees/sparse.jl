@@ -72,37 +72,34 @@ end
 # Maximum Cardinality Search
 function mcs(matrix::SparseMatrixCSC)
     α = Vector{Int}(undef, size(matrix, 2))
-    siz = Vector{Int}(undef, size(matrix, 2))
-    set = Vector{LinkedList{Int}}(undef, size(matrix, 2))
-    pointer = Vector{ListNode{Int}}(undef, size(matrix, 2))
+    num = Vector{Int}(undef, size(matrix, 2))
+    set = DisjointLists(size(matrix, 2))
 
-    for i in axes(matrix, 2)
-        siz[i] = 1
-        set[i] = LinkedList{Int}()
-        pointer[i] = push!(set[1], i)
+    for v in axes(matrix, 2)
+        num[v] = 1
+        push!(set, 1, v)
     end
 
     i = size(matrix, 2)
     j = 1
 
     while i >= 1
-        v = first(set[j])
-        deleteat!(set[j], pointer[v])
+        v = pop!(set, j)
         α[i] = v
-        siz[v] = 0
+        num[v] = 0
 
         for w in view(rowvals(matrix), nzrange(matrix, v))
-            if siz[w] >= 1
-                deleteat!(set[siz[w]], pointer[w])
-                siz[w] += 1
-                pointer[w] = push!(set[siz[w]], w)
+            if num[w] >= 1
+                delete!(set, num[w], w)
+                num[w] += 1
+                push!(set, num[w], w)
             end
         end
 
         i -= 1
         j += 1
 
-        while j >= 1 && isempty(set[j])
+        while j >= 1 && isempty(set, j)
             j -= 1
         end
     end
