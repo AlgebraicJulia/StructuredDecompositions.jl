@@ -1,5 +1,5 @@
 # A rooted tree.
-# This type implements the abstract graph and indexed tree interfaces.
+# This type implements the indexed tree interface.
 struct Tree <: AbstractUnitRange{Int}
     parent::Vector{Int}  # vector of parents
     child::Vector{Int}   # vector of left-children
