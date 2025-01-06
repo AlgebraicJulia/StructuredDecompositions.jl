@@ -1,5 +1,5 @@
 # A rooted tree.
-# This type implements the abstract graph and indexed tree interfaces.
+# This type implements the indexed tree interface.
 struct Tree <: AbstractUnitRange{Int}
     parent::Vector{Int}  # vector of parents
     child::Vector{Int}   # vector of left-children
@@ -36,7 +36,7 @@ end
 # Compact Clique Tree Data Structures in Sparse Matrix Factorizations
 # Pothen and Sun
 # Figure 4: The Clique Tree Algorithm 2
-function stree(tree::Tree, colcount::AbstractVector, type::Maximal)
+function stree(tree::Tree, colcount::AbstractVector, snd::Maximal)
     new = Stack{Int}(length(tree))
     parent = Stack{Int}(length(tree))
     ancestor = Stack{Int}(length(tree))
@@ -79,7 +79,7 @@ end
 
 
 # Compute the fundamental supernode partition.
-function stree(tree::Tree, colcount::AbstractVector, type::Fundamental)
+function stree(tree::Tree, colcount::AbstractVector, snd::Fundamental)
     new = Stack{Int}(length(tree))
     parent = Stack{Int}(length(tree))
     ancestor = Stack{Int}(length(tree))
@@ -142,7 +142,7 @@ end
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
 function supcnt(lower::SparseMatrixCSC, tree::Tree, level::AbstractVector=levels(tree), fdesc::AbstractVector=firstdescendants(tree))
-    sets = DisjointSets(size(lower, 1))
+    sets = DisjointTrees(size(lower, 1))
     prev_p = zeros(Int, size(lower, 1))
     prev_nbr = zeros(Int, size(lower, 1))
     rc = ones(Int, size(lower, 1))
@@ -190,7 +190,7 @@ end
 # Compute a postordering of a rooted tree.
 function dfs(tree::Tree)
     head = copy(tree.child)
-    order = Stack{Int}(length(tree))
+    order = Index(length(tree))
     stack = Stack{Int}(length(tree))
     push!(stack, tree.root[])
 
@@ -206,7 +206,7 @@ function dfs(tree::Tree)
         end
     end
 
-    order.items
+    order.index
 end
 
 
