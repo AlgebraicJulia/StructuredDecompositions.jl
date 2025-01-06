@@ -1,14 +1,29 @@
+"""
+    Bag <: AbstractVector{Int}
+
+A bag of a junction tree.
+"""
 struct Bag <: AbstractVector{Int}
     residual::UnitRange{Int}
     separator::SubArray{Int, 1, Vector{Int}, Tuple{UnitRange{Int}}, true}
 end
 
 
+"""
+    residual(bag::Bag)
+
+Get the residual ``\\mathrm{res}(i) := \\mathrm{bag}(i) - \\mathrm{sep}(i).``
+"""
 function residual(bag::Bag)
     bag.residual
 end
 
 
+"""
+    separator(bag::Bag)
+
+Get the separator ``\\mathrm{sep}(i) := \\mathrm{bag}(i) \\cap \\mathrm{bag}(\\mathrm{parent}(i)).``
+"""
 function separator(bag::Bag)
     bag.separator
 end

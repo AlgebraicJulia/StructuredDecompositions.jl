@@ -36,7 +36,7 @@ end
 # Compact Clique Tree Data Structures in Sparse Matrix Factorizations
 # Pothen and Sun
 # Figure 4: The Clique Tree Algorithm 2
-function stree(tree::Tree, colcount::AbstractVector, type::Maximal)
+function stree(tree::Tree, colcount::AbstractVector, snd::Maximal)
     new = Stack{Int}(length(tree))
     parent = Stack{Int}(length(tree))
     ancestor = Stack{Int}(length(tree))
@@ -79,7 +79,7 @@ end
 
 
 # Compute the fundamental supernode partition.
-function stree(tree::Tree, colcount::AbstractVector, type::Fundamental)
+function stree(tree::Tree, colcount::AbstractVector, snd::Fundamental)
     new = Stack{Int}(length(tree))
     parent = Stack{Int}(length(tree))
     ancestor = Stack{Int}(length(tree))

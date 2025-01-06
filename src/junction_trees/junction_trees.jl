@@ -1,5 +1,9 @@
-# A junction tree.
-# This type implements the abstract graph and abstract tree interfaces.
+"""
+    JunctionTree <: AbstractVector{Bag}
+
+A [junction tree](https://en.wikipedia.org/wiki/Tree_decomposition).
+This type implements the [indexed tree interface](https://juliacollections.github.io/AbstractTrees.jl/stable/#The-Indexed-Tree-Interface).
+"""
 struct JunctionTree <: AbstractVector{Bag}
     tree::Tree
     sndptr::Vector{Int}
@@ -14,27 +18,38 @@ function Bag(tree::JunctionTree, i::Integer)
 end
 
 
-# Construct a junction tree. 
-function junctiontree(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+"""
+    junctiontree(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=AMDJL_AMD(), snd::SupernodeType=Maximal())
+
+A non-mutating version of [`junctiontree!`](@ref).
+"""
+function junctiontree(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     label, index = permutation(matrix, alg)
     cache = triu(matrix)
-    label, lower, tree, cache = junctiontree!(label, sympermute(cache, index), type, cache)
+    label, lower, tree, cache = junctiontree!(label, sympermute(cache, index), snd, cache)
+    label, tree
+end
+
+
+"""
+    junctiontree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=AMDJL_AMD(), snd::SupernodeType=Maximal())
+
+Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html) ``G = (V, E)``, represented by its adjacency matrix.
+The vertices of ``G`` are first ordered by a [fill-reducing permutation](https://www.mathworks.com/help/matlab/math/sparse-matrix-reordering.html) ``\\sigma: V \\to V`` computed by the algorithm `alg`.
+The size of the resulting junction tree ``J = (T, B)`` is determined by the supernode partition `snd`.
+The function returns the pair ``(\\sigma, J)``.
+"""
+function junctiontree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    label, index = permutation(matrix, alg)
+    cache = triu(matrix)
+    label, lower, tree, cache = junctiontree!(label, sympermute!(matrix, cache, index), snd, cache)
     label, tree
 end
 
 
 # Construct a junction tree. 
-function junctiontree!(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    label, index = permutation(matrix, alg)
-    cache = triu(matrix)
-    label, lower, tree, cache = junctiontree!(label, sympermute!(matrix, cache, index), type, cache)
-    label, tree
-end
-
-
-# Construct a junction tree. 
-function junctiontree!(label::AbstractVector, upper::SparseMatrixCSC, type::SupernodeType, cache::SparseMatrixCSC=similar(upper))
-    label, lower, tree, sndptr, sepptr, cache = supernodetree!(label, upper, type, cache)
+function junctiontree!(label::AbstractVector, upper::SparseMatrixCSC, snd::SupernodeType, cache::SparseMatrixCSC=similar(upper))
+    label, lower, tree, sndptr, sepptr, cache = supernodetree!(label, upper, snd, cache)
     sepval = sepvals(lower, tree, sndptr, sepptr)
     relval = relvals(tree, sndptr, sepptr, sepval)
     label, lower, JunctionTree(tree, sndptr, sepptr, sepval, relval), cache
@@ -50,11 +65,11 @@ end
 
 
 # Construct a postordered supernodal elimination tree.
-function supernodetree!(label::AbstractVector, upper::SparseMatrixCSC, type::SupernodeType, cache::SparseMatrixCSC=similar(upper))
+function supernodetree!(label::AbstractVector, upper::SparseMatrixCSC, snd::SupernodeType, cache::SparseMatrixCSC=similar(upper))
     label, upper, etree, cache = eliminationtree!(label, upper, cache)
     lower = transpose!(cache, upper)
     rowcount, colcount = supcnt(lower, etree)
-    new, ancestor, tree = stree(etree, colcount, type)
+    new, ancestor, tree = stree(etree, colcount, snd)
     index = dfs(tree)
 
     sndptr = Vector{Int}(undef, length(tree) + 1)
@@ -81,7 +96,7 @@ end
 
 
 # Construct a postordered supernodal elimination tree.
-function supernodetree!(label::AbstractVector, upper::SparseMatrixCSC, type::Node, cache::SparseMatrixCSC=similar(upper))
+function supernodetree!(label::AbstractVector, upper::SparseMatrixCSC, snd::Node, cache::SparseMatrixCSC=similar(upper))
     label, upper, tree, cache = eliminationtree!(label, upper, cache)
     lower = transpose!(cache, upper)
     rowcount, colcount = supcnt(lower, tree)
@@ -147,25 +162,41 @@ function relvals(tree::Tree, sndptr::AbstractVector, sepptr::AbstractVector, sep
 end
 
 
-# Compute the width of a junction tree
+"""
+    treewidth(tree::JunctionTree, i::Integer)
+
+Compute the width of a junction tree.
+"""
 function treewidth(tree::JunctionTree)
     maximum(length, tree) - 1
 end
 
 
-# Get the residual at node i.
+"""
+    residual(tree::JunctionTree, i::Integer)
+
+Get the residual ``\\mathrm{res}(i) := \\mathrm{bag}(i) - \\mathrm{sep}(i).``
+"""
 function residual(tree::JunctionTree, i::Integer)
     tree.sndptr[i]:tree.sndptr[i + 1] - 1
 end
 
 
-# Get the separator at node i.
+"""
+    separator(tree::JunctionTree, i::Integer)
+
+Get the separator ``\\mathrm{sep}(i) := \\mathrm{bag}(i) \\cap \\mathrm{bag}(parent(i)).``
+"""
 function separator(tree::JunctionTree, i::Integer)
     view(tree.sepval, tree.sepptr[i]:tree.sepptr[i + 1] - 1)
 end
 
 
-# Get the relative indices at node i.
+"""
+    relative(tree::JunctionTree, i::Integer)
+
+Get the inclusion mapping ``\\mathrm{sep}(i) \\to \\mathrm{bag}(parent(i)).`` 
+"""
 function relative(tree::JunctionTree, i::Integer)
     view(tree.relval, tree.sepptr[i]:tree.sepptr[i + 1] - 1)
 end

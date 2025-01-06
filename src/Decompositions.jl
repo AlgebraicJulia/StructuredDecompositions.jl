@@ -196,17 +196,15 @@ end
 
 
 """
-    StrDecomp(graph::AbstractSymmetricGraph[, alg::PermutationOrAlgorithm[, type::SupernodeType]])
+    StrDecomp(graph::HasGraph; alg::PermutationOrAlgorithm=AMDJL_AMD(), snd::SupernodeType=Maximal())
 
-Construct a structured decomposition of a simple graph, optionally specifying an elimination algorithm and
-supernode type.
+Construct a structured decomposition of a simple graph. See [`junctiontree`](@ref) for the meaning of `alg` and `snd`.
 """
-function StrDecomp(
-    graph::HasGraph,
+function StrDecomp(graph::HasGraph;
     alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
-    type::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-    merge_decompositions(decompositions(graph, alg, type))
+    merge_decompositions(decompositions(graph, alg, snd))
 end
 
 
@@ -260,7 +258,7 @@ function merge_decompositions(decomposition::AbstractVector)
 end
 
 
-function decompositions(graph::HasGraph, alg::EliminationAlgorithm, type::SupernodeType)
+function decompositions(graph::HasGraph, alg::EliminationAlgorithm, snd::SupernodeType)
     component = connected_components(graph)
 
     n = length(component)
@@ -268,14 +266,14 @@ function decompositions(graph::HasGraph, alg::EliminationAlgorithm, type::Supern
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph), alg, type)...)
+        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph); alg, snd)...)
     end
     
     decomposition
 end
 
 
-function decompositions(graph::HasGraph, alg::AbstractVector, type::SupernodeType)
+function decompositions(graph::HasGraph, alg::AbstractVector, snd::SupernodeType)
     component = connected_components(graph)
 
     n = length(component)
@@ -283,7 +281,7 @@ function decompositions(graph::HasGraph, alg::AbstractVector, type::SupernodeTyp
     
     @threads for i in 1:n
         subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph), induced_order(invperm(alg), component[i]), type)...)
+        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph); alg=induced_order(invperm(alg), component[i]), snd)...)
     end
     
     decomposition

@@ -59,7 +59,7 @@ order, index = permutation(matrix, MCS())
 @test order[index] == 1:17
 
 # Figure 4.3
-label, tree = junctiontree(matrix, 1:17, Node())
+label, tree = junctiontree(matrix; alg=1:17, snd=Node())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:17)  == [
@@ -144,7 +144,7 @@ label, tree = junctiontree(matrix, 1:17, Node())
 
 
 # Figure 4.7 (left)
-label, tree = junctiontree(matrix, 1:17, Maximal())
+label, tree = junctiontree(matrix; alg=1:17, snd=Maximal())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:8)  == [
@@ -192,7 +192,7 @@ label, tree = junctiontree(matrix, 1:17, Maximal())
 ]
 
 # Figure 4.9
-label, tree = junctiontree(matrix, 1:17, Fundamental())
+label, tree = junctiontree(matrix; alg=1:17, snd=Fundamental())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:12)  == [

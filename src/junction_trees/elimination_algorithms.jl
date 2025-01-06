@@ -13,6 +13,11 @@ A graph elimination algorithm. The options are
 abstract type EliminationAlgorithm end
 
 
+"""
+    PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
+
+Either a permutation or a graph elimination algorithm.
+"""
 const PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
 
 
@@ -42,7 +47,7 @@ struct AMDJL_AMD <: EliminationAlgorithm
 end
 
 """
-    AMDJL_SYMAMD <: EliminationAlgorithm
+    AMDJL_SYMAMD{T} <: EliminationAlgorithm
 
 The SYMAMD algorithm. Uses AMD.jl.
 """
@@ -93,7 +98,9 @@ end
 """
     permutation(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm)
 
-Construct a fill-reducing permutation of the vertices of a graph.
+Construct a [fill-reducing permutation](https://www.mathworks.com/help/matlab/math/sparse-matrix-reordering.html)
+``\\sigma: V \\to V`` of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html) ``G = (V, E)``, represented by its adjacency matrix.
+Returns a tuple ``(\\sigma, \\sigma^{-1})``.
 """
 permutation(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm)
 
