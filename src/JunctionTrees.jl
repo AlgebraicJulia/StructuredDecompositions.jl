@@ -39,7 +39,7 @@ export Bag, separator, residual
 
 
 # Junction Trees
-export JunctionTree, junctiontree, junctiontree!, treewidth, relative
+export JunctionTree, junctiontree, junctiontree!, treewidth, treewidth!, relative
 
 
 include("junction_trees/disjoint_trees.jl")

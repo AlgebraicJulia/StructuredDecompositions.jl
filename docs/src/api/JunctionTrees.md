@@ -9,9 +9,11 @@ Bag
 JunctionTree
 junctiontree!
 junctiontree
+treewidth!
 treewidth
 separator
 residual
+relative
 ```
 
 ## Elimination Algorithms

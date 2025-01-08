@@ -44,7 +44,7 @@ end
         snd::SupernodeType=Maximal())
 
 Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`.
-The vertices of the graph are first ordered by a [fill-reducing permutation](https://www.mathworks.com/help/matlab/math/sparse-matrix-reordering.html) computed by the algorithm `alg`.
+The vertices of the graph are first ordered by a fill-reducing permutation computed by the algorithm `alg`.
 The size of the resulting decomposition is determined by the supernode partition `snd`.
 
 ```julia
@@ -191,7 +191,7 @@ end
 
 
 """
-    treewidth(tree::JunctionTree, i::Integer)
+    treewidth(tree::JunctionTree)
 
 Compute the width of a junction tree.
 """
@@ -201,9 +201,42 @@ end
 
 
 """
+    treewidth(matrix::AbstractMatrix)
+
+A non-mutating version of [`treewidth!`](@ref).
+"""
+function treewidth(matrix::AbstractMatrix)
+    treewidth!(sparse(matrix))
+end
+
+
+function treewidth(matrix::SparseMatrixCSC)
+    label, index = permutation(matrix, TreeWidthSolverJL_BT())
+    cache = triu(matrix)
+    label, upper, tree, cache = eliminationtree!(label, sympermute(cache, index), cache)
+    rowcount, colcount = supcnt(transpose!(cache, upper), tree)
+    maximum(colcount) - 1
+end
+
+
+"""
+    treewidth!(matrix::SparseMatrixCSC)
+
+Compute the tree width of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`.
+"""
+function treewidth!(matrix::SparseMatrixCSC)
+    label, index = permutation(matrix, TreeWidthSolverJL_BT())
+    cache = triu(matrix)
+    label, upper, tree, cache = eliminationtree!(label, sympermute!(matrix, cache, index), cache)
+    rowcount, colcount = supcnt(transpose!(cache, upper), tree)
+    maximum(colcount) - 1
+end
+
+
+"""
     residual(tree::JunctionTree, i::Integer)
 
-Get the residual at node i.
+Get the residual at node `i`.
 """
 function residual(tree::JunctionTree, i::Integer)
     tree.sndptr[i]:tree.sndptr[i + 1] - 1
@@ -213,10 +246,10 @@ end
 """
     separator(tree::JunctionTree, i::Integer)
 
-Get the separator at node i.
+Get the separator at node `i`.
 """
 function separator(tree::JunctionTree, i::Integer)
-    view(tree.sepval, tree.sepptr[i]:tree.sepptr[i + 1] - 1)
+    @view tree.sepval[tree.sepptr[i]:tree.sepptr[i + 1] - 1]
 end
 
 
@@ -227,6 +260,7 @@ Get the indices in `tree[parentindex(tree, i)]` corresponding to the elements of
 
 ```julia
 julia> using AbstractTrees
+
 julia> using StructuredDecompositions.JunctionTrees
 
 julia> graph = [
@@ -247,7 +281,7 @@ true
 ```
 """
 function relative(tree::JunctionTree, i::Integer)
-    view(tree.relval, tree.sepptr[i]:tree.sepptr[i + 1] - 1)
+    @view tree.relval[tree.sepptr[i]:tree.sepptr[i + 1] - 1]
 end
 
 

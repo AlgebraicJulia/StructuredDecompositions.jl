@@ -24,7 +24,7 @@ const PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
 """
     CuthillMcKeeJL_RCM <: EliminationAlgorithm
 
-The reverse Cuthill-McKee algorithm. Uses CuthillMckee.jl.
+The [reverse Cuthill-McKee algorithm](https://en.wikipedia.org/wiki/Cuthill–McKee_algorithm). Uses [CuthillMckee.jl](https://github.com/rleegates/CuthillMcKee.jl).
 """
 struct CuthillMcKeeJL_RCM <: EliminationAlgorithm end
 
@@ -32,7 +32,7 @@ struct CuthillMcKeeJL_RCM <: EliminationAlgorithm end
 """
     SymRCMJL_RCM <: EliminationAlgorithm
 
-The reverse Cuthill-McKee algorithm. Uses SymRCM.jl.
+The [reverse Cuthill-McKee algorithm](https://en.wikipedia.org/wiki/Cuthill–McKee_algorithm). Uses [SymRCM.jl](https://github.com/PetrKryslUCSD/SymRCM.jl).
 """
 struct SymRCMJL_RCM <: EliminationAlgorithm end
 
@@ -40,7 +40,7 @@ struct SymRCMJL_RCM <: EliminationAlgorithm end
 """
     AMDJL_AMD <: EliminationAlgorithm
 
-The approximate minimum degree algorithm. Uses AMD.jl.
+The approximate minimum degree algorithm. Uses [AMD.jl](https://github.com/JuliaSmoothOptimizers/AMD.jl).
 """
 struct AMDJL_AMD <: EliminationAlgorithm
     meta::AMD.Amd
@@ -49,7 +49,7 @@ end
 """
     AMDJL_SymAMD{T} <: EliminationAlgorithm
 
-The SymAMD algorithm. Uses AMD.jl.
+The SYMAMD algorithm. Uses [AMD.jl](https://github.com/JuliaSmoothOptimizers/AMD.jl).
 """
 struct AMDJL_SymAMD{T} <: EliminationAlgorithm
     meta::AMD.Colamd{T}
@@ -59,7 +59,7 @@ end
 """
     MetisJL_ND <: EliminationAlgorithm
 
-The nested dissection heuristic. Uses Metis.jl.
+The [nested dissection heuristic](https://en.wikipedia.org/wiki/Nested_dissection). Uses [Metis.jl](https://github.com/JuliaSparse/Metis.jl).
 """
 struct MetisJL_ND <: EliminationAlgorithm end
 
@@ -67,7 +67,7 @@ struct MetisJL_ND <: EliminationAlgorithm end
 """
     TreeWidthSolverJL_BT <: EliminationAlgorithm
 
-The Bouchitte-Todinca algorithm. Uses TreeWidthSolver.jl.
+The Bouchitte-Todinca algorithm. Uses [TreeWidthSolver.jl](https://github.com/ArrogantGao/TreeWidthSolver.jl).
 """
 struct TreeWidthSolverJL_BT <: EliminationAlgorithm end
 
@@ -98,7 +98,7 @@ end
 """
     permutation(matrix::AbstractMatrix, alg::PermutationOrAlgorithm)
 
-Construct a [fill-reducing permutation](https://www.mathworks.com/help/matlab/math/sparse-matrix-reordering.html) of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`.
+Construct a fill-reducing permutation of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`.
 
 ```julia
 julia> using StructuredDecompositions.JunctionTrees
