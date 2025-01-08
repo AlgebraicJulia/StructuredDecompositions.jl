@@ -8,7 +8,7 @@ using Test
 
 # Chordal Graphs and Semidefinite Optimization
 # Vandenberghe and Andersen
-matrix = sparse([
+matrix = [
     0  0  1  1  1  0  0  0  0  0  0  0  0  0  1  0  0
     0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0
     1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
@@ -26,7 +26,7 @@ matrix = sparse([
     1  0  0  0  0  0  1  0  0  0  0  0  0  0  0  0  1
     0  0  0  0  1  1  0  0  0  0  0  1  0  0  0  0  0
     0  0  0  0  0  0  0  0  0  1  0  1  0  0  1  0  0
-])
+]
 
 
 order, index = permutation(matrix, CuthillMcKeeJL_RCM())
@@ -42,7 +42,7 @@ order, index = permutation(matrix, AMDJL_AMD())
 @test length(order) == 17
 @test order[index] == 1:17
 
-order, index = permutation(matrix, AMDJL_SYMAMD())
+order, index = permutation(matrix, AMDJL_SymAMD())
 @test length(order) == 17
 @test order[index] == 1:17
 
@@ -59,7 +59,7 @@ order, index = permutation(matrix, MCS())
 @test order[index] == 1:17
 
 # Figure 4.3
-label, tree = junctiontree(matrix; alg=1:17, snd=Node())
+label, tree = junctiontree(matrix; alg=1:17, snd=Nodal())
 @test treewidth(tree) == 4
 
 @test map(i -> parentindex(tree, i), 1:17)  == [

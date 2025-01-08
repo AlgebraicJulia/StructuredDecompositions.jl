@@ -12,7 +12,7 @@ end
 """
     residual(bag::Bag)
 
-Get the residual ``\\mathrm{res}(i) := \\mathrm{bag}(i) - \\mathrm{sep}(i).``
+Get the residual of a bag.
 """
 function residual(bag::Bag)
     bag.residual
@@ -22,7 +22,7 @@ end
 """
     separator(bag::Bag)
 
-Get the separator ``\\mathrm{sep}(i) := \\mathrm{bag}(i) \\cap \\mathrm{bag}(\\mathrm{parent}(i)).``
+Get the separator of a bag.
 """
 function separator(bag::Bag)
     bag.separator

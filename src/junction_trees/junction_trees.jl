@@ -19,10 +19,17 @@ end
 
 
 """
-    junctiontree(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=AMDJL_AMD(), snd::SupernodeType=Maximal())
+    junctiontree(matrix::AbstractMatrix;
+        alg::PermutationOrAlgorithm=AMDJL_AMD(),
+        snd::SupernodeType=Maximal())
 
 A non-mutating version of [`junctiontree!`](@ref).
 """
+function junctiontree(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    junctiontree!(sparse(matrix); alg, snd)
+end
+
+
 function junctiontree(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     label, index = permutation(matrix, alg)
     cache = triu(matrix)
@@ -32,12 +39,40 @@ end
 
 
 """
-    junctiontree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=AMDJL_AMD(), snd::SupernodeType=Maximal())
+    junctiontree!(matrix::SparseMatrixCSC;
+        alg::PermutationOrAlgorithm=AMDJL_AMD(),
+        snd::SupernodeType=Maximal())
 
-Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html) ``G = (V, E)``, represented by its adjacency matrix.
-The vertices of ``G`` are first ordered by a [fill-reducing permutation](https://www.mathworks.com/help/matlab/math/sparse-matrix-reordering.html) ``\\sigma: V \\to V`` computed by the algorithm `alg`.
-The size of the resulting junction tree ``J = (T, B)`` is determined by the supernode partition `snd`.
-The function returns the pair ``(\\sigma, J)``.
+Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`.
+The vertices of the graph are first ordered by a [fill-reducing permutation](https://www.mathworks.com/help/matlab/math/sparse-matrix-reordering.html) computed by the algorithm `alg`.
+The size of the resulting decomposition is determined by the supernode partition `snd`.
+
+```julia
+julia> using StructuredDecompositions.JunctionTrees
+
+julia> graph = [
+    0 1 1 0 0 0 0 0
+    1 0 1 0 0 1 0 0
+    1 1 0 1 1 0 0 0
+    0 0 1 0 1 0 0 0
+    0 0 1 1 0 0 1 1
+    0 1 0 0 0 0 1 0
+    0 0 0 0 1 1 0 1
+    0 0 0 0 1 0 1 0
+];
+
+julia> label, tree = junctiontree(graph);
+
+julia> tree
+6-element JunctionTree:
+[6, 7, 8]
+├─ [1, 6, 7]
+├─ [4, 6, 8]
+│  └─ [3, 4, 6]
+│     └─ [2, 3, 6]
+└─ [5, 7, 8]
+```
+
 """
 function junctiontree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     label, index = permutation(matrix, alg)
@@ -74,15 +109,14 @@ function supernodetree!(label::AbstractVector, upper::SparseMatrixCSC, snd::Supe
 
     sndptr = Vector{Int}(undef, length(tree) + 1)
     sepptr = Vector{Int}(undef, length(tree) + 1)
-    sndval = Vector{Int}(undef, size(lower, 1))
-    sndptr[1] = sepptr[1] = 1
+    eindex = Vector{Int}(undef, size(lower, 1))
+    p = sndptr[1] = sepptr[1] = 1
 
     for (i, j) in enumerate(invperm(index))
         v = new[j]
-        p = sndptr[i]
 
         while !isnothing(v) && v != ancestor[j]
-            sndval[v] = p
+            eindex[v] = p
             v = parentindex(etree, v)
             p += 1
         end
@@ -91,12 +125,12 @@ function supernodetree!(label::AbstractVector, upper::SparseMatrixCSC, snd::Supe
         sepptr[i + 1] = sndptr[i] + sepptr[i] + colcount[new[j]] - p
     end
 
-    invpermute!(label, sndval), sympermute!(upper, lower, sndval, ReverseOrdering()), invpermute!(tree, index), sndptr, sepptr, lower
+    invpermute!(label, eindex), sympermute!(upper, lower, eindex, ReverseOrdering()), invpermute!(tree, index), sndptr, sepptr, lower
 end
 
 
 # Construct a postordered supernodal elimination tree.
-function supernodetree!(label::AbstractVector, upper::SparseMatrixCSC, snd::Node, cache::SparseMatrixCSC=similar(upper))
+function supernodetree!(label::AbstractVector, upper::SparseMatrixCSC, snd::Nodal, cache::SparseMatrixCSC=similar(upper))
     label, upper, tree, cache = eliminationtree!(label, upper, cache)
     lower = transpose!(cache, upper)
     rowcount, colcount = supcnt(lower, tree)
@@ -108,28 +142,20 @@ end
 
 # Get the separators of every node of a supernodal elimination tree.
 function sepvals(lower::SparseMatrixCSC, tree::Tree, sndptr::AbstractVector, sepptr::AbstractVector)
-    index = zeros(Int, size(lower, 1))
-    sepval = Vector{Int}(undef, last(sepptr) - 1)
-    p = 1
+    stack = sizehint!(Int[], maximum(i -> sepptr[i + 1] - sepptr[i], tree))
+    sepval = sizehint!(Int[], last(sepptr) - 1)
 
     for j in tree
-        for v in view(rowvals(lower), nzrange(lower, sndptr[j]))
-            if sndptr[j + 1] <= v
-                sepval[p] = v
-                index[v] = j
-                p += 1
-            end
-        end
+        notinsnd(v) = sndptr[j + 1] <= v
+        column = @view rowvals(lower)[nzrange(lower, sndptr[j])]
+        append!(sepval, Iterators.filter(notinsnd, column))
 
-        for i in childindices(tree, j), v in view(sepval, sepptr[i]:sepptr[i + 1] - 1)
-            if sndptr[j + 1] <= v && index[v] != j
-                sepval[p] = v
-                index[v] = j
-                p += 1
-            end
-        end
-
-        sort!(sepval, sepptr[j], sepptr[j + 1] - 1, DEFAULT_STABLE, ForwardOrdering())
+        for i in childindices(tree, j)
+            self = @view sepval[sepptr[j]:end]
+            child = @view sepval[sepptr[i]:sepptr[i + 1] - 1]
+            union = mergesorted!(empty!(stack), self, Iterators.filter(notinsnd, child))
+            append!(resize!(sepval, sepptr[j] - 1), union)
+        end 
     end
 
     sepval
@@ -143,18 +169,20 @@ function relvals(tree::Tree, sndptr::AbstractVector, sepptr::AbstractVector, sep
 
     for i in tree[1:end - 1]
         j = parentindex(tree, i)
+        q = sepptr[j]
 
         while p < sepptr[i + 1] && sepval[p] < sndptr[j + 1]
             relval[p] = sepval[p] - sndptr[j] + 1
             p += 1
         end
 
-        q = sepptr[j]
+        while p < sepptr[i + 1] && q < sepptr[j + 1]
+            if sepval[p] <= sepval[q]
+                relval[p] = q - sepptr[j] - sndptr[j] + sndptr[j + 1] + 1
+                p += 1
+            end
 
-        while p < sepptr[i + 1]
-            q = searchsortedfirst(sepval, sepval[p], q, sepptr[j + 1] - 1, ForwardOrdering()) + 1
-            relval[p] = q - sepptr[j] - sndptr[j] + sndptr[j + 1]
-            p += 1
+            q += 1
         end
     end
 
@@ -175,7 +203,7 @@ end
 """
     residual(tree::JunctionTree, i::Integer)
 
-Get the residual ``\\mathrm{res}(i) := \\mathrm{bag}(i) - \\mathrm{sep}(i).``
+Get the residual at node i.
 """
 function residual(tree::JunctionTree, i::Integer)
     tree.sndptr[i]:tree.sndptr[i + 1] - 1
@@ -185,7 +213,7 @@ end
 """
     separator(tree::JunctionTree, i::Integer)
 
-Get the separator ``\\mathrm{sep}(i) := \\mathrm{bag}(i) \\cap \\mathrm{bag}(parent(i)).``
+Get the separator at node i.
 """
 function separator(tree::JunctionTree, i::Integer)
     view(tree.sepval, tree.sepptr[i]:tree.sepptr[i + 1] - 1)
@@ -195,10 +223,37 @@ end
 """
     relative(tree::JunctionTree, i::Integer)
 
-Get the inclusion mapping ``\\mathrm{sep}(i) \\to \\mathrm{bag}(parent(i)).`` 
+Get the indices in `tree[parentindex(tree, i)]` corresponding to the elements of `separator(tree, i)`.
+
+```julia
+julia> using AbstractTrees
+julia> using StructuredDecompositions.JunctionTrees
+
+julia> graph = [
+    0 1 1 0 0 0 0 0
+    1 0 1 0 0 1 0 0
+    1 1 0 1 1 0 0 0
+    0 0 1 0 1 0 0 0
+    0 0 1 1 0 0 1 1
+    0 1 0 0 0 0 1 0
+    0 0 0 0 1 1 0 1
+    0 0 0 0 1 0 1 0
+];
+
+julia> label, tree = junctiontree(graph);
+
+julia> tree[parentindex(tree, 3)][relative(tree, 3)] == separator(tree, 3)
+true
+```
 """
 function relative(tree::JunctionTree, i::Integer)
     view(tree.relval, tree.sepptr[i]:tree.sepptr[i + 1] - 1)
+end
+
+
+function Base.show(io::IO, ::MIME"text/plain", tree::JunctionTree)
+    print(io, "$(length(tree))-element JunctionTree:\n")
+    print_tree(io, IndexNode(tree))
 end
 
 

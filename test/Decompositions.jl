@@ -15,7 +15,7 @@ using Catlab.CategoricalAlgebra
 
 # Define the instance #######################
 # bag 1
-H₁ = @acset Graph begin
+H1 = @acset Graph begin
     V = 3
     E = 2
     src = [1, 2]
@@ -23,12 +23,12 @@ H₁ = @acset Graph begin
 end
 
 # adhesion 1, 2
-H₁₂ = @acset Graph begin
+H12 = @acset Graph begin
     V = 2
 end
 
 # bag 2
-H₂ = @acset Graph begin
+H2 = @acset Graph begin
     V = 4
     E = 3
     src = [1, 2, 3]
@@ -36,12 +36,12 @@ H₂ = @acset Graph begin
 end
 
 # adhesion 2, 3
-H₂₃ = @acset Graph begin
+H23 = @acset Graph begin
     V = 1
 end
 
 # bag 3
-H₃ = @acset Graph begin
+H3 = @acset Graph begin
     V = 2
     E = 1
     src = [1]
@@ -58,14 +58,13 @@ G = @acset Graph begin
 end
 
 # the functor
-Γ₀ = Dict(1 => H₁, 2 => H₂, 3 => H₃, 4 => H₁₂, 5 => H₂₃)
 Γ = FinDomFunctor(
-    Γ₀,
+    Dict(1 => H1, 2 => H2, 3 => H3, 4 => H12, 5 => H23),
     Dict(
-        1 => ACSetTransformation(Γ₀[4], Γ₀[1], V=[1, 3]),
-        2 => ACSetTransformation(Γ₀[5], Γ₀[2], V=[1]   ),
-        3 => ACSetTransformation(Γ₀[4], Γ₀[2], V=[4, 1]),
-        4 => ACSetTransformation(Γ₀[5], Γ₀[3], V=[1]   )),
+        1 => ACSetTransformation(H12, H1, V=[1, 3]),
+        2 => ACSetTransformation(H23, H2, V=[1]),
+        3 => ACSetTransformation(H12, H2, V=[4, 1]),
+        4 => ACSetTransformation(H23, H3, V=[1])),
     ∫(G))
 
 # the decomposition
@@ -73,24 +72,20 @@ bigdecomp = StrDecomp(G, Γ)
 
 #f = ACSetTransformation(Γ₀[4], Γ₀[1], V=[1, 3])
 
-@test H₁ ∈ bags(bigdecomp) && H₂ ∈ bags(bigdecomp) && !(H₁₂ ∈ bags(bigdecomp))
+@test H1 ∈ bags(bigdecomp) && H2 ∈ bags(bigdecomp) && !(H12 ∈ bags(bigdecomp))
 
-𝐃ᵥ = 𝐃 $ vs
+v𝐃 = 𝐃 $ vs
 
-bigdecomp_to_sets = 𝐃ᵥ(bigdecomp)
-@test all( 
-    s -> dom(s[1]) == dom(s[2]), 
-    adhesionSpans(bigdecomp_to_sets))
+bigdecomp_to_sets = v𝐃(bigdecomp)
+@test all(s -> dom(s[1]) == dom(s[2]), adhesionSpans(bigdecomp_to_sets))
 
-𝐃ₛ = 𝐃 $ skeleton
+s𝐃 = 𝐃 $ skeleton
 
-bigdecomp_skeleton = 𝐃ₛ(bigdecomp_to_sets)
+bigdecomp_skeleton = s𝐃(bigdecomp_to_sets)
 
 @test bags(bigdecomp_skeleton) == map(FinSet, [3,4,2])
 @test adhesions(bigdecomp_skeleton) == map(FinSet, [2,1])
-@test all( 
-    s -> dom(s[1]) == dom(s[2]), 
-    adhesionSpans(bigdecomp_skeleton))
+@test all(s -> dom(s[1]) == dom(s[2]), adhesionSpans(bigdecomp_skeleton))
 
 
 ##################################
