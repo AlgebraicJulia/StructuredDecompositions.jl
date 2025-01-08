@@ -30,25 +30,29 @@ end
 
 @info "Building Documenter.jl docs"
 makedocs(
-  modules=[StructuredDecompositions],
-  format=Documenter.HTML(),
-  sitename="StructuredDecompositions.jl",
-  doctest=false,
-  checkdocs=:none,
-  pages=Any[
-    "StructuredDecompositions.jl"=>"index.md",
-    "Decompositions"=>"pages/decompositions.md",
-    "Deciding Sheaves"=>"pages/decidingsheaves.md",
-#    "Junction Trees"=>"pages/junction_trees.md",
-    "Functor Utils"=>"pages/functor_utils.md",
-#    "Nested UWDs"=>"pages/nested_uwds.md",
-    "Library Reference"=>"api.md",
+  modules = [StructuredDecompositions],
+  format = Documenter.HTML(),
+  sitename = "StructuredDecompositions.jl",
+  doctest = false,
+  checkdocs = :none,
+  pages = [
+    "StructuredDecompositions.jl" => "index.md",
+    "Decompositions" => "pages/Decompositions.md",
+    "DecidingSheaves" => "pages/DecidingSheaves.md",
+    "FunctorUtils" => "pages/FunctorUtils.md",
+    "JunctionTrees" => "pages/JunctionTrees.md",
+    "API" => [
+        "Decompositions" => "api/Decompositions.md",
+        "DecidingSheaves" => "api/DecidingSheaves.md",
+        "FunctorUtils" => "api/FunctorUtils.md",
+        "JunctionTrees" => "api/JunctionTrees.md",
+    ]
   ]
 )
 
 @info "Deploying docs"
 deploydocs(
-  target="build",
-  repo="github.com/AlgebraicJulia/StructuredDecompositions.jl.git",
-  branch="gh-pages"
+  target = "build",
+  repo = "github.com/AlgebraicJulia/StructuredDecompositions.jl.git",
+  branch = "gh-pages"
 )

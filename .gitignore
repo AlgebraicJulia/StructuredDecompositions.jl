@@ -23,6 +23,9 @@ docs/site/
 # environment.
 Manifest.toml
 
-.vscode
 
-.DS_Store
+.vscode
+*.swp
+*.DS_Store
+benchmark/Manifest.toml
+

@@ -2,29 +2,31 @@
 # This type implements the indexed tree interface.
 struct Tree <: AbstractUnitRange{Int}
     parent::Vector{Int}  # vector of parents
+    root::Scalar{Int}    # root
+
+    # Left-Child Right-Sibling tree
     child::Vector{Int}   # vector of left-children
     brother::Vector{Int} # vector of right-siblings
-    root::Array{Int, 0}  # root
 end
 
 
 # Construct a rooted tree from a list of parents.
 function Tree(parent::AbstractVector)
-    child = zeros(Int, length(parent))
-    brother = Vector{Int}(undef, length(parent))
     root = zeros(Int)
+    child = zeros(Int, length(parent))
+    brother = similar(child)
 
     for (i, j) in Iterators.reverse(enumerate(parent))
         if iszero(j)
-            brother[i] = 0
             root[] = i
+            brother[i] = 0
         else
             brother[i] = child[j]
             child[j] = i
         end
     end
 
-    Tree(parent, child, brother, root)
+    Tree(parent, root, child, brother)
 end
 
 
@@ -36,10 +38,13 @@ end
 # Compact Clique Tree Data Structures in Sparse Matrix Factorizations
 # Pothen and Sun
 # Figure 4: The Clique Tree Algorithm 2
+#
+# Find the maximal supernode partition of a chordal graph.
+# `tree` is a topologically ordered elimination tree and `colcount` is a list of higher degrees.
 function stree(tree::Tree, colcount::AbstractVector, snd::Maximal)
-    new = Stack{Int}(length(tree))
-    parent = Stack{Int}(length(tree))
-    ancestor = Stack{Int}(length(tree))
+    new = sizehint!(Int[], length(tree))
+    parent = sizehint!(Int[], length(tree))
+    ancestor = sizehint!(Int[], length(tree))
     new_in_clique = Vector{Int}(undef, length(tree))
 
     for v in tree
@@ -78,11 +83,12 @@ function stree(tree::Tree, colcount::AbstractVector, snd::Maximal)
 end
 
 
-# Compute the fundamental supernode partition.
+# Find the fundamental supernode partition of a chordal graph.
+# `tree` is a topologically ordered elimination tree and `colcount` is a list of higher degrees.
 function stree(tree::Tree, colcount::AbstractVector, snd::Fundamental)
-    new = Stack{Int}(length(tree))
-    parent = Stack{Int}(length(tree))
-    ancestor = Stack{Int}(length(tree))
+    new = sizehint!(Int[], length(tree))
+    parent = sizehint!(Int[], length(tree))
+    ancestor = sizehint!(Int[], length(tree))
     new_in_clique = Vector{Int}(undef, length(tree))
 
     for v in tree
@@ -110,6 +116,9 @@ end
 # A Compact Row Storage Scheme for Cholesky Factors Using Elimination Trees
 # Liu
 # Algorithm 4.2: Elimination Tree by Path Compression.
+#
+# Construct an elimination tree of a simple graph, represented by the upper triangular part
+# `upper` of its adjacency matrix.
 function etree(upper::SparseMatrixCSC)
     parent = Vector{Int}(undef, size(upper, 1))
     ancestor = Vector{Int}(undef, size(upper, 1))
@@ -141,6 +150,10 @@ end
 # An Efficient Algorithm to Compute Row and Column Counts for Sparse Cholesky Factorization
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
+#
+# Compute the lower and higher degrees of the elimination graph of a simple graph, represented by the
+# lower triangular part `lower` of its adjacency matrix. `tree` is a postordered elimination tree,
+# `level` is a list of levels, and `fdesc` is a list of first descendants.
 function supcnt(lower::SparseMatrixCSC, tree::Tree, level::AbstractVector=levels(tree), fdesc::AbstractVector=firstdescendants(tree))
     sets = DisjointTrees(size(lower, 1))
     prev_p = zeros(Int, size(lower, 1))
@@ -190,23 +203,27 @@ end
 # Compute a postordering of a rooted tree.
 function dfs(tree::Tree)
     head = copy(tree.child)
-    order = Index(length(tree))
-    stack = Stack{Int}(length(tree))
+
+    stack = sizehint!(Int[], length(tree))
     push!(stack, tree.root[])
+
+    n = 0
+    index = Vector{Int}(undef, length(tree))
 
     while !isempty(stack)
         j = last(stack)
         i = head[j]
 
         if iszero(i)
-            push!(order, pop!(stack))
+            n += 1
+            index[pop!(stack)] = n
         else
             head[j] = tree.brother[i]
             push!(stack, i)
         end
     end
 
-    order.index
+    index
 end
 
 
@@ -238,12 +255,6 @@ end
 
 
 # Permute the vertices of a rooted tree.
-function Base.permute!(tree::Tree, permutation::AbstractVector)
-    invpermute!(tree, invperm(permutation))
-end
-
-
-# Permute the vertices of a rooted tree.
 function Base.invpermute!(tree::Tree, index::AbstractVector)
     fill!(tree.child, 0)
 
@@ -253,8 +264,8 @@ function Base.invpermute!(tree::Tree, index::AbstractVector)
 
     for (i, j) in Iterators.reverse(enumerate(tree.parent))
         if iszero(j)
-            tree.brother[i] = 0
             tree.root[] = i
+            tree.brother[i] = 0
         else
             tree.brother[i] = tree.child[j]
             tree.child[j] = i
@@ -266,6 +277,7 @@ end
 
 
 function Base.show(io::IO, ::MIME"text/plain", tree::Tree)
+    print(io, "$(length(tree))-element Tree:\n")
     print_tree(io, IndexNode(tree))
 end
 

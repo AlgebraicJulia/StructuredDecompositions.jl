@@ -5,7 +5,7 @@ A graph elimination algorithm. The options are
 - [`CuthillMcKeeJL_RCM`](@ref)
 - [`SymRCMJL_RCM`](@ref)
 - [`AMDJL_AMD`](@ref)
-- [`AMDJL_SYMAMD`](@ref)
+- [`AMDJL_SymAMD`](@ref)
 - [`MetisJL_ND`](@ref)
 - [`TreeWidthSolverJL_BT`](@ref)
 - [`MCS`](@ref)
@@ -47,11 +47,11 @@ struct AMDJL_AMD <: EliminationAlgorithm
 end
 
 """
-    AMDJL_SYMAMD{T} <: EliminationAlgorithm
+    AMDJL_SymAMD{T} <: EliminationAlgorithm
 
-The SYMAMD algorithm. Uses AMD.jl.
+The SymAMD algorithm. Uses AMD.jl.
 """
-struct AMDJL_SYMAMD{T} <: EliminationAlgorithm
+struct AMDJL_SymAMD{T} <: EliminationAlgorithm
     meta::AMD.Colamd{T}
 end
 
@@ -85,27 +85,58 @@ function AMDJL_AMD()
 end
 
 
-function AMDJL_SYMAMD{T}() where T
-    AMDJL_SYMAMD(AMD.Colamd{T}())
+function AMDJL_SymAMD{T}() where T
+    AMDJL_SymAMD(AMD.Colamd{T}())
 end
 
 
-function AMDJL_SYMAMD()
-    AMDJL_SYMAMD{Int}()
+function AMDJL_SymAMD()
+    AMDJL_SymAMD{Int}()
 end
 
 
 """
-    permutation(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm)
+    permutation(matrix::AbstractMatrix, alg::PermutationOrAlgorithm)
 
-Construct a [fill-reducing permutation](https://www.mathworks.com/help/matlab/math/sparse-matrix-reordering.html)
-``\\sigma: V \\to V`` of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html) ``G = (V, E)``, represented by its adjacency matrix.
-Returns a tuple ``(\\sigma, \\sigma^{-1})``.
+Construct a [fill-reducing permutation](https://www.mathworks.com/help/matlab/math/sparse-matrix-reordering.html) of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`.
+
+```julia
+julia> using StructuredDecompositions.JunctionTrees
+
+julia> graph = [
+    0 1 1 0 0 0 0 0
+    1 0 1 0 0 1 0 0
+    1 1 0 1 1 0 0 0
+    0 0 1 0 1 0 0 0
+    0 0 1 1 0 0 1 1
+    0 1 0 0 0 0 1 0
+    0 0 0 0 1 1 0 1
+    0 0 0 0 1 0 1 0
+];
+
+julia> order, index = permutation(graph, MCS());
+
+julia> order
+8-element Vector{Int64}:
+ 1
+ 6
+ 2
+ 3
+ 4
+ 5
+ 7
+ 8
+```
 """
-permutation(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm)
+permutation(matrix::AbstractMatrix, alg::PermutationOrAlgorithm)
 
 
-function permutation(matrix::SparseMatrixCSC, alg::AbstractVector)
+function permutation(matrix::AbstractMatrix, alg::EliminationAlgorithm)
+    permutation(sparse(matrix), alg)
+end
+
+
+function permutation(matrix::AbstractMatrix, alg::AbstractVector)
     order = collect(alg)
     order, invperm(order)
 end
@@ -132,8 +163,8 @@ function permutation(matrix::SparseMatrixCSC, alg::AMDJL_AMD)
 end
 
 
-# Construct an order using the SYMAMD algorithm. Uses AMD.jl.
-function permutation(matrix::SparseMatrixCSC, alg::AMDJL_SYMAMD)
+# Construct an order using the SymAMD algorithm. Uses AMD.jl.
+function permutation(matrix::SparseMatrixCSC, alg::AMDJL_SymAMD)
     order = AMD.symamd(matrix, alg.meta)
     order, invperm(order)
 end

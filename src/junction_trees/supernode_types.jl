@@ -2,7 +2,7 @@
     SupernodeType
 
 A type of supernode. The options are
-- [`Node`](@ref)
+- [`Nodal`](@ref)
 - [`Maximal`](@ref)
 - [`Fundamental`](@ref)
 """
@@ -10,11 +10,11 @@ abstract type SupernodeType end
 
 
 """
-    Node <: Supernode
+    Nodal <: Supernode
 
 A single-vertex supernode.
 """
-struct Node <: SupernodeType end
+struct Nodal <: SupernodeType end
 
 
 """

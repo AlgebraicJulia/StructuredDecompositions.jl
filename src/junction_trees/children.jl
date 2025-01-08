@@ -1,4 +1,4 @@
-# The children of a vertex in a rooted tree.
+# The children of a node in a rooted tree.
 struct Children
     child::Int
     brother::Vector{Int}
