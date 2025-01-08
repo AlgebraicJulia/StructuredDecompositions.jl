@@ -28,6 +28,7 @@ matrix = [
     0  0  0  0  0  0  0  0  0  1  0  1  0  0  1  0  0
 ]
 
+@test treewidth(matrix) == 3
 
 order, index = permutation(matrix, CuthillMcKeeJL_RCM())
 @test length(order) == 17

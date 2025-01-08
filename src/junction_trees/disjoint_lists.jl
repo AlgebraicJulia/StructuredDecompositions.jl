@@ -92,7 +92,7 @@ function mcs(matrix::SparseMatrixCSC)
         order[i] = v
         number[v] = 0
 
-        for w in view(rowvals(matrix), nzrange(matrix, v))
+        for w in @view rowvals(matrix)[nzrange(matrix, v)]
             if number[w] >= 1
                 delete!(set, number[w], w)
                 number[w] += 1

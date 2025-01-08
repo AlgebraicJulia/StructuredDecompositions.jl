@@ -127,7 +127,7 @@ function etree(upper::SparseMatrixCSC)
         parent[i] = 0
         ancestor[i] = 0
 
-        for k in view(rowvals(upper), nzrange(upper, i))
+        for k in @view rowvals(upper)[nzrange(upper, i)]
             r = k
 
             while !iszero(ancestor[r]) && ancestor[r] != i
@@ -168,7 +168,7 @@ function supcnt(lower::SparseMatrixCSC, tree::Tree, level::AbstractVector=levels
     for p in tree[1:end - 1]
         wt[parentindex(tree, p)] -= 1
 
-        for u in view(rowvals(lower), nzrange(lower, p))
+        for u in @view rowvals(lower)[nzrange(lower, p)]
             if fdesc[p] > prev_nbr[u]
                 wt[p] += 1
                 pp = prev_p[u]
