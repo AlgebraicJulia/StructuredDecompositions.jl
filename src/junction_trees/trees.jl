@@ -30,6 +30,40 @@ function Tree(parent::AbstractVector)
 end
 
 
+function Tree(neighbors::Vector{Vector{Int}}, root::Integer)
+    parent = zeros(Int, length(neighbors))
+    parent[root] = 0
+
+    seen = zeros(Bool, length(neighbors))
+    seen[root] = true
+    
+    stack = sizehint!(Int[], length(neighbors))
+    push!(stack, root)
+    
+    while !isempty(stack)
+        v = last(stack)
+        u = 0
+        
+        for n in neighbors[v]
+            if !seen[n]
+                u = n
+                break
+            end
+        end
+        
+        if iszero(u)
+            pop!(stack)
+        else
+            seen[u] = true
+            push!(stack, u)
+            parent[u] = v
+        end
+    end
+    
+    Tree(parent)
+end
+
+
 function Children(tree::Tree, i::Integer)
     Children(tree.child[i], tree.brother)
 end

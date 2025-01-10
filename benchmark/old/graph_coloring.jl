@@ -31,7 +31,7 @@ function skeletal_coloring(n::Integer)
 end 
 
 
-# Decomposition 1
+# decomposition 1
 # small n per bag(4) and small bags k(2), 3 coloring
 
 # bag 1
@@ -75,11 +75,11 @@ decomp = StrDecomp(G, Γ)
 graph = ob(colimit(decomp))
 
 for i in (2, 3, 4)
-    SUITE["GraphColoring"]["Decomposition 1"]["$i Coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
-    SUITE["GraphColoring"]["Decomposition 1"]["$i Coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
+    SUITE["graph coloring"]["decomposition 1"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
+    SUITE["graph coloring"]["decomposition 1"]["$i coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
-# Decomposition 2
+# decomposition 2
 # medium n per bag(10) and small bags k(2), 3 coloring
 
 # bag 1
@@ -123,13 +123,13 @@ decomp = StrDecomp(G, Γ)
 graph = ob(colimit(decomp))
 
 for i in (2, 3, 4)
-    SUITE["GraphColoring"]["Decomposition 2"]["$i Coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
-    SUITE["GraphColoring"]["Decomposition 2"]["$i Coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
+    SUITE["graph coloring"]["decomposition 2"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
+    SUITE["graph coloring"]["decomposition 2"]["$i coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
 
 #=
-# Decomposition 3 
+# decomposition 3 
 # large n per bag(20) and small bags k(2), 3 coloring
 
 # bag 1
@@ -172,13 +172,13 @@ decomp = StrDecomp(G, Γ)
 graph = ob(colimit(decomp))
 
 for i in (2, 3, 4)
-    SUITE["GraphColoring"]["Decomposition 3"]["$i Coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
-    SUITE["GraphColoring"]["Decomposition 3"]["$i Coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
+    SUITE["graph coloring"]["decomposition 3"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
+    SUITE["graph coloring"]["decomposition 3"]["$i coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 =#
 
 
-# Decomposition 4 
+# decomposition 4 
 # small n per bag(5) with medium bags k(4), 3 coloring
 
 # bag 1
@@ -252,12 +252,12 @@ decomp = StrDecomp(G, Γ)
 graph = ob(colimit(decomp))
 
 for i in (2, 3, 4)
-    SUITE["GraphColoring"]["Decomposition 4"]["$i Coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
-    SUITE["GraphColoring"]["Decomposition 4"]["$i Coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
+    SUITE["graph coloring"]["decomposition 4"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
+    SUITE["graph coloring"]["decomposition 4"]["$i coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
 
-# Decomposition 5 
+# decomposition 5 
 # medium n per bag(10) with medium bags k(4), 3 coloring
 
 # bag 1
@@ -330,11 +330,11 @@ decomp = StrDecomp(G, Γ)
 graph = ob(colimit(decomp))
 
 for i in (2, 3, 4)
-    SUITE["GraphColoring"]["Decomposition 5"]["$i Coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
-    SUITE["GraphColoring"]["Decomposition 5"]["$i Coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
+    SUITE["graph coloring"]["decomposition 5"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
+    SUITE["graph coloring"]["decomposition 5"]["$i coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
-# Decomposition 6 
+# decomposition 6 
 # large n per bag(20) with medium bags k(4), 3 coloring
 
 # bag 1
@@ -407,11 +407,11 @@ decomp = StrDecomp(G, Γ)
 graph = ob(colimit(decomp))
 
 for i in (2, 3, 4)
-    SUITE["GraphColoring"]["Decomposition 6"]["$i Coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
-    SUITE["GraphColoring"]["Decomposition 6"]["$i Coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
+    SUITE["graph coloring"]["decomposition 6"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
+    SUITE["graph coloring"]["decomposition 6"]["$i coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
-# Decomposition 7 
+# decomposition 7 
 # small n per bag(5) with large bags k(10), 3 coloring
 
 # bag 1
@@ -576,6 +576,6 @@ decomp = StrDecomp(G, Γ)
 graph = ob(colimit(decomp))
 
 for i in (2, 3, 4)
-    SUITE["GraphColoring"]["Decomposition 6"]["$i Coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
-    SUITE["GraphColoring"]["Decomposition 6"]["$i Coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
+    SUITE["graph coloring"]["decomposition 6"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
+    SUITE["graph coloring"]["decomposition 6"]["$i coloring"]["StructuredDecompositions"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end

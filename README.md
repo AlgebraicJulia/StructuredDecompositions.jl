@@ -10,12 +10,15 @@ Since the definition of a structured decompositions is functorial, one can easil
 
 You can benchmark StructuredDecompositions by navigating to the project directory, running Julia, and typing the following into the REPL.
 ```julia
-using Pkg
-Pkg.activate("benchmark")
-Pkg.instantiate()
-using PkgBenchmark
-using StructuredDecompositions
-benchmarkpkg(StructuredDecompositions)
+julia> using Pkg
+
+julia> Pkg.activate("benchmark")
+
+julia> Pkg.instantiate()
+
+julia> using PkgBenchmark, StructuredDecompositions
+
+julia> benchmarkpkg(StructuredDecompositions)
 ```
 
   [1]: https://en.wikipedia.org/wiki/Tree_decomposition

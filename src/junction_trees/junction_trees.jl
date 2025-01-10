@@ -20,7 +20,7 @@ end
 
 """
     junctiontree(matrix::AbstractMatrix;
-        alg::PermutationOrAlgorithm=AMDJL_AMD(),
+        alg::PermutationOrAlgorithm=AMD(),
         snd::SupernodeType=Maximal())
 
 A non-mutating version of [`junctiontree!`](@ref).
@@ -40,7 +40,7 @@ end
 
 """
     junctiontree!(matrix::SparseMatrixCSC;
-        alg::PermutationOrAlgorithm=AMDJL_AMD(),
+        alg::PermutationOrAlgorithm=AMD(),
         snd::SupernodeType=Maximal())
 
 Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`.
@@ -51,15 +51,15 @@ The size of the resulting decomposition is determined by the supernode partition
 julia> using StructuredDecompositions.JunctionTrees
 
 julia> graph = [
-    0 1 1 0 0 0 0 0
-    1 0 1 0 0 1 0 0
-    1 1 0 1 1 0 0 0
-    0 0 1 0 1 0 0 0
-    0 0 1 1 0 0 1 1
-    0 1 0 0 0 0 1 0
-    0 0 0 0 1 1 0 1
-    0 0 0 0 1 0 1 0
-];
+           0 1 1 0 0 0 0 0
+           1 0 1 0 0 1 0 0
+           1 1 0 1 1 0 0 0
+           0 0 1 0 1 0 0 0
+           0 0 1 1 0 0 1 1
+           0 1 0 0 0 0 1 0
+           0 0 0 0 1 1 0 1
+           0 0 0 0 1 0 1 0
+       ];
 
 julia> label, tree = junctiontree(graph);
 
@@ -72,7 +72,6 @@ julia> tree
 │     └─ [2, 3, 6]
 └─ [5, 7, 8]
 ```
-
 """
 function junctiontree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     label, index = permutation(matrix, alg)
@@ -146,14 +145,13 @@ function sepvals(lower::SparseMatrixCSC, tree::Tree, sndptr::AbstractVector, sep
     sepval = sizehint!(Int[], last(sepptr) - 1)
 
     for j in tree
-        notinsnd(v) = sndptr[j + 1] <= v
         column = @view rowvals(lower)[nzrange(lower, sndptr[j])]
-        append!(sepval, Iterators.filter(notinsnd, column))
+        append!(sepval, ifilter(v -> sndptr[j + 1] <= v, column))
 
         for i in childindices(tree, j)
             self = @view sepval[sepptr[j]:end]
             child = @view sepval[sepptr[i]:sepptr[i + 1] - 1]
-            union = mergesorted!(empty!(stack), self, Iterators.filter(notinsnd, child))
+            union = mergesorted!(empty!(stack), self, ifilter(v -> sndptr[j + 1] <= v, child))
             append!(resize!(sepval, sepptr[j] - 1), union)
         end 
     end
@@ -201,17 +199,18 @@ end
 
 
 """
-    treewidth(matrix::AbstractMatrix)
+    treewidth(matrix::AbstractMatrix;
+        alg::PermutationOrAlgorithm=AMD())
 
 A non-mutating version of [`treewidth!`](@ref).
 """
-function treewidth(matrix::AbstractMatrix)
-    treewidth!(sparse(matrix))
+function treewidth(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    treewidth!(sparse(matrix); alg)
 end
 
 
-function treewidth(matrix::SparseMatrixCSC)
-    label, index = permutation(matrix, TreeWidthSolverJL_BT())
+function treewidth(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    label, index = permutation(matrix, alg)
     cache = triu(matrix)
     label, upper, tree, cache = eliminationtree!(label, sympermute(cache, index), cache)
     rowcount, colcount = supcnt(transpose!(cache, upper), tree)
@@ -220,16 +219,79 @@ end
 
 
 """
-    treewidth!(matrix::SparseMatrixCSC)
+    treewidth!(matrix::SparseMatrixCSC;
+        alg::PermutationOrAlgorithm=AMD())
 
-Compute the tree width of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`.
+Compute an upper bound to the [tree width](https://en.wikipedia.org/wiki/Treewidth) of a 
+[simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix
+`matrix`. See [`junctiontree!`](@ref) for the meaning of `alg`.
 """
-function treewidth!(matrix::SparseMatrixCSC)
-    label, index = permutation(matrix, TreeWidthSolverJL_BT())
+function treewidth!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    label, index = permutation(matrix, alg)
     cache = triu(matrix)
     label, upper, tree, cache = eliminationtree!(label, sympermute!(matrix, cache, index), cache)
     rowcount, colcount = supcnt(transpose!(cache, upper), tree)
     maximum(colcount) - 1
+end
+
+
+"""
+    nnz(tree::JunctionTree)
+
+Compute the number of edges in the [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph) of a junction tree.
+"""
+function SparseArrays.nnz(tree::JunctionTree)
+    sum(tree) do bag
+        r = length(residual(bag))
+        s = length(separator(bag))
+        (2s + r - 1) * r ÷ 2
+    end 
+end
+
+
+function chordalgraph(tree::JunctionTree)
+    chordalgraph(true, tree)
+end
+
+
+"""
+    chordalgraph([element=true,] tree::JunctionTree)
+
+See below. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
+"""
+function chordalgraph(element::T, tree::JunctionTree) where T
+    matrix = chordalgraph(T, tree)
+    fill!(nonzeros(matrix), element)
+    matrix
+end
+
+
+"""
+    chordalgraph(Element::Type, tree::JunctionTree)
+
+Construct the [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph) of the subtrees of
+a junction tree. The function returns a sparse matrix with elements of type `Element`
+and the same sparsity structure as the lower triangular part of the graph's adjacency matrix.
+"""
+function chordalgraph(Element::Type, tree::JunctionTree)
+    colptr = Vector{Int}(undef, last(tree.sndptr))
+    rowval = Vector{Int}(undef, nnz(tree))
+    nzval = Vector{Element}(undef, nnz(tree))
+    j = p = colptr[1] = 1
+
+    for bag in tree
+        for i in eachindex(residual(bag))
+            for v in @view bag[i + 1:end]
+                rowval[p] = v
+                p += 1
+            end
+            
+            colptr[j + 1] = p
+            j += 1
+        end
+    end
+
+    SparseMatrixCSC(last(tree.sndptr) - 1, last(tree.sndptr) - 1, colptr, rowval, nzval)
 end
 
 
@@ -264,19 +326,35 @@ julia> using AbstractTrees
 julia> using StructuredDecompositions.JunctionTrees
 
 julia> graph = [
-    0 1 1 0 0 0 0 0
-    1 0 1 0 0 1 0 0
-    1 1 0 1 1 0 0 0
-    0 0 1 0 1 0 0 0
-    0 0 1 1 0 0 1 1
-    0 1 0 0 0 0 1 0
-    0 0 0 0 1 1 0 1
-    0 0 0 0 1 0 1 0
-];
+           0 1 1 0 0 0 0 0
+           1 0 1 0 0 1 0 0
+           1 1 0 1 1 0 0 0
+           0 0 1 0 1 0 0 0
+           0 0 1 1 0 0 1 1
+           0 1 0 0 0 0 1 0
+           0 0 0 0 1 1 0 1
+           0 0 0 0 1 0 1 0
+       ];
 
 julia> label, tree = junctiontree(graph);
 
-julia> tree[parentindex(tree, 3)][relative(tree, 3)] == separator(tree, 3)
+julia> bag = tree[parentindex(tree, 1)]
+3-element Bag:
+ 6
+ 7
+ 8
+
+julia> sep = separator(tree, 1)
+2-element view(::Vector{Int64}, 1:2) with eltype Int64:
+ 6
+ 7
+
+julia> rel = relative(tree, 1)
+2-element view(::Vector{Int64}, 1:2) with eltype Int64:
+ 1
+ 2
+
+julia> bag[rel] == sep
 true
 ```
 """

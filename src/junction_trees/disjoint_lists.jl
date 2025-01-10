@@ -77,7 +77,7 @@ end
 function mcs(matrix::SparseMatrixCSC)
     order = Vector{Int}(undef, size(matrix, 2))
     number = Vector{Int}(undef, size(matrix, 2))
-    set = DisjointLists(size(matrix, 2))
+    set = DisjointLists(size(matrix, 2) + 1)
 
     for v in axes(matrix, 2)
         number[v] = 1

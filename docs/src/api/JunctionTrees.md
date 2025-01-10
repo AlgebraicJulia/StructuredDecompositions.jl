@@ -9,6 +9,7 @@ Bag
 JunctionTree
 junctiontree!
 junctiontree
+chordalgraph
 treewidth!
 treewidth
 separator
@@ -21,13 +22,19 @@ relative
 ```@docs
 EliminationAlgorithm
 PermutationOrAlgorithm
-AMDJL_AMD
-AMDJL_SymAMD
-MetisJL_ND
-CuthillMcKeeJL_RCM
-SymRCMJL_RCM
-TreeWidthSolverJL_BT
+AMD
+AMD(; ::Any, ::Any)
+SymAMD
+SymAMD(; ::Any, ::Any)
+NodeND
+RCM
+RCM(; ::Any)
+BT
 MCS
+FlowCutter
+FlowCutter(; ::Any, ::Any)
+ischordal
+isperfect
 permutation   
 ```
 

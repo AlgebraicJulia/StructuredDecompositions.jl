@@ -63,8 +63,7 @@ end
 
 
 # Compute the union of sorted sets `source1` and `source2`.
-# The union is stored in `target`.
-# `source1` and `source2` should support iteration, and `target` should support `push!(target, v)`.
+# The result is appended to `target`.
 function mergesorted!(target, source1, source2, order::Ordering=ForwardOrdering())
     i1 = iterate(source1)
     i2 = iterate(source2)
@@ -100,4 +99,149 @@ function mergesorted!(target, source1, source2, order::Ordering=ForwardOrdering(
     end
    
     target
+end
+
+
+# Compute the difference of sorted sets `source1` and `source2`.
+# The result is appended to `target`.
+function diffsorted!(target, source1, source2, order::Ordering=ForwardOrdering())
+    i1 = iterate(source1)
+    i2 = iterate(source2)
+
+    while !isnothing(i1) && !isnothing(i2)
+        x1, s1 = i1
+        x2, s2 = i2
+
+        if isequal(x1, x2)
+            i1 = iterate(source1, s1)
+            i2 = iterate(source2, s2)
+        elseif lt(order, x1, x2)
+            push!(target, x1)
+            i1 = iterate(source1, s1)
+        else
+            i2 = iterate(source2, s2)
+        end
+
+    end
+
+    while !isnothing(i1)
+        x1, s1 = i1
+        push!(target, x1)
+        i1 = iterate(source1, s1)
+    end
+
+    target
+end
+
+
+function flowcutter(matrix::SparseMatrixCSC, time::Integer, seed::Integer)
+    mktempdir(dirname(FlowCutterPACE17_jll.flow_cutter_pace17_path)) do directory
+        input = directory * "/input.gr"
+        output = directory * "/output.td"
+        open(io -> writegr(io, matrix), input; write=true)
+
+        command = `$(FlowCutterPACE17_jll.flow_cutter_pace17()) -s $seed`
+        process = run(pipeline(input, command, output); wait=false)
+
+        while !process_running(process)
+            sleep(1)
+        end
+
+        sleep(time)
+        kill(process)
+        open(readtd, output)
+    end
+end
+
+
+# Write a simple graph to a .gr file.
+# https://pacechallenge.org/2017/treewidth/
+function writegr(io::IO, matrix::SparseMatrixCSC)
+    m = size(matrix, 2)
+    n = nnz(matrix) ÷ 2
+    write(io, "p tw $m $n\n")
+
+    for j in axes(matrix, 2)
+        for i in @view rowvals(matrix)[nzrange(matrix, j)]
+            if j < i
+                write(io, "$j $i\n")
+            end
+        end
+    end
+end
+
+
+# Read a tree decomposition from a .td file.
+# https://pacechallenge.org/2017/treewidth/
+function readtd(io::IO) 
+    # comments
+    comment = String[]
+    line = readline(io)
+    
+    while !isempty(line)
+        flag = first(line)
+        
+        if flag == 'c'
+            push!(comment, line[3:end])
+            line = readline(io)
+            continue
+        end
+        
+        break
+    end
+
+    # statistics
+    if isempty(line) || first(line) != 's'
+        throw(EOFError("Missing header."))
+    end
+
+    nb, tw, nv = imap(word -> parse(Int, word), drop(split(line), 2))
+    line = readline(io)
+    
+    # bags
+    bagptr = sizehint!(Int[], nb + 1)    
+    bagval = sizehint!(Int[], tw * nb ÷ 2)
+    push!(bagptr, 1)
+    
+    while !isempty(line)
+        flag = first(line)
+        
+        if flag == 'c'
+            push!(comment, line[3:end])
+            line = readline(io)
+            continue
+        end
+        
+        if flag == 'b' 
+            for v in imap(word -> parse(Int, word), drop(split(line), 2))         
+                push!(bagval, v)
+            end
+            
+            push!(bagptr, length(bagval) + 1)
+            line = readline(io)
+            continue
+        end
+        
+        break
+    end
+
+    # edges
+    tree = map(i -> Int[], 1:nb)
+
+    while !isempty(line)
+        flag = first(line)
+   
+        if flag == 'c'
+            push!(comment, line[3:end])
+            line = readline(io)
+            continue
+        end
+
+        i, j = imap(word -> parse(Int, word), split(line))
+        push!(tree[i], j)
+        push!(tree[j], i)
+        line = readline(io)
+    end
+   
+    comment, nb, tw, nv, bagptr, bagval, tree
 end
