@@ -6,9 +6,6 @@
 # We will first benchmark the coloring algorithm in graphs.jl
 
 
-const colorings_fixed = (2, 3)
-
-
 struct Coloring
     n::Int    
 end
@@ -43,7 +40,7 @@ graph = @acset Graph begin
           22, 23, 23, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 32, 33, 33, 34, 35, 35, 36, 36, 37, 38, 38, 39, 39, 40]
 end
 
-for i in colorings_fixed
+for i in (2, 3, 4)
     SUITE["graph coloring fixed"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
 end
 
@@ -92,7 +89,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in colorings_fixed
+for i in (2, 3)
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["1 bag"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -138,7 +135,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in colorings_fixed
+for i in (2, 3)
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["2 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -215,7 +212,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in colorings_fixed
+for i in (2, 3, 4)
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["4 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -351,7 +348,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in colorings_fixed
+for i in (2, 3, 4)
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["8 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -547,7 +544,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in colorings_fixed
+for i in (2, 3, 4)
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["12 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 

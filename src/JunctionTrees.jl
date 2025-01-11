@@ -12,6 +12,7 @@ using SparseArrays: getcolptr
 
 
 import AMD as AMDPkg
+import ArnoldiMethod
 import FlowCutterPACE17_jll
 import Metis
 import SymRCM
@@ -23,7 +24,7 @@ const Scalar{T} = Array{T, 0}
 
 
 # Elimination Algorithms
-export AMD, SymAMD, RCM, NodeND, BT, MCS, FlowCutter, ischordal, isperfect, permutation
+export AMD, SymAMD, RCM, NodeND, BT, MCS, FlowCutter, Spectral, ischordal, isperfect, permutation
 
 
 # Ordered Graphs
@@ -51,6 +52,7 @@ include("junction_trees/children.jl")
 include("junction_trees/trees.jl")
 include("junction_trees/bags.jl")
 include("junction_trees/junction_trees.jl")
+include("junction_trees/chordal_graphs.jl")
 
 
 end

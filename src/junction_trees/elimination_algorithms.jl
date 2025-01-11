@@ -3,17 +3,18 @@
 
 A graph elimination algorithm. The options are
 
-| type                 | name                              | complexity |
-| :------------------- | :-------------------------------- | :--------- |
-| [`RCM`](@ref)        | reverse Cuthill-Mckee             |            |
-| [`AMD`](@ref)        | approximate minimum degree        |            |
-| [`SymAMD`](@ref)     | column approximate minimum degree |            |
-| [`NodeND`](@ref)     | nested dissection                 |            |
-| [`BT`](@ref)         | Bouchitte-Todinca                 |            |
-| [`MCS`](@ref)        | maximum cardinality search        | O(m + n)   |
-| [`FlowCutter`](@ref) | FlowCutter                        |            |
+| type                 | name                              | complexity  |
+| :------------------- | :-------------------------------- | :---------- |
+| [`RCM`](@ref)        | reverse Cuthill-Mckee             | O(mn)       |
+| [`AMD`](@ref)        | approximate minimum degree        | O(mn)       |
+| [`SymAMD`](@ref)     | column approximate minimum degree | O(mn)       |
+| [`NodeND`](@ref)     | nested dissection                 |             |
+| [`BT`](@ref)         | Bouchitte-Todinca                 | O(2.6183ⁿ)  |
+| [`MCS`](@ref)        | maximum cardinality search        | O(m + n)    |
+| [`FlowCutter`](@ref) | FlowCutter                        |             |
+| [`Spectral`](@ref)   | spectral ordering                 |             |
 
-for a graph with m vertices and n edges.
+for a graph with m edges and n vertices.
 """
 abstract type EliminationAlgorithm end
 
@@ -29,34 +30,91 @@ const PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
 """
     RCM <: EliminationAlgorithm
 
+    RCM(; sortbydeg=true)
+
 The [reverse Cuthill-McKee algorithm](https://en.wikipedia.org/wiki/Cuthill–McKee_algorithm). Uses [SymRCM.jl](https://github.com/PetrKryslUCSD/SymRCM.jl).
+- `sortbydeg`: whether to sort neighbor lists by degree
 """
 mutable struct RCM <: EliminationAlgorithm
     sortbydeg::Bool
+
+    function RCM(; sortbydeg=true)
+        new(sortbydeg)
+    end
 end
 
 
 """
     AMD <: EliminationAlgorithm
 
+    AMD(; dense=nothing, aggressive=nothing)
+
 The approximate minimum degree algorithm. Uses [AMD.jl](https://github.com/JuliaSmoothOptimizers/AMD.jl).
+- `dense`: dense row parameter
+- `aggressive`: aggressive absorbtion
 """
 mutable struct AMD <: EliminationAlgorithm
     meta::AMDPkg.Amd
+
+    function AMD(; dense=nothing, aggressive=nothing)
+        meta = AMDPkg.Amd()
+
+        if !isnothing(dense)
+            meta.control[AMDPkg.AMD_DENSE] = dense
+        end
+
+        if !isnothing(aggressive)
+            meta.control[AMDPkg.AMD_AGGRESSIVE] = aggressive
+        end
+
+        new(meta)
+    end
 end
 
 """
-    SymAMD{T} <: EliminationAlgorithm
+    SymAMD{Index} <: EliminationAlgorithm
+
+    SymAMD{Index}(; dense_row=nothing, dense_col=nothing, aggressive=nothing) where Index
+
+    SymAMD(; dense_row=nothing, dense_col=nothing, aggressive=nothing)
 
 The column approximate minimum degree algorithm. Uses [AMD.jl](https://github.com/JuliaSmoothOptimizers/AMD.jl).
+    - `Index`: either `Int` or `Cint`
+    - `dense_row`: dense row parameter
+    - `dense_column`: dense column parameter
+    - `aggressive`: aggressive absorbtion
 """
-mutable struct SymAMD{T} <: EliminationAlgorithm
-    meta::AMDPkg.Colamd{T}
+mutable struct SymAMD{Index} <: EliminationAlgorithm
+    meta::AMDPkg.Colamd{Index}
+
+    function SymAMD(; dense_row=nothing, dense_col=nothing, aggressive=nothing)
+        SymAMD{Int}(; dense_row, dense_col, aggressive)
+    end
+
+    function SymAMD{Index}(; dense_row=nothing, dense_col=nothing, aggressive=nothing) where Index
+        meta = AMDPkg.Colamd{Index}()
+
+        if !isnothing(dense_row)
+            meta.knobs[AMDPkg.COLAMD_DENSE_ROW] = dense_row
+        end
+
+        if !isnothing(dense_col)
+            meta.knobs[AMDPkg.COLAMD_DENSE_COL] = dense_col
+        end
+
+        if !isnothing(aggressive)
+            meta.knobs[AMDPkg.COLAMD_AGGRESSIVE] = aggressive
+        end
+
+        new{Index}(meta)
+    end
 end
 
 
 """
     NodeND <: EliminationAlgorithm
+
+    NodeND()
 
 The [nested dissection heuristic](https://en.wikipedia.org/wiki/Nested_dissection). Uses [Metis.jl](https://github.com/JuliaSparse/Metis.jl).
 """
@@ -66,6 +124,8 @@ mutable struct NodeND <: EliminationAlgorithm end
 """
     BT <: EliminationAlgorithm
 
+    BT()
+
 The Bouchitte-Todinca algorithm. Uses [TreeWidthSolver.jl](https://github.com/ArrogantGao/TreeWidthSolver.jl).
 """
 mutable struct BT <: EliminationAlgorithm end
@@ -73,6 +133,8 @@ mutable struct BT <: EliminationAlgorithm end
 
 """
     MCS <: EliminationAlgorithm
+
+    MCS()
 
 The maximum cardinality search algorithm.
 """
@@ -82,155 +144,44 @@ mutable struct MCS <: EliminationAlgorithm end
 """
     FlowCutter <: EliminationAlgorithm
 
+    FlowCutter(; time=10, seed=0)
+
 The FlowCutter algorithm. Uses [FlowCutterPACE17_jll.jl](https://github.com/JuliaBinaryWrappers/FlowCutterPACE17_jll.jl). 
+    - `time`: running time
+    - `seed`: random seed
 """
 mutable struct FlowCutter <: EliminationAlgorithm
     time::Int
     seed::Int
-    comment::Vector{String}
+    history::Vector{String}
 
-    function FlowCutter(time, seed, comment)
-        time < 0 && throw(ArgumentError("time < 0"))
-        seed < 0 && throw(ArgumentError("seed < 0"))
-        new(time, seed, comment)
+    function FlowCutter(; time=10, seed=0)
+        new(time, seed, String[])
     end
 end
 
 
 """
-    RCM(; sortbydeg=true)
+    Spectral <: EliminationAlgorithm
 
-Parameters for the RCM algorithm.
-- `sortbydeg`: whether to sort neighbor lists by degree
+    Spectral(; tol=sqrt(eps(Float64)), restarts=200, mindim=nothing, maxdim=nothing)
+
+Spectral ordering. Uses [ArnoldiMethod.jl](https://github.com/JuliaLinearAlgebra/ArnoldiMethod.jl).
+    - `tol`: tolerance for convergence
+    - `restarts`: maximum number of restarts
+    - `mindim`: minimum Krylov dimension (≥ 2)
+    - `maxdim`: maximum Krylov dimension (≥ mindim)
 """
-function RCM(; sortbydeg=true)
-    RCM(sortbydeg)
-end
+mutable struct Spectral <: EliminationAlgorithm
+    tol::Float64
+    restarts::Int
+    mindim::Union{Int, Nothing}
+    maxdim::Union{Int, Nothing}
+    history::Union{ArnoldiMethod.History, Nothing}
 
-
-"""
-    AMD(; dense=nothing, aggressive=nothing)
-
-Parameters for the AMD algorithm.
-- `dense`: dense row parameter
-- `aggressive`: aggressive absorbtion
-"""
-function AMD(; dense=nothing, aggressive=nothing)
-    meta = AMDPkg.Amd()
-
-    if !isnothing(dense)
-        meta.control[AMDPkg.AMD_DENSE] = dense
-    end
-
-    if !isnothing(aggressive)
-        meta.control[AMDPkg.AMD_AGGRESSIVE] = aggressive
-    end
-
-    AMD(meta)
-end
-
-
-function SymAMD{T}(; dense_row=nothing, dense_col=nothing, aggressive=nothing) where T
-    meta = AMDPkg.Colamd{T}()
-
-    if !isnothing(dense_row)
-        meta.knobs[AMDPkg.COLAMD_DENSE_ROW] = dense_row
-    end
-
-    if !isnothing(dense_col)
-        meta.knobs[AMDPkg.COLAMD_DENSE_COL] = dense_col
-    end
-
-    if !isnothing(aggressive)
-        meta.knobs[AMDPkg.COLAMD_AGGRESSIVE] = aggressive
-    end
-
-    SymAMD(meta)
-end
-
-
-"""
-    SymAMD(; dense_row=nothing, dense_col=nothing, aggressive=nothing)
-
-Parameters for the SYMAMD algorithm.
-- `dense_row`: dense row parameter
-- `dense_column`: dense column parameter
-- `aggressive`: aggressive absorbtion
-"""
-function SymAMD(; dense_row=nothing, dense_col=nothing, aggressive=nothing)
-    SymAMD{Int}(; dense_row, dense_col, aggressive)
-end
-
-
-"""
-    FlowCutter(; time=10, seed=0, verbose=false)
-
-Parameters for the FlowCutter algorithm.
-- `time`: running time
-- `seed`: random seed
-"""
-function FlowCutter(; time=10, seed=0)
-    FlowCutter(time, seed, String[])
-end
-
-
-"""
-    ischordal(matrix::AbstractMatrix)
-
-Determine whether a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`,
-is [chordal](https://en.wikipedia.org/wiki/Chordal_graph).
-"""
-function ischordal(matrix::AbstractMatrix)
-    ischordal(sparse(matrix))
-end
-
-
-function ischordal(matrix::SparseMatrixCSC)
-    isperfect(matrix, permutation(matrix, MCS())...)
-end
-
-
-"""
-    isperfect(matrix::AbstractMatrix, order::AbstractVector[, index::AbstractVector])
-
-Determine whether an fill-reducing permutation is perfect.
-"""
-function isperfect(matrix::AbstractMatrix, order::AbstractVector, index::AbstractVector=invperm(order))
-    isperfect(sparse(matrix))
-end
-
-
-# Simple Linear-Time Algorithms to Test Chordality of Graphs, Test Acyclicity of Hypergraphs, and Selectively Reduce Acyclic Hypergraphs
-# Tarjan and Yannakakis
-# Test for Zero Fill-In.
-#
-# Determine whether a fill-reducing permutation is perfect.
-function isperfect(matrix::SparseMatrixCSC, order::AbstractVector, index::AbstractVector=invperm(order))
-    f = Vector{Int}(undef, size(matrix, 2))
-    findex = similar(f)
-    
-    for (i, w) in enumerate(order)
-        f[w] = w
-        findex[w] = i
-        
-        for v in @view rowvals(matrix)[nzrange(matrix, w)]
-            if index[v] < i
-                findex[v] = i
-                
-                if f[v] == v
-                    f[v] = w
-                end
-            end
-        end
-        
-        for v in @view rowvals(matrix)[nzrange(matrix, w)]
-            if index[v] < i && findex[f[v]] < i
-                return false
-            end
-        end
-    end
-    
-    true
+    function Spectral(; tol=sqrt(eps(Float64)), restarts=200, mindim=nothing, maxdim=nothing)
+        new(tol, restarts, mindim, maxdim, nothing)
+    end    
 end
 
 
@@ -335,9 +286,8 @@ end
 
 
 function permutation(matrix::SparseMatrixCSC, alg::FlowCutter)
-    comment, nb, tw, nv, bagptr, bagval, tree = flowcutter(matrix, alg.time, alg.seed)
-    alg.comment = comment
-    tree = Tree(tree, nb)
+    nb, tw, nv, bagptr, bagval, treerow, treecol, history = flowcutter(matrix, alg.time, alg.seed)
+    tree = Tree(sparse(treerow, treecol, ones(Bool, 2nb - 2), nb, nb), nb)
     order = sizehint!(Int[], nv)
 
     for i in tree
@@ -359,44 +309,118 @@ function permutation(matrix::SparseMatrixCSC, alg::FlowCutter)
         end
     end
 
+    append!(alg.history, history)
     order, invperm(order)
 end
 
 
-function Base.show(io::IO, alg::EliminationAlgorithm)
-    string = "Parameters:\n"
-    print(io, string)
+function permutation(matrix::SparseMatrixCSC, alg::Spectral)
+    kwargs = Dict{Symbol, Real}(:tol => alg.tol, :restarts => alg.restarts)
+       
+    if !isnothing(alg.mindim)
+        kwargs[:mindim] = alg.mindim        
+    end
+
+    if !isnothing(alg.maxdim)
+        kwargs[:maxdim] = alg.maxdim
+    end
+
+    order, history = spectralorder(matrix; kwargs...)
+    alg.history = history
+    order, invperm(order)
 end
 
 
 function Base.show(io::IO, alg::RCM)
-    string = "Parameters:\n"
-    string *= "  sortbydeg: $(alg.sortbydeg)\n"
-    print(io, string)
+    output = "RCM:\n"
+    output *= "    parameters:\n"
+    output *= "        sortbydeg: $(alg.sortbydeg)\n"
+    print(io, output)
 end
 
 
 function Base.show(io::IO, alg::AMD)
-    print(io, alg.meta)
+    meta = alg.meta
+    output = "AMD:\n"
+    output *= "    parameters:\n"
+    output *= "        dense: $(meta.control[AMDPkg.AMD_DENSE])\n"
+    output *= "        aggressive: $(meta.control[AMDPkg.AMD_AGGRESSIVE])\n"
+    output *= "    information:\n"
+    output *= "        status: $(AMDPkg.amd_statuses[meta.info[AMDPkg.AMD_STATUS]])\n"
+    output *= "        matrix size: $(meta.info[AMDPkg.AMD_N])\n"
+    output *= "        number of nonzeros: $(meta.info[AMDPkg.AMD_NZ])\n"
+    output *= "        pattern symmetry: $(meta.info[AMDPkg.AMD_SYMMETRY])\n"
+    output *= "        number of nonzeros on diagonal: $(meta.info[AMDPkg.AMD_NZDIAG])\n"
+    output *= "        number of nonzeros in A + Aᵀ: $(meta.info[AMDPkg.AMD_NZ_A_PLUS_AT])\n"
+    output *= "        number of dense columns: $(meta.info[AMDPkg.AMD_NDENSE])\n"
+    output *= "        memory used: $(meta.info[AMDPkg.AMD_MEMORY])\n"
+    output *= "        number of garbage collections: $(meta.info[AMDPkg.AMD_NCMPA])\n"
+    output *= "        approximate number of nonzeros in factor: $(meta.info[AMDPkg.AMD_LNZ])\n"
+    output *= "        number of float divides: $(meta.info[AMDPkg.AMD_NDIV])\n"
+    output *= "        number of float * or - for LDL: $(meta.info[AMDPkg.AMD_NMULTSUBS_LDL])\n"
+    output *= "        number of float * or - for LU: $(meta.info[AMDPkg.AMD_NMULTSUBS_LU])\n"
+    output *= "        max nonzeros in any column of factor: $(meta.info[AMDPkg.AMD_DMAX])\n"
+    print(io, output)
 end
 
 
 function Base.show(io::IO, alg::SymAMD)
-    print(io, alg.meta)
+    meta = alg.meta
+    output = "SymAMD:\n"
+    output *= "    parameters:\n"
+    output *= "        dense row: $(meta.knobs[AMDPkg.COLAMD_DENSE_ROW])\n"
+    output *= "        dense col: $(meta.knobs[AMDPkg.COLAMD_DENSE_COL])\n"
+    output *= "        aggressive: $(meta.knobs[AMDPkg.COLAMD_AGGRESSIVE])\n"
+    output *= "    information:\n"
+    output *= "        status: $(AMDPkg.colamd_statuses[meta.stats[AMDPkg.COLAMD_STATUS]])\n"
+    output *= "        memory defragmentation: $(meta.stats[AMDPkg.COLAMD_DEFRAG_COUNT])\n"
+    print(io, output)
 end
 
 
 function Base.show(io::IO, alg::FlowCutter)
-    string = "Parameters:\n"
-    string *= "  time: $(alg.time)\n"
-    string *= "  seed: $(alg.seed)\n"
-    string *= "Information:\n"
+    output = "FlowCutter:\n"
+    output *= "    parameters:\n"
+    output *= "        time: $(alg.time)\n"
+    output *= "        seed: $(alg.seed)\n"
+    
+    if !isempty(alg.history)
+        output *= "    information:\n"
+    
+        for line in alg.history
+            if startswith(line, "status")
+                break
+            end
 
-    for c in alg.comment
-        string *= "  $c\n"
+            output *= "        $line\n"
+        end
     end
 
-    print(io, string)
+    print(io, output)
+end
+
+
+function Base.show(io::IO, alg::Spectral)
+    output = "Spectral:\n"
+    output *= "    parameters:\n"
+    output *= "        tol: $(alg.tol)\n"
+    output *= "        restarts: $(alg.restarts)\n"
+
+    if !isnothing(alg.mindim)
+        output *= "        mindim: $(alg.mindim)\n"
+    end
+
+    if !isnothing(alg.maxdim)
+        output *= "        maxdim: $(alg.maxdim)\n"
+    end
+
+    if !isnothing(alg.history)
+        history = lowercase(string(alg.history))
+        output *= "    information:\n"
+        output *= "        $history\n"
+    end
+
+    print(io, output)
 end
 
 

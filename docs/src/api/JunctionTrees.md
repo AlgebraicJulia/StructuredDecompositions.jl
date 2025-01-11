@@ -4,17 +4,25 @@
 CurrentModule = StructuredDecompositions.JunctionTrees
 ```
 
+## Junction Trees
+
 ```@docs
 Bag
 JunctionTree
 junctiontree!
 junctiontree
-chordalgraph
 treewidth!
 treewidth
 separator
 residual
 relative
+```
+
+## Chordal Graphs
+```@docs
+chordalgraph
+ischordal
+isperfect
 ```
 
 ## Elimination Algorithms
@@ -23,18 +31,13 @@ relative
 EliminationAlgorithm
 PermutationOrAlgorithm
 AMD
-AMD(; ::Any, ::Any)
 SymAMD
-SymAMD(; ::Any, ::Any)
 NodeND
 RCM
-RCM(; ::Any)
 BT
 MCS
 FlowCutter
-FlowCutter(; ::Any, ::Any)
-ischordal
-isperfect
+Spectral
 permutation   
 ```
 

@@ -62,6 +62,59 @@ function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::Ab
 end
 
 
+# See below. The function returns a sparse matrix with elementts of type `Int`.
+function laplacian(matrix::SparseMatrixCSC)
+    laplacian(Int, matrix)
+end
+
+
+# Compute the graph laplacian of a graph. The function returns a sparse matrix with elements of type `Element`.
+function laplacian(Element::Type, matrix::SparseMatrixCSC{<:Any, Index}) where Index
+    colptr = sizehint!(Index[], size(matrix, 2) + 1)
+    rowval = sizehint!(Index[], size(matrix, 2) + nnz(matrix))
+    nzval = sizehint!(Element[], size(matrix, 2) + nnz(matrix))
+    push!(colptr, 1)
+    
+    for j in axes(matrix, 2)
+        flag = true
+        
+        for i in @view rowvals(matrix)[nzrange(matrix, j)]
+            if flag && i > j
+                push!(rowval, j)
+                push!(nzval, length(nzrange(matrix, j)))
+                flag = false
+            end
+            
+            push!(rowval, i)
+            push!(nzval, -1)
+        end
+        
+        if flag
+            push!(rowval, j)
+            push!(nzval, length(nzrange(matrix, j)))
+        end
+        
+        push!(colptr, length(rowval) + 1)
+    end
+    
+    SparseMatrixCSC(size(matrix)..., colptr, rowval, nzval)    
+end
+
+
+# A Spectral Algorithm for Elvelope Reduction of Sparse Matrices
+# Barnard, Pothen, and Simon
+# Algorithm 1: Spectral Algorithm
+#
+# Compute the spectral ordering of a graph.
+function spectralorder(matrix::SparseMatrixCSC; kwargs...)
+    n = min(2, size(matrix, 2))
+    decomposition, history = ArnoldiMethod.partialschur(laplacian(matrix); which=:SR, nev=n, kwargs...)
+    eigenvalues, eigenvectors = ArnoldiMethod.partialeigen(decomposition)
+    order = sortperm(eigenvectors[:, n])
+    order, history
+end
+
+
 # Compute the union of sorted sets `source1` and `source2`.
 # The result is appended to `target`.
 function mergesorted!(target, source1, source2, order::Ordering=ForwardOrdering())
@@ -135,6 +188,9 @@ end
 
 
 function flowcutter(matrix::SparseMatrixCSC, time::Integer, seed::Integer)
+    time < 0 && throw(ArgumentError("time < 0"))
+    seed < 0 && throw(ArgumentError("seed < 0"))
+
     mktempdir(dirname(FlowCutterPACE17_jll.flow_cutter_pace17_path)) do directory
         input = directory * "/input.gr"
         output = directory * "/output.td"
@@ -173,16 +229,15 @@ end
 
 # Read a tree decomposition from a .td file.
 # https://pacechallenge.org/2017/treewidth/
-function readtd(io::IO) 
-    # comments
-    comment = String[]
+function readtd(io::IO)
+    history = String[]
     line = readline(io)
     
     while !isempty(line)
         flag = first(line)
         
         if flag == 'c'
-            push!(comment, line[3:end])
+            push!(history, line[3:end])
             line = readline(io)
             continue
         end
@@ -207,7 +262,7 @@ function readtd(io::IO)
         flag = first(line)
         
         if flag == 'c'
-            push!(comment, line[3:end])
+            push!(history, line[3:end])
             line = readline(io)
             continue
         end
@@ -226,22 +281,23 @@ function readtd(io::IO)
     end
 
     # edges
-    tree = map(i -> Int[], 1:nb)
+    treerow = sizehint!(Int[], nb - 1)
+    treecol = sizehint!(Int[], nb - 1)
 
     while !isempty(line)
         flag = first(line)
-   
+
         if flag == 'c'
-            push!(comment, line[3:end])
+            push!(history, line[3:end])
             line = readline(io)
             continue
         end
 
         i, j = imap(word -> parse(Int, word), split(line))
-        push!(tree[i], j)
-        push!(tree[j], i)
+        push!(treerow, i, j)
+        push!(treecol, j, i)
         line = readline(io)
     end
-   
-    comment, nb, tw, nv, bagptr, bagval, tree
+
+    nb, tw, nv, bagptr, bagval, treerow, treecol, history
 end

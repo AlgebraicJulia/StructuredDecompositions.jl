@@ -30,27 +30,27 @@ function Tree(parent::AbstractVector)
 end
 
 
-function Tree(neighbors::Vector{Vector{Int}}, root::Integer)
-    parent = zeros(Int, length(neighbors))
+function Tree(matrix::SparseMatrixCSC, root::Integer)
+    parent = zeros(Int, size(matrix, 2))
     parent[root] = 0
 
-    seen = zeros(Bool, length(neighbors))
+    seen = zeros(Bool, size(matrix, 2))
     seen[root] = true
-    
-    stack = sizehint!(Int[], length(neighbors))
+
+    stack = sizehint!(Int[], size(matrix, 2))
     push!(stack, root)
-    
+
     while !isempty(stack)
         v = last(stack)
         u = 0
-        
-        for n in neighbors[v]
+
+        for n in @view rowvals(matrix)[nzrange(matrix, v)]
             if !seen[n]
                 u = n
                 break
             end
         end
-        
+
         if iszero(u)
             pop!(stack)
         else
@@ -59,7 +59,7 @@ function Tree(neighbors::Vector{Vector{Int}}, root::Integer)
             parent[u] = v
         end
     end
-    
+
     Tree(parent)
 end
 

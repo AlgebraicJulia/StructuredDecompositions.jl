@@ -236,66 +236,6 @@ end
 
 
 """
-    nnz(tree::JunctionTree)
-
-Compute the number of edges in the [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph) of a junction tree.
-"""
-function SparseArrays.nnz(tree::JunctionTree)
-    sum(tree) do bag
-        r = length(residual(bag))
-        s = length(separator(bag))
-        (2s + r - 1) * r ÷ 2
-    end 
-end
-
-
-function chordalgraph(tree::JunctionTree)
-    chordalgraph(true, tree)
-end
-
-
-"""
-    chordalgraph([element=true,] tree::JunctionTree)
-
-See below. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
-"""
-function chordalgraph(element::T, tree::JunctionTree) where T
-    matrix = chordalgraph(T, tree)
-    fill!(nonzeros(matrix), element)
-    matrix
-end
-
-
-"""
-    chordalgraph(Element::Type, tree::JunctionTree)
-
-Construct the [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph) of the subtrees of
-a junction tree. The function returns a sparse matrix with elements of type `Element`
-and the same sparsity structure as the lower triangular part of the graph's adjacency matrix.
-"""
-function chordalgraph(Element::Type, tree::JunctionTree)
-    colptr = Vector{Int}(undef, last(tree.sndptr))
-    rowval = Vector{Int}(undef, nnz(tree))
-    nzval = Vector{Element}(undef, nnz(tree))
-    j = p = colptr[1] = 1
-
-    for bag in tree
-        for i in eachindex(residual(bag))
-            for v in @view bag[i + 1:end]
-                rowval[p] = v
-                p += 1
-            end
-            
-            colptr[j + 1] = p
-            j += 1
-        end
-    end
-
-    SparseMatrixCSC(last(tree.sndptr) - 1, last(tree.sndptr) - 1, colptr, rowval, nzval)
-end
-
-
-"""
     residual(tree::JunctionTree, i::Integer)
 
 Get the residual at node `i`.
