@@ -23,7 +23,7 @@ docs/site/
 # environment.
 Manifest.toml
 
-
+benchmarks.md
 .vscode
 *.swp
 *.DS_Store

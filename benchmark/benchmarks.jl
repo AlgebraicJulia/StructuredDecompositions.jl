@@ -12,5 +12,5 @@ using SuiteSparseMatrixCollection
 
 const SUITE = BenchmarkGroup()
 
-include("JunctionTrees.jl")
-include("GraphColoring.jl")
+include("junction_trees.jl")
+include("graph_coloring_fixed.jl")

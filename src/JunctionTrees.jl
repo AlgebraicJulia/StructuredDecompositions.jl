@@ -4,15 +4,17 @@ module JunctionTrees
 using AbstractTrees
 using Base: DEFAULT_STABLE, OneTo
 using Base.Order
+using Base.Iterators: drop, filter as ifilter, map as imap, reverse as ireverse
 using DataStructures: IntDisjointSets, find_root!, root_union!
 using LinearAlgebra
 using SparseArrays
 using SparseArrays: getcolptr
+using Sparspak: SpkMmd
 
 
-import AMD
-import Base.Iterators
-import CuthillMcKee
+import AMD as AMDPkg
+import ArnoldiMethod
+import FlowCutterPACE17_jll
 import Metis
 import SymRCM
 import TreeWidthSolver
@@ -23,7 +25,7 @@ const Scalar{T} = Array{T, 0}
 
 
 # Elimination Algorithms
-export AMDJL_AMD, AMDJL_SymAMD, CuthillMcKeeJL_RCM, SymRCMJL_RCM, MetisJL_ND, TreeWidthSolverJL_BT, MCS, permutation
+export RCM, MMD, AMD, SymAMD, NodeND, BT, MCS, FlowCutter, Spectral, ischordal, isperfect, permutation
 
 
 # Ordered Graphs
@@ -39,7 +41,7 @@ export Bag, separator, residual
 
 
 # Junction Trees
-export JunctionTree, junctiontree, junctiontree!, treewidth, treewidth!, relative
+export JunctionTree, junctiontree, junctiontree!, treewidth, treewidth!, chordalgraph, relative
 
 
 include("junction_trees/disjoint_trees.jl")
@@ -51,6 +53,7 @@ include("junction_trees/children.jl")
 include("junction_trees/trees.jl")
 include("junction_trees/bags.jl")
 include("junction_trees/junction_trees.jl")
+include("junction_trees/chordal_graphs.jl")
 
 
 end

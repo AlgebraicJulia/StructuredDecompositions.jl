@@ -1,34 +1,37 @@
 """
     SupernodeType
 
-A type of supernode. The options are
-- [`Nodal`](@ref)
-- [`Maximal`](@ref)
-- [`Fundamental`](@ref)
+A type of supernode partition. The options are
+
+| type                  | name                            |
+| :-------------------- | :------------------------------ |
+| [`Nodal`](@ref)       | nodal supernode partition       |
+| [`Maximal`](@ref)     | maximal supernode partition     |
+| [`Fundamental`](@ref) | fundamental supernode partition |
 """
 abstract type SupernodeType end
 
 
 """
-    Nodal <: Supernode
+    Nodal <: SupernodeType
 
-A single-vertex supernode.
+A nodal  supernode partition.
 """
 struct Nodal <: SupernodeType end
 
 
 """
-    Maximal <: Supernode
+    Maximal <: SupernodeType
 
-A maximal supernode.
+A maximal supernode partition.
 """
 struct Maximal <: SupernodeType end
 
 
 """
-    Fundamental <: Supernode
+    Fundamental <: SupernodeType
 
-A fundamental supernode.
+A fundamental supernode partition.
 """
 struct Fundamental <: SupernodeType end
 

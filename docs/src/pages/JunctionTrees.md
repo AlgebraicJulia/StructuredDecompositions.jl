@@ -6,15 +6,15 @@ JunctionTrees.jl is a Julia package for constructing [tree decompositions](https
 julia> using StructuredDecompositions.JunctionTrees
 
 julia> graph = [
-    0 1 1 0 0 0 0 0
-    1 0 1 0 0 1 0 0
-    1 1 0 1 1 0 0 0
-    0 0 1 0 1 0 0 0
-    0 0 1 1 0 0 1 1
-    0 1 0 0 0 0 1 0
-    0 0 0 0 1 1 0 1
-    0 0 0 0 1 0 1 0
-];
+           0 1 1 0 0 0 0 0
+           1 0 1 0 0 1 0 0
+           1 1 0 1 1 0 0 0
+           0 0 1 0 1 0 0 0
+           0 0 1 1 0 0 1 1
+           0 1 0 0 0 0 1 0
+           0 0 0 0 1 1 0 1
+           0 0 0 0 1 0 1 0
+       ];
 
 julia> label, tree = junctiontree(graph);
 
@@ -50,4 +50,32 @@ The width of a junction tree is computed by the function `treewidth`.
 ```julia
 julia> treewidth(tree)
 2
+```
+
+Every junction tree has an [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph).
+```julia
+julia> using LinearAlgebra
+
+julia> intersection = Symmetric(chordalgraph(tree), :L)
+8×8 Symmetric{Bool, SparseMatrixCSC{Bool, Int64}}:
+ ⋅  ⋅  ⋅  ⋅  ⋅  1  1  ⋅
+ ⋅  ⋅  1  ⋅  ⋅  1  ⋅  ⋅
+ ⋅  1  ⋅  1  ⋅  1  ⋅  ⋅
+ ⋅  ⋅  1  ⋅  ⋅  1  ⋅  1
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  1  1
+ 1  1  1  1  ⋅  ⋅  1  1
+ 1  ⋅  ⋅  ⋅  1  1  ⋅  1
+ ⋅  ⋅  ⋅  1  1  1  1  ⋅
+```
+
+The intersection graph `intersection` is a [chordal completion](https://en.wikipedia.org/wiki/Chordal_completion) of `graph`.
+```julia
+julia> ischordal(graph)
+false
+
+julia> ischordal(intersection)
+true
+
+julia> all(graph[label, label] .<= intersection)
+true
 ```

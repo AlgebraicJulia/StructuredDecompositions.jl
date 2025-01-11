@@ -30,6 +30,40 @@ function Tree(parent::AbstractVector)
 end
 
 
+function Tree(matrix::SparseMatrixCSC, root::Integer)
+    parent = zeros(Int, size(matrix, 2))
+    parent[root] = 0
+
+    seen = zeros(Bool, size(matrix, 2))
+    seen[root] = true
+
+    stack = sizehint!(Int[], size(matrix, 2))
+    push!(stack, root)
+
+    while !isempty(stack)
+        v = last(stack)
+        u = 0
+
+        for n in @view rowvals(matrix)[nzrange(matrix, v)]
+            if !seen[n]
+                u = n
+                break
+            end
+        end
+
+        if iszero(u)
+            pop!(stack)
+        else
+            seen[u] = true
+            push!(stack, u)
+            parent[u] = v
+        end
+    end
+
+    Tree(parent)
+end
+
+
 function Children(tree::Tree, i::Integer)
     Children(tree.child[i], tree.brother)
 end

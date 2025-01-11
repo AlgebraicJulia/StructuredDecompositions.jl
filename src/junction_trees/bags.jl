@@ -35,9 +35,9 @@ end
 
 
 function Base.getindex(bag::Bag, i::Integer)
-    res = residual(bag)
-    sep = separator(bag)
-    i in eachindex(res) ? res[i] : sep[i - length(res)]
+    r = residual(bag)
+    s = separator(bag)
+    i in eachindex(r) ? r[i] : s[i - length(r)]
 end
 
 
@@ -49,4 +49,16 @@ end
 function Base.size(bag::Bag)
     (length(residual(bag)) + length(separator(bag)),)
 end
+
+
+function Base.in(v, bag::Bag)
+    v in residual(bag) || insorted(v, separator(bag))
+end
+
+
+function Base.hasfastin(::Type{Bag})
+    true
+end
+
+
 
