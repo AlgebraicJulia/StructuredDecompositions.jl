@@ -6,8 +6,9 @@ A graph elimination algorithm. The options are
 | type                 | name                              | complexity  |
 | :------------------- | :-------------------------------- | :---------- |
 | [`RCM`](@ref)        | reverse Cuthill-Mckee             | O(mn)       |
+| [`MMD`](@ref)        | multiple minimum degree           | O(mn²)      |
 | [`AMD`](@ref)        | approximate minimum degree        | O(mn)       |
-| [`SymAMD`](@ref)     | column approximate minimum degree | O(mn)       |
+| [`SymAMD`](@ref)     | column approximate minimum degree |             |
 | [`NodeND`](@ref)     | nested dissection                 |             |
 | [`BT`](@ref)         | Bouchitte-Todinca                 | O(2.6183ⁿ)  |
 | [`MCS`](@ref)        | maximum cardinality search        | O(m + n)    |
@@ -42,6 +43,16 @@ mutable struct RCM <: EliminationAlgorithm
         new(sortbydeg)
     end
 end
+
+
+"""
+    MMD <: EliminationAlgorithm
+
+    MMD()
+
+The multiple minimum degree algorithm. Uses [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl/tree/main).
+"""
+mutable struct MMD <: EliminationAlgorithm end
 
 
 """
@@ -239,6 +250,14 @@ end
 function permutation(matrix::SparseMatrixCSC, alg::RCM)
     order = SymRCM.symrcm(matrix)
     order, invperm(order)
+end
+
+
+function permutation(matrix::SparseMatrixCSC, alg::MMD)
+    order = collect(axes(matrix, 2))
+    index = collect(axes(matrix, 2))
+    SpkMmd._generalmmd(size(matrix, 2), getcolptr(matrix), rowvals(matrix), order, index)
+    order, index
 end
 
 

@@ -30,6 +30,7 @@ isperfect
 ```@docs
 EliminationAlgorithm
 PermutationOrAlgorithm
+MMD
 AMD
 SymAMD
 NodeND

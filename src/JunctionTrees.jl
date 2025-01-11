@@ -9,6 +9,7 @@ using DataStructures: IntDisjointSets, find_root!, root_union!
 using LinearAlgebra
 using SparseArrays
 using SparseArrays: getcolptr
+using Sparspak: SpkMmd
 
 
 import AMD as AMDPkg
@@ -24,7 +25,7 @@ const Scalar{T} = Array{T, 0}
 
 
 # Elimination Algorithms
-export AMD, SymAMD, RCM, NodeND, BT, MCS, FlowCutter, Spectral, ischordal, isperfect, permutation
+export RCM, MMD, AMD, SymAMD, NodeND, BT, MCS, FlowCutter, Spectral, ischordal, isperfect, permutation
 
 
 # Ordered Graphs

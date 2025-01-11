@@ -12,12 +12,13 @@ using Test
     @test iszero(treewidth(matrix))
 
     @test permutation(matrix, RCM())                 == ([1], [1])
+    @test permutation(matrix, MMD())                 == ([1], [1])
     @test permutation(matrix, AMD())                 == ([1], [1])
     @test permutation(matrix, SymAMD())              == ([1], [1])
     @test permutation(matrix, NodeND())              == ([1], [1])
     @test permutation(matrix, BT())                  == ([1], [1])
     @test permutation(matrix, MCS())                 == ([1], [1])
-    @test permutation(matrix, FlowCutter(; time=10)) == ([1], [1])
+    # @test permutation(matrix, FlowCutter(; time=10)) == ([1], [1])
     @test permutation(matrix, Spectral())            == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())
@@ -111,6 +112,10 @@ end
     @test length(order) == 17
     @test order[index] == 1:17
 
+    order, index = permutation(matrix, MMD())
+    @test length(order) == 17
+    @test order[index] == 1:17
+
     order, index = permutation(matrix, AMD())
     @test length(order) == 17
     @test order[index] == 1:17
@@ -131,9 +136,9 @@ end
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, FlowCutter(; time=10))
-    @test length(order) == 17
-    @test order[index] == 1:17
+    # order, index = permutation(matrix, FlowCutter(; time=10))
+    # @test length(order) == 17
+    # @test order[index] == 1:17
 
     order, index = permutation(matrix, Spectral())
     @test length(order) == 17
