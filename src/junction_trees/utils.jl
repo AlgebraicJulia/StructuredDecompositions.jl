@@ -247,7 +247,7 @@ function readtd(io::IO)
 
     # statistics
     if isempty(line) || first(line) != 's'
-        throw(EOFError("Missing header."))
+        throw(EOFError())
     end
 
     nb, tw, nv = imap(word -> parse(Int, word), drop(split(line), 2))
