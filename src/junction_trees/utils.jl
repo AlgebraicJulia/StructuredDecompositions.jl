@@ -8,11 +8,22 @@ end
 # Davis
 # cs_symperm
 #
-# Permute the rows and columns of a symmetric matrix, represented by its lower / upper triangular part `source`.
-# The permutation is represented by its inverse `index`.
-# Use ForwardOrdering() if `source` is upper triangular and ReverseOrdering() if it is lower triangular.
-# The result is stored in `target`.
+# Permute the rows and columns of a symmetric matrix.
+# - `target`: overwritten by the permuted matrix
+# - `source`: upper / lower triangular part of the matrix to be permuted
+# - `index`: inverse permutation
+# - `order`: `ForwardOrdering()` if `matrix` is upper triangular, `ReverseOrdering()` if it is lower triangular
 function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::AbstractVector, order::Ordering=ForwardOrdering())
+    # validate arguments
+    eachindex(index) != axes(target, 1) && throw(ArgumentError("eachindex(index) != axes(target, 1)"))
+    eachindex(index) != axes(target, 2) && throw(ArgumentError("eachindex(index) != axes(target, 2)"))
+    size(target) != size(source) && throw(ArgumentError("size(target) != size(source)"))
+
+    # resize target array
+    resize!(rowvals(target), nnz(source))
+    resize!(nonzeros(target), nnz(source))
+    
+    # run algorithm
     count = similar(getcolptr(source))
     count[1] = 1
     count[2:end] .= 0
@@ -22,19 +33,18 @@ function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::Ab
             i = rowvals(source)[p]
 
             if lt(order, i, j) || isequal(i, j)
-                if lt(order, index[i], index[j])
-                    v = index[j]
-                else
-                    v = index[i]
+                u = index[i]
+                v = index[j]
+                
+                if lt(order, v, u)
+                    u, v = v, u
                 end
-
+                
                 count[v + 1] += 1
             end
         end
     end
 
-    resize!(rowvals(target), nnz(source))
-    resize!(nonzeros(target), nnz(source))
     copy!(count, cumsum!(getcolptr(target), count))
 
     for j in axes(source, 2)
@@ -43,16 +53,16 @@ function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::Ab
             x = nonzeros(source)[p]
 
             if lt(order, i, j) || isequal(i, j)
-                if lt(order, index[i], index[j])
-                    u = index[i]
-                    v = index[j]
-                else
-                    u = index[j]
-                    v = index[i]
+                u = index[i]
+                v = index[j]
+                
+                if lt(order, v, u)
+                    u, v = v, u
                 end
 
-                rowvals(target)[count[v]] = u
-                nonzeros(target)[count[v]] = x
+                q = count[v]
+                rowvals(target)[q] = u
+                nonzeros(target)[q] = x
                 count[v] += 1
             end
         end
@@ -101,7 +111,7 @@ function laplacian(Element::Type, matrix::SparseMatrixCSC{<:Any, Index}) where I
 end
 
 
-# A Spectral Algorithm for Elvelope Reduction of Sparse Matrices
+# A Spectral Algorithm for Envelope Reduction of Sparse Matrices
 # Barnard, Pothen, and Simon
 # Algorithm 1: Spectral Algorithm
 #

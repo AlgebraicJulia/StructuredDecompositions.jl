@@ -11,7 +11,6 @@ using ..JunctionTrees: PermutationOrAlgorithm, EliminationAlgorithm, SupernodeTy
 using PartialFunctions
 using MLStyle
 
-using AbstractTrees
 using Base: DEFAULT_STABLE, ForwardOrdering
 using Base.Threads
 using Catlab

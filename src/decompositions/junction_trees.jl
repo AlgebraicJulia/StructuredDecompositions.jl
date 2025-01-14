@@ -1,7 +1,7 @@
 """
     StrDecomp(graph::HasGraph;
-        alg::PermutationOrAlgorithm=AMD(),
-        snd::SupernodeType=Maximal())
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
+        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
 Construct a structured decomposition of a simple graph. See [`junctiontree!`](@ref) for the meaning of `alg` and `snd`.
 """

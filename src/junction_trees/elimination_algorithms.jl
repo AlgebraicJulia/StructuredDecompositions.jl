@@ -5,17 +5,17 @@ A graph elimination algorithm. The options are
 
 | type                 | name                              | complexity  |
 | :------------------- | :-------------------------------- | :---------- |
-| [`RCM`](@ref)        | reverse Cuthill-Mckee             | O(mn)       |
-| [`MMD`](@ref)        | multiple minimum degree           | O(mn²)      |
-| [`AMD`](@ref)        | approximate minimum degree        | O(mn)       |
-| [`SymAMD`](@ref)     | column approximate minimum degree |             |
-| [`NodeND`](@ref)     | nested dissection                 |             |
-| [`BT`](@ref)         | Bouchitte-Todinca                 | O(2.6183ⁿ)  |
 | [`MCS`](@ref)        | maximum cardinality search        | O(m + n)    |
+| [`RCM`](@ref)        | reverse Cuthill-Mckee             | O(mΔ)       |
+| [`AMD`](@ref)        | approximate minimum degree        | O(mn)       |
+| [`SymAMD`](@ref)     | column approximate minimum degree | O(mn)       |
+| [`MMD`](@ref)        | multiple minimum degree           | O(mn²)      |
+| [`NodeND`](@ref)     | nested dissection                 |             |
 | [`FlowCutter`](@ref) | FlowCutter                        |             |
 | [`Spectral`](@ref)   | spectral ordering                 |             |
+| [`BT`](@ref)         | Bouchitte-Todinca                 | O(2.6183ⁿ)  |
 
-for a graph with m edges and n vertices.
+for a graph with m edges, n vertices, and maximum degree Δ.
 """
 abstract type EliminationAlgorithm end
 
@@ -26,6 +26,16 @@ abstract type EliminationAlgorithm end
 Either a permutation or a graph elimination algorithm.
 """
 const PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
+
+
+"""
+    MCS <: EliminationAlgorithm
+
+    MCS()
+
+The maximum cardinality search algorithm.
+"""
+mutable struct MCS <: EliminationAlgorithm end
 
 
 """
@@ -43,16 +53,6 @@ mutable struct RCM <: EliminationAlgorithm
         new(sortbydeg)
     end
 end
-
-
-"""
-    MMD <: EliminationAlgorithm
-
-    MMD()
-
-The multiple minimum degree algorithm. Uses [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl/tree/main).
-"""
-mutable struct MMD <: EliminationAlgorithm end
 
 
 """
@@ -81,6 +81,7 @@ mutable struct AMD <: EliminationAlgorithm
         new(meta)
     end
 end
+
 
 """
     SymAMD{Index} <: EliminationAlgorithm
@@ -123,6 +124,17 @@ end
 
 
 """
+    MMD <: EliminationAlgorithm
+
+    MMD()
+
+The multiple minimum degree algorithm. Uses [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl/tree/main).
+"""
+mutable struct MMD <: EliminationAlgorithm end
+
+
+
+"""
     NodeND <: EliminationAlgorithm
 
     NodeND()
@@ -130,26 +142,6 @@ end
 The [nested dissection heuristic](https://en.wikipedia.org/wiki/Nested_dissection). Uses [Metis.jl](https://github.com/JuliaSparse/Metis.jl).
 """
 mutable struct NodeND <: EliminationAlgorithm end
-
-
-"""
-    BT <: EliminationAlgorithm
-
-    BT()
-
-The Bouchitte-Todinca algorithm. Uses [TreeWidthSolver.jl](https://github.com/ArrogantGao/TreeWidthSolver.jl).
-"""
-mutable struct BT <: EliminationAlgorithm end
-
-
-"""
-    MCS <: EliminationAlgorithm
-
-    MCS()
-
-The maximum cardinality search algorithm.
-"""
-mutable struct MCS <: EliminationAlgorithm end
 
 
 """
@@ -197,11 +189,22 @@ end
 
 
 """
+    BT <: EliminationAlgorithm
+
+    BT()
+
+The Bouchitte-Todinca algorithm. Uses [TreeWidthSolver.jl](https://github.com/ArrogantGao/TreeWidthSolver.jl).
+"""
+mutable struct BT <: EliminationAlgorithm end
+
+
+
+"""
     permutation(matrix::AbstractMatrix, alg::PermutationOrAlgorithm)
 
-Construct a fill-reducing permutation of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html),
-represented by its adjacency matrix `matrix`.
-
+Construct a fill-reducing permutation of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html).
+- `matrix`: adjacency matrix
+- `alg`: ordering algortihm
 ```julia
 julia> using StructuredDecompositions.JunctionTrees
 
@@ -247,17 +250,15 @@ function permutation(matrix::AbstractMatrix, alg::AbstractVector)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::RCM)
-    order = SymRCM.symrcm(matrix)
+function permutation(matrix::SparseMatrixCSC, alg::MCS)
+    order = mcs(matrix)
     order, invperm(order)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::MMD)
-    order = collect(axes(matrix, 2))
-    index = collect(axes(matrix, 2))
-    SpkMmd._generalmmd(size(matrix, 2), getcolptr(matrix), rowvals(matrix), order, index)
-    order, index
+function permutation(matrix::SparseMatrixCSC, alg::RCM)
+    order = SymRCM.symrcm(matrix)
+    order, invperm(order)
 end
 
 
@@ -273,34 +274,17 @@ function permutation(matrix::SparseMatrixCSC, alg::SymAMD)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::NodeND)
-    order, index = Metis.permutation(matrix)
+function permutation(matrix::SparseMatrixCSC, alg::MMD)
+    order = collect(axes(matrix, 2))
+    index = collect(axes(matrix, 2))
+    SpkMmd._generalmmd(size(matrix, 2), getcolptr(matrix), rowvals(matrix), order, index)
     order, index
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::BT)
-    T = TreeWidthSolver.LongLongUInt{size(matrix, 2) ÷ 64 + 1}
-    fadjlist = Vector{Vector{Int}}(undef, size(matrix, 2))
-    bitgraph = Vector{T}(undef, size(matrix, 2))
-
-    for j in axes(matrix, 2)
-        neighbors = rowvals(matrix)[nzrange(matrix, j)]
-        fadjlist[j] = neighbors
-        bitgraph[j] = TreeWidthSolver.bmask(T, neighbors)
-    end
-
-    graph = TreeWidthSolver.MaskedBitGraph(bitgraph, fadjlist, TreeWidthSolver.bmask(T, axes(matrix, 2)))
-    cliques = TreeWidthSolver.all_pmc_enmu(graph, false)
-    decomposition = TreeWidthSolver.bt_algorithm(graph, cliques, ones(size(matrix, 2)), false, true)
-    order = reverse!(reduce(vcat, TreeWidthSolver.EliminationOrder(decomposition.tree).order))
-    order, invperm(order)
-end
-
-
-function permutation(matrix::SparseMatrixCSC, alg::MCS)
-    order = mcs(matrix)
-    order, invperm(order)
+function permutation(matrix::SparseMatrixCSC, alg::NodeND)
+    order, index = Metis.permutation(matrix)
+    order, index
 end
 
 
@@ -346,6 +330,25 @@ function permutation(matrix::SparseMatrixCSC, alg::Spectral)
 
     order, history = spectralorder(matrix; kwargs...)
     alg.history = history
+    order, invperm(order)
+end
+
+
+function permutation(matrix::SparseMatrixCSC, alg::BT)
+    T = TreeWidthSolver.LongLongUInt{size(matrix, 2) ÷ 64 + 1}
+    fadjlist = Vector{Vector{Int}}(undef, size(matrix, 2))
+    bitgraph = Vector{T}(undef, size(matrix, 2))
+
+    for j in axes(matrix, 2)
+        neighbors = rowvals(matrix)[nzrange(matrix, j)]
+        fadjlist[j] = neighbors
+        bitgraph[j] = TreeWidthSolver.bmask(T, neighbors)
+    end
+
+    graph = TreeWidthSolver.MaskedBitGraph(bitgraph, fadjlist, TreeWidthSolver.bmask(T, axes(matrix, 2)))
+    cliques = TreeWidthSolver.all_pmc_enmu(graph, false)
+    decomposition = TreeWidthSolver.bt_algorithm(graph, cliques, ones(size(matrix, 2)), false, true)
+    order = reverse!(reduce(vcat, TreeWidthSolver.EliminationOrder(decomposition.tree).order))
     order, invperm(order)
 end
 

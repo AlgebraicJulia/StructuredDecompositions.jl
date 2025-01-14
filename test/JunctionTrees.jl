@@ -1,4 +1,3 @@
-using AbstractTrees
 using LinearAlgebra
 using SparseArrays
 using StructuredDecompositions.JunctionTrees
@@ -11,15 +10,15 @@ using Test
     @test ischordal(matrix)
     @test iszero(treewidth(matrix))
 
+    @test permutation(matrix, MCS())                 == ([1], [1])
     @test permutation(matrix, RCM())                 == ([1], [1])
-    @test permutation(matrix, MMD())                 == ([1], [1])
     @test permutation(matrix, AMD())                 == ([1], [1])
     @test permutation(matrix, SymAMD())              == ([1], [1])
+    @test permutation(matrix, MMD())                 == ([1], [1])
     @test permutation(matrix, NodeND())              == ([1], [1])
-    @test permutation(matrix, BT())                  == ([1], [1])
-    @test permutation(matrix, MCS())                 == ([1], [1])
     # @test permutation(matrix, FlowCutter(; time=10)) == ([1], [1])
     @test permutation(matrix, Spectral())            == ([1], [1])
+    @test permutation(matrix, BT())                  == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())
     @test isone(length(tree))
@@ -108,11 +107,11 @@ end
     @test treewidth(matrix; alg=1:17) == 4
     @test treewidth(extension; alg=1:17) == 4
 
-    order, index = permutation(matrix, RCM())
+    order, index = permutation(matrix, MCS())
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, MMD())
+    order, index = permutation(matrix, RCM())
     @test length(order) == 17
     @test order[index] == 1:17
 
@@ -124,15 +123,11 @@ end
     @test length(order) == 17
     @test order[index] == 1:17
 
+    order, index = permutation(matrix, MMD())
+    @test length(order) == 17
+    @test order[index] == 1:17
+
     order, index = permutation(matrix, NodeND())
-    @test length(order) == 17
-    @test order[index] == 1:17
-
-    order, index = permutation(matrix, BT())
-    @test length(order) == 17
-    @test order[index] == 1:17
-
-    order, index = permutation(matrix, MCS())
     @test length(order) == 17
     @test order[index] == 1:17
 
@@ -141,6 +136,10 @@ end
     # @test order[index] == 1:17
 
     order, index = permutation(matrix, Spectral())
+    @test length(order) == 17
+    @test order[index] == 1:17
+
+    order, index = permutation(matrix, BT())
     @test length(order) == 17
     @test order[index] == 1:17
 
