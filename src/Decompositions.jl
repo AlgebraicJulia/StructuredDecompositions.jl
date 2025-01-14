@@ -11,12 +11,12 @@ using ..JunctionTrees: PermutationOrAlgorithm, EliminationAlgorithm, SupernodeTy
 using PartialFunctions
 using MLStyle
 
-using AbstractTrees
 using Base: DEFAULT_STABLE, ForwardOrdering
 using Base.Threads
 using Catlab
 using Catlab.CategoricalAlgebra
 using Catlab.Graphs
+using Catlab.Graphs: add_edges!
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra.Diagrams
 using SparseArrays

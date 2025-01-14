@@ -4,19 +4,33 @@ struct Tree <: AbstractUnitRange{Int}
     parent::Vector{Int}  # vector of parents
     root::Scalar{Int}    # root
 
-    # Left-Child Right-Sibling tree
+    # left-child right-sibling tree
     child::Vector{Int}   # vector of left-children
     brother::Vector{Int} # vector of right-siblings
+
+    function Tree(parent::AbstractVector, root::AbstractScalar, child::AbstractVector, brother::AbstractVector)
+        # validate arguments
+        eachindex(parent) != eachindex(brother) && throwthrow(ArgumentError("eachindex(parent) != eachindex(brother)"))
+        eachindex(parent) != eachindex(child) && throwthrow(ArgumentError("eachindex(parent) != eachindex(child)"))
+        root[] ∉ eachindex(parent) && throw(ArgumentError("root[] ∉ eachindex(parent)"))
+
+        # construct tree
+        new(parent, root, child, brother)
+    end
 end
 
 
-# Construct a rooted tree from a list of parents.
+# Construct a rooted tree.
 function Tree(parent::AbstractVector)
+    # validate argument
+    isempty(parent) && throw(ArgumentError("isempty(parent)"))
+
+    # construct tree
     root = zeros(Int)
     child = zeros(Int, length(parent))
-    brother = similar(child)
+    brother = Vector{Int}(undef, length(parent))
 
-    for (i, j) in Iterators.reverse(enumerate(parent))
+    for (i, j) in ireverse(enumerate(parent))
         if iszero(j)
             root[] = i
             brother[i] = 0
@@ -30,7 +44,38 @@ function Tree(parent::AbstractVector)
 end
 
 
+function Tree(tree::Tree)
+    Tree(tree.parent, tree.root, tree.child, tree.brother)
+end
+
+
+# Construct a rooted tree.
+function Tree(tree::Tree, root::Integer)
+    # validate arguments
+    root ∉ tree && throw(ArgumentError("root ∉ tree"))
+
+    # construct tree
+    parent = copy(tree.parent)
+    i = root
+    j = 0
+
+    while !isnothing(i)
+        parent[i] = j
+        j = i
+        i = parentindex(tree, j)
+    end
+
+    Tree(parent)
+end
+
+
+# Construct a rooted tree.
 function Tree(matrix::SparseMatrixCSC, root::Integer)
+    # validate arguments
+    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
+    root ∉ axes(matrix, 2) && throw(ArgumentError("root ∉ axes(matrix, 2)"))
+
+    # construct tree
     parent = zeros(Int, size(matrix, 2))
     parent[root] = 0
 
@@ -64,86 +109,22 @@ function Tree(matrix::SparseMatrixCSC, root::Integer)
 end
 
 
-function Children(tree::Tree, i::Integer)
-    Children(tree.child[i], tree.brother)
+function eliminationtree(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    eliminationtree!(sparse(matrix); alg)
 end
 
 
-# Compact Clique Tree Data Structures in Sparse Matrix Factorizations
-# Pothen and Sun
-# Figure 4: The Clique Tree Algorithm 2
-#
-# Find the maximal supernode partition of a chordal graph.
-# `tree` is a topologically ordered elimination tree and `colcount` is a list of higher degrees.
-function stree(tree::Tree, colcount::AbstractVector, snd::Maximal)
-    new = sizehint!(Int[], length(tree))
-    parent = sizehint!(Int[], length(tree))
-    ancestor = sizehint!(Int[], length(tree))
-    new_in_clique = Vector{Int}(undef, length(tree))
-
-    for v in tree
-        u = nothing
-
-        for s in childindices(tree, v)
-            if colcount[s] == colcount[v] + 1
-                u = s
-                break
-            end
-        end
-
-        if !isnothing(u)
-            new_in_clique[v] = new_in_clique[u]
-
-            for s in childindices(tree, v)
-                if s !== u
-                    parent[new_in_clique[s]] = new_in_clique[v]
-                    ancestor[new_in_clique[s]] = v
-                end
-            end
-        else
-            push!(new, v)
-            push!(parent, 0)
-            push!(ancestor, 0)
-            new_in_clique[v] = length(new)
-
-            for s in childindices(tree, v)
-                parent[new_in_clique[s]] = new_in_clique[v]
-                ancestor[new_in_clique[s]] = v
-            end
-        end
-    end
-
-    new, ancestor, Tree(parent)
+function eliminationtree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    label, tree, upper, cache = eliminationtree!(matrix, alg)
+    label, tree
 end
 
 
-# Find the fundamental supernode partition of a chordal graph.
-# `tree` is a topologically ordered elimination tree and `colcount` is a list of higher degrees.
-function stree(tree::Tree, colcount::AbstractVector, snd::Fundamental)
-    new = sizehint!(Int[], length(tree))
-    parent = sizehint!(Int[], length(tree))
-    ancestor = sizehint!(Int[], length(tree))
-    new_in_clique = Vector{Int}(undef, length(tree))
-
-    for v in tree
-        u = firstchildindex(tree, v)
-
-        if !isnothing(u) && colcount[u] == colcount[v] + 1 && isnothing(nextsiblingindex(tree, u))
-            new_in_clique[v] = new_in_clique[u]
-        else
-            push!(new, v)
-            push!(parent, 0)
-            push!(ancestor, 0)
-            new_in_clique[v] = length(new)
-
-            for s in childindices(tree, v)
-                parent[new_in_clique[s]] = new_in_clique[v]
-                ancestor[new_in_clique[s]] = v
-            end
-        end
-    end
-
-    new, ancestor, Tree(parent)
+function eliminationtree!(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm)
+    label, index = permutation(matrix, alg)
+    cache = triu(matrix)
+    upper = sympermute!(matrix, cache, index)
+    label, etree(upper), upper, cache
 end
 
 
@@ -151,13 +132,17 @@ end
 # Liu
 # Algorithm 4.2: Elimination Tree by Path Compression.
 #
-# Construct an elimination tree of a simple graph, represented by the upper triangular part
-# `upper` of its adjacency matrix.
+# Construct the elimination tree of an ordered graph.
+# The complexity is O(mlogn), where m = |E| and n = |V|.
 function etree(upper::SparseMatrixCSC)
-    parent = Vector{Int}(undef, size(upper, 1))
-    ancestor = Vector{Int}(undef, size(upper, 1))
+    # validate argument
+    size(upper, 1) != size(upper, 2) && throw(ArgumentError("size(upper, 1) != size(upper, 2)"))
 
-    for i in axes(upper, 1)
+    # run algorithm
+    parent = Vector{Int}(undef, size(upper, 2))
+    ancestor = Vector{Int}(undef, size(upper, 2))
+
+    for i in axes(upper, 2)
         parent[i] = 0
         ancestor[i] = 0
 
@@ -185,32 +170,56 @@ end
 # Gilbert, Ng, and Peyton
 # Figure 3: Implementation of algorithm to compute row and column counts.
 #
-# Compute the lower and higher degrees of the elimination graph of a simple graph, represented by the
-# lower triangular part `lower` of its adjacency matrix. `tree` is a postordered elimination tree,
-# `level` is a list of levels, and `fdesc` is a list of first descendants.
-function supcnt(lower::SparseMatrixCSC, tree::Tree, level::AbstractVector=levels(tree), fdesc::AbstractVector=firstdescendants(tree))
-    sets = DisjointTrees(size(lower, 1))
-    prev_p = zeros(Int, size(lower, 1))
-    prev_nbr = zeros(Int, size(lower, 1))
-    rc = ones(Int, size(lower, 1))
-    wt = ones(Int, size(lower, 1))
+# Compute the lower and higher degrees of the monotone transitive extesion of an ordered graph.
+# The complexity is O(mα(m, n)), where m = |E|, n = |V|, and α is the inverse Ackermann function.
+function supcnt(lower::SparseMatrixCSC, tree::Tree, index::AbstractVector=dfs(tree))
+    # validate arguments
+    tree != axes(lower, 1) && throw(ArgumentError("tree != axes(lower, 1)"))
+    tree != axes(lower, 2) && throw(ArgumentError("tree != axes(lower, 2)"))
+    tree != eachindex(index) && throw(ArgumentError("tree != eachindex(index)"))
+
+    # find first descendants and levels
+    order = Perm(ForwardOrdering(), index)
+    fdesc = firstdescendants(tree, order)
+    level = levels(tree)
+
+    # construct disjoint set forest
+    sets = IntDisjointSets(length(tree))
+    root = collect(tree)
+    repr = collect(tree)
+    
+    function find(u)
+        v = find_root!(sets, u)
+        repr[v]
+    end
+    
+    function union(u, v)
+        root[v] = root_union!(sets, root[u], root[v])
+        repr[root[v]] = v
+    end
+    
+    # run algorithm
+    prev_p = zeros(Int, length(tree))
+    prev_nbr = zeros(Int, length(tree))
+    rc = ones(Int, length(tree))
+    wt = ones(Int, length(tree))
 
     for p in tree[1:end - 1]
         wt[parentindex(tree, p)] = 0
     end
 
-    for p in tree[1:end - 1]
+    for p in @view invperm(index)[1:end - 1]
         wt[parentindex(tree, p)] -= 1
 
         for u in @view rowvals(lower)[nzrange(lower, p)]
-            if fdesc[p] > prev_nbr[u]
+            if iszero(prev_nbr[u]) || lt(order, prev_nbr[u], fdesc[p])
                 wt[p] += 1
                 pp = prev_p[u]
 
                 if iszero(pp)
                     rc[u] += level[p] - level[u]
                 else
-                    q = find!(sets, pp)
+                    q = find(pp)
                     rc[u] += level[p] - level[q]
                     wt[q] -= 1
                 end
@@ -221,7 +230,7 @@ function supcnt(lower::SparseMatrixCSC, tree::Tree, level::AbstractVector=levels
             prev_nbr[u] = p
         end
 
-        union!(sets, p, parentindex(tree, p))
+        union(p, parentindex(tree, p))
     end
 
     cc = wt
@@ -236,24 +245,26 @@ end
 
 # Compute a postordering of a rooted tree.
 function dfs(tree::Tree)
-    head = copy(tree.child)
-
-    stack = sizehint!(Int[], length(tree))
-    push!(stack, tree.root[])
-
-    n = 0
+    stack = Vector{Int}(undef, length(tree))
     index = Vector{Int}(undef, length(tree))
+    head = copy(tree.child)
+    p = 1
+    q = 1
+    
+    stack[p] = rootindex(tree)
 
-    while !isempty(stack)
-        j = last(stack)
+    while !iszero(p)
+        j = stack[p]
         i = head[j]
 
         if iszero(i)
-            n += 1
-            index[pop!(stack)] = n
+            index[stack[p]] = q
+            p -= 1
+            q += 1
         else
             head[j] = tree.brother[i]
-            push!(stack, i)
+            p += 1
+            stack[p] = i
         end
     end
 
@@ -261,7 +272,7 @@ function dfs(tree::Tree)
 end
 
 
-# Get the level of every vertex in a topologically ordered rooted tree.
+# Get the level of every vertex in a topologically ordered tree.
 function levels(tree::Tree)
     level = Vector{Int}(undef, length(tree))
     level[end] = 0
@@ -275,13 +286,20 @@ function levels(tree::Tree)
 end
 
 
-# Get the first descendant of every vertex in a postordered rooted tree.
-function firstdescendants(tree::Tree)
+# Get the first descendant of every vertex in a topologically ordered tree.
+function firstdescendants(tree::Tree, order::Ordering=ForwardOrdering())
     fdesc = collect(tree)
 
     for i in tree[1:end - 1]
         j = parentindex(tree, i)
-        fdesc[j] = min(fdesc[i], fdesc[j])
+        u = fdesc[i]
+        v = fdesc[j]
+
+        if lt(order, v, u)
+            u, v = v, u
+        end
+
+        fdesc[j] = u
     end
 
     fdesc
@@ -290,13 +308,17 @@ end
 
 # Permute the vertices of a rooted tree.
 function Base.invpermute!(tree::Tree, index::AbstractVector)
+    # validate arguments
+    tree != eachindex(index) && throw(ArgumentError("tree != eachindex(index)"))
+
+    # run algorithm
     fill!(tree.child, 0)
 
     tree.parent[index] = map(tree.parent) do i
         iszero(i) ? i : index[i]
     end
 
-    for (i, j) in Iterators.reverse(enumerate(tree.parent))
+    for (i, j) in ireverse(enumerate(tree.parent))
         if iszero(j)
             tree.root[] = i
             tree.brother[i] = 0
@@ -311,7 +333,7 @@ end
 
 
 function Base.show(io::IO, ::MIME"text/plain", tree::Tree)
-    print(io, "$(length(tree))-element Tree:\n")
+    println(io, "$(length(tree))-element Tree:")
     print_tree(io, IndexNode(tree))
 end
 
@@ -328,8 +350,7 @@ end
 
 
 function AbstractTrees.rootindex(tree::Tree)
-    j = tree.root[]
-    iszero(j) ? nothing : j
+    tree.root[]
 end
 
 
@@ -346,7 +367,7 @@ end
 
 
 function AbstractTrees.childindices(tree::Tree, i::Integer)
-    Children(tree, i)
+    SinglyLinkedList(view(tree.child, i), tree.brother)
 end
 
 

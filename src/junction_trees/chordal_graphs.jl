@@ -7,7 +7,7 @@ function SparseArrays.nnz(tree::JunctionTree)
     sum(tree) do bag
         r = length(residual(bag))
         s = length(separator(bag))
-        (2s + r - 1) * r ÷ 2
+        div((2s + r - 1)r, 2)
     end 
 end
 
@@ -15,8 +15,7 @@ end
 """
     ischordal(matrix::AbstractMatrix)
 
-Determine whether a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html), represented by its adjacency matrix `matrix`,
-is [chordal](https://en.wikipedia.org/wiki/Chordal_graph).
+Determine whether a simple graph is [chordal](https://en.wikipedia.org/wiki/Chordal_graph).
 """
 function ischordal(matrix::AbstractMatrix)
     ischordal(sparse(matrix))
@@ -99,22 +98,21 @@ a junction tree. The function returns a sparse matrix with elements of type `Ele
 and the same sparsity structure as the lower triangular part of the graph's adjacency matrix.
 """
 function chordalgraph(Element::Type, tree::JunctionTree)
-    colptr = Vector{Int}(undef, last(tree.sndptr))
-    rowval = Vector{Int}(undef, nnz(tree))
-    nzval = Vector{Element}(undef, nnz(tree))
-    j = p = colptr[1] = 1
+    n = last(residual(last(tree)))
+    colptr = sizehint!(Int[], n + 1)
+    rowval = sizehint!(Int[], nnz(tree))
+    push!(colptr, 1) 
 
     for bag in tree
         for i in eachindex(residual(bag))
             for v in @view bag[i + 1:end]
-                rowval[p] = v
-                p += 1
+                push!(rowval, v)
             end
 
-            colptr[j + 1] = p
-            j += 1
+            push!(colptr, length(rowval) + 1)
         end
     end
 
-    SparseMatrixCSC(last(tree.sndptr) - 1, last(tree.sndptr) - 1, colptr, rowval, nzval)
+    nzval = Vector{Element}(undef, nnz(tree))
+    SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end

@@ -5,17 +5,17 @@ A graph elimination algorithm. The options are
 
 | type                 | name                              | complexity  |
 | :------------------- | :-------------------------------- | :---------- |
-| [`RCM`](@ref)        | reverse Cuthill-Mckee             | O(mn)       |
-| [`MMD`](@ref)        | multiple minimum degree           | O(mn²)      |
-| [`AMD`](@ref)        | approximate minimum degree        | O(mn)       |
-| [`SymAMD`](@ref)     | column approximate minimum degree |             |
-| [`NodeND`](@ref)     | nested dissection                 |             |
-| [`BT`](@ref)         | Bouchitte-Todinca                 | O(2.6183ⁿ)  |
 | [`MCS`](@ref)        | maximum cardinality search        | O(m + n)    |
+| [`RCM`](@ref)        | reverse Cuthill-Mckee             | O(mΔ)       |
+| [`AMD`](@ref)        | approximate minimum degree        | O(mn)       |
+| [`SymAMD`](@ref)     | column approximate minimum degree | O(mn)       |
+| [`MMD`](@ref)        | multiple minimum degree           | O(mn²)      |
+| [`NodeND`](@ref)     | nested dissection                 |             |
 | [`FlowCutter`](@ref) | FlowCutter                        |             |
 | [`Spectral`](@ref)   | spectral ordering                 |             |
+| [`BT`](@ref)         | Bouchitte-Todinca                 | O(2.6183ⁿ)  |
 
-for a graph with m edges and n vertices.
+for a graph with m edges, n vertices, and maximum degree Δ.
 """
 abstract type EliminationAlgorithm end
 
@@ -29,6 +29,16 @@ const PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
 
 
 """
+    MCS <: EliminationAlgorithm
+
+    MCS()
+
+The maximum cardinality search algorithm.
+"""
+struct MCS <: EliminationAlgorithm end
+
+
+"""
     RCM <: EliminationAlgorithm
 
     RCM(; sortbydeg=true)
@@ -36,23 +46,13 @@ const PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
 The [reverse Cuthill-McKee algorithm](https://en.wikipedia.org/wiki/Cuthill–McKee_algorithm). Uses [SymRCM.jl](https://github.com/PetrKryslUCSD/SymRCM.jl).
 - `sortbydeg`: whether to sort neighbor lists by degree
 """
-mutable struct RCM <: EliminationAlgorithm
+struct RCM <: EliminationAlgorithm
     sortbydeg::Bool
 
     function RCM(; sortbydeg=true)
         new(sortbydeg)
     end
 end
-
-
-"""
-    MMD <: EliminationAlgorithm
-
-    MMD()
-
-The multiple minimum degree algorithm. Uses [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl/tree/main).
-"""
-mutable struct MMD <: EliminationAlgorithm end
 
 
 """
@@ -64,7 +64,7 @@ The approximate minimum degree algorithm. Uses [AMD.jl](https://github.com/Julia
 - `dense`: dense row parameter
 - `aggressive`: aggressive absorbtion
 """
-mutable struct AMD <: EliminationAlgorithm
+struct AMD <: EliminationAlgorithm
     meta::AMDPkg.Amd
 
     function AMD(; dense=nothing, aggressive=nothing)
@@ -82,6 +82,7 @@ mutable struct AMD <: EliminationAlgorithm
     end
 end
 
+
 """
     SymAMD{Index} <: EliminationAlgorithm
 
@@ -95,7 +96,7 @@ The column approximate minimum degree algorithm. Uses [AMD.jl](https://github.co
     - `dense_column`: dense column parameter
     - `aggressive`: aggressive absorbtion
 """
-mutable struct SymAMD{Index} <: EliminationAlgorithm
+struct SymAMD{Index} <: EliminationAlgorithm
     meta::AMDPkg.Colamd{Index}
 
     function SymAMD(; dense_row=nothing, dense_col=nothing, aggressive=nothing)
@@ -123,33 +124,24 @@ end
 
 
 """
+    MMD <: EliminationAlgorithm
+
+    MMD()
+
+The multiple minimum degree algorithm. Uses [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl/tree/main).
+"""
+struct MMD <: EliminationAlgorithm end
+
+
+
+"""
     NodeND <: EliminationAlgorithm
 
     NodeND()
 
 The [nested dissection heuristic](https://en.wikipedia.org/wiki/Nested_dissection). Uses [Metis.jl](https://github.com/JuliaSparse/Metis.jl).
 """
-mutable struct NodeND <: EliminationAlgorithm end
-
-
-"""
-    BT <: EliminationAlgorithm
-
-    BT()
-
-The Bouchitte-Todinca algorithm. Uses [TreeWidthSolver.jl](https://github.com/ArrogantGao/TreeWidthSolver.jl).
-"""
-mutable struct BT <: EliminationAlgorithm end
-
-
-"""
-    MCS <: EliminationAlgorithm
-
-    MCS()
-
-The maximum cardinality search algorithm.
-"""
-mutable struct MCS <: EliminationAlgorithm end
+struct NodeND <: EliminationAlgorithm end
 
 
 """
@@ -161,7 +153,7 @@ The FlowCutter algorithm. Uses [FlowCutterPACE17_jll.jl](https://github.com/Juli
     - `time`: running time
     - `seed`: random seed
 """
-mutable struct FlowCutter <: EliminationAlgorithm
+struct FlowCutter <: EliminationAlgorithm
     time::Int
     seed::Int
     history::Vector{String}
@@ -175,33 +167,37 @@ end
 """
     Spectral <: EliminationAlgorithm
 
-    Spectral(; tol=sqrt(eps(Float64)), restarts=200, mindim=nothing, maxdim=nothing)
+    Spectral(; tol=0.0)
 
-Spectral ordering. Uses [ArnoldiMethod.jl](https://github.com/JuliaLinearAlgebra/ArnoldiMethod.jl).
+Spectral ordering. Uses [Laplacians.jl](https://github.com/danspielman/Laplacians.jl).
     - `tol`: tolerance for convergence
-    - `restarts`: maximum number of restarts
-    - `mindim`: minimum Krylov dimension (≥ 2)
-    - `maxdim`: maximum Krylov dimension (≥ mindim)
 """
-mutable struct Spectral <: EliminationAlgorithm
+struct Spectral <: EliminationAlgorithm
     tol::Float64
-    restarts::Int
-    mindim::Union{Int, Nothing}
-    maxdim::Union{Int, Nothing}
-    history::Union{ArnoldiMethod.History, Nothing}
 
-    function Spectral(; tol=sqrt(eps(Float64)), restarts=200, mindim=nothing, maxdim=nothing)
-        new(tol, restarts, mindim, maxdim, nothing)
+    function Spectral(; tol=0.0)
+        new(tol)
     end    
 end
 
 
 """
+    BT <: EliminationAlgorithm
+
+    BT()
+
+The Bouchitte-Todinca algorithm. Uses [TreeWidthSolver.jl](https://github.com/ArrogantGao/TreeWidthSolver.jl).
+"""
+struct BT <: EliminationAlgorithm end
+
+
+
+"""
     permutation(matrix::AbstractMatrix, alg::PermutationOrAlgorithm)
 
-Construct a fill-reducing permutation of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html),
-represented by its adjacency matrix `matrix`.
-
+Construct a fill-reducing permutation of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html).
+- `matrix`: adjacency matrix
+- `alg`: ordering algortihm
 ```julia
 julia> using StructuredDecompositions.JunctionTrees
 
@@ -247,17 +243,15 @@ function permutation(matrix::AbstractMatrix, alg::AbstractVector)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::RCM)
-    order = SymRCM.symrcm(matrix)
+function permutation(matrix::SparseMatrixCSC, alg::MCS)
+    order = mcs(matrix)
     order, invperm(order)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::MMD)
-    order = collect(axes(matrix, 2))
-    index = collect(axes(matrix, 2))
-    SpkMmd._generalmmd(size(matrix, 2), getcolptr(matrix), rowvals(matrix), order, index)
-    order, index
+function permutation(matrix::SparseMatrixCSC, alg::RCM)
+    order = SymRCM.symrcm(matrix)
+    order, invperm(order)
 end
 
 
@@ -273,34 +267,17 @@ function permutation(matrix::SparseMatrixCSC, alg::SymAMD)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::NodeND)
-    order, index = Metis.permutation(matrix)
+function permutation(matrix::SparseMatrixCSC, alg::MMD)
+    order = collect(axes(matrix, 2))
+    index = collect(axes(matrix, 2))
+    SpkMmd._generalmmd(size(matrix, 2), getcolptr(matrix), rowvals(matrix), order, index)
     order, index
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::BT)
-    T = TreeWidthSolver.LongLongUInt{size(matrix, 2) ÷ 64 + 1}
-    fadjlist = Vector{Vector{Int}}(undef, size(matrix, 2))
-    bitgraph = Vector{T}(undef, size(matrix, 2))
-
-    for j in axes(matrix, 2)
-        neighbors = rowvals(matrix)[nzrange(matrix, j)]
-        fadjlist[j] = neighbors
-        bitgraph[j] = TreeWidthSolver.bmask(T, neighbors)
-    end
-
-    graph = TreeWidthSolver.MaskedBitGraph(bitgraph, fadjlist, TreeWidthSolver.bmask(T, axes(matrix, 2)))
-    cliques = TreeWidthSolver.all_pmc_enmu(graph, false)
-    decomposition = TreeWidthSolver.bt_algorithm(graph, cliques, ones(size(matrix, 2)), false, true)
-    order = reverse!(reduce(vcat, TreeWidthSolver.EliminationOrder(decomposition.tree).order))
-    order, invperm(order)
-end
-
-
-function permutation(matrix::SparseMatrixCSC, alg::MCS)
-    order = mcs(matrix)
-    order, invperm(order)
+function permutation(matrix::SparseMatrixCSC, alg::NodeND)
+    order, index = Metis.permutation(matrix)
+    order, index
 end
 
 
@@ -334,112 +311,98 @@ end
 
 
 function permutation(matrix::SparseMatrixCSC, alg::Spectral)
-    kwargs = Dict{Symbol, Real}(:tol => alg.tol, :restarts => alg.restarts)
-       
-    if !isnothing(alg.mindim)
-        kwargs[:mindim] = alg.mindim        
+    order = spectralorder(matrix; tol=alg.tol)
+    order, invperm(order)
+end
+
+
+function permutation(matrix::SparseMatrixCSC, alg::BT)
+    T = TreeWidthSolver.LongLongUInt{size(matrix, 2) ÷ 64 + 1}
+    fadjlist = Vector{Vector{Int}}(undef, size(matrix, 2))
+    bitgraph = Vector{T}(undef, size(matrix, 2))
+
+    for j in axes(matrix, 2)
+        neighbors = rowvals(matrix)[nzrange(matrix, j)]
+        fadjlist[j] = neighbors
+        bitgraph[j] = TreeWidthSolver.bmask(T, neighbors)
     end
 
-    if !isnothing(alg.maxdim)
-        kwargs[:maxdim] = alg.maxdim
-    end
-
-    order, history = spectralorder(matrix; kwargs...)
-    alg.history = history
+    graph = TreeWidthSolver.MaskedBitGraph(bitgraph, fadjlist, TreeWidthSolver.bmask(T, axes(matrix, 2)))
+    cliques = TreeWidthSolver.all_pmc_enmu(graph, false)
+    decomposition = TreeWidthSolver.bt_algorithm(graph, cliques, ones(size(matrix, 2)), false, true)
+    order = reverse!(reduce(vcat, TreeWidthSolver.EliminationOrder(decomposition.tree).order))
     order, invperm(order)
 end
 
 
 function Base.show(io::IO, alg::RCM)
-    output = "RCM:\n"
-    output *= "    parameters:\n"
-    output *= "        sortbydeg: $(alg.sortbydeg)\n"
-    print(io, output)
+    println(io, "RCM:")
+    println(io, "    parameters:")
+    println(io, "        sortbydeg: $(alg.sortbydeg)")
 end
 
 
 function Base.show(io::IO, alg::AMD)
     meta = alg.meta
-    output = "AMD:\n"
-    output *= "    parameters:\n"
-    output *= "        dense: $(meta.control[AMDPkg.AMD_DENSE])\n"
-    output *= "        aggressive: $(meta.control[AMDPkg.AMD_AGGRESSIVE])\n"
-    output *= "    information:\n"
-    output *= "        status: $(AMDPkg.amd_statuses[meta.info[AMDPkg.AMD_STATUS]])\n"
-    output *= "        matrix size: $(meta.info[AMDPkg.AMD_N])\n"
-    output *= "        number of nonzeros: $(meta.info[AMDPkg.AMD_NZ])\n"
-    output *= "        pattern symmetry: $(meta.info[AMDPkg.AMD_SYMMETRY])\n"
-    output *= "        number of nonzeros on diagonal: $(meta.info[AMDPkg.AMD_NZDIAG])\n"
-    output *= "        number of nonzeros in A + Aᵀ: $(meta.info[AMDPkg.AMD_NZ_A_PLUS_AT])\n"
-    output *= "        number of dense columns: $(meta.info[AMDPkg.AMD_NDENSE])\n"
-    output *= "        memory used: $(meta.info[AMDPkg.AMD_MEMORY])\n"
-    output *= "        number of garbage collections: $(meta.info[AMDPkg.AMD_NCMPA])\n"
-    output *= "        approximate number of nonzeros in factor: $(meta.info[AMDPkg.AMD_LNZ])\n"
-    output *= "        number of float divides: $(meta.info[AMDPkg.AMD_NDIV])\n"
-    output *= "        number of float * or - for LDL: $(meta.info[AMDPkg.AMD_NMULTSUBS_LDL])\n"
-    output *= "        number of float * or - for LU: $(meta.info[AMDPkg.AMD_NMULTSUBS_LU])\n"
-    output *= "        max nonzeros in any column of factor: $(meta.info[AMDPkg.AMD_DMAX])\n"
-    print(io, output)
+    println(io, "AMD:")
+    println(io, "    parameters:")
+    println(io, "        dense: $(meta.control[AMDPkg.AMD_DENSE])")
+    println(io, "        aggressive: $(meta.control[AMDPkg.AMD_AGGRESSIVE])")
+    println(io, "    information:")
+    println(io, "        status: $(AMDPkg.amd_statuses[meta.info[AMDPkg.AMD_STATUS]])")
+    println(io, "        matrix size: $(meta.info[AMDPkg.AMD_N])")
+    println(io, "        number of nonzeros: $(meta.info[AMDPkg.AMD_NZ])")
+    println(io, "        pattern symmetry: $(meta.info[AMDPkg.AMD_SYMMETRY])")
+    println(io, "        number of nonzeros on diagonal: $(meta.info[AMDPkg.AMD_NZDIAG])")
+    println(io, "        number of nonzeros in A + Aᵀ: $(meta.info[AMDPkg.AMD_NZ_A_PLUS_AT])")
+    println(io, "        number of dense columns: $(meta.info[AMDPkg.AMD_NDENSE])")
+    println(io, "        memory used: $(meta.info[AMDPkg.AMD_MEMORY])")
+    println(io, "        number of garbage collections: $(meta.info[AMDPkg.AMD_NCMPA])")
+    println(io, "        approximate number of nonzeros in factor: $(meta.info[AMDPkg.AMD_LNZ])")
+    println(io, "        number of float divides: $(meta.info[AMDPkg.AMD_NDIV])")
+    println(io, "        number of float * or - for LDL: $(meta.info[AMDPkg.AMD_NMULTSUBS_LDL])")
+    println(io, "        number of float * or - for LU: $(meta.info[AMDPkg.AMD_NMULTSUBS_LU])")
+    println(io, "        max nonzeros in any column of factor: $(meta.info[AMDPkg.AMD_DMAX])")
 end
 
 
 function Base.show(io::IO, alg::SymAMD)
     meta = alg.meta
-    output = "SymAMD:\n"
-    output *= "    parameters:\n"
-    output *= "        dense row: $(meta.knobs[AMDPkg.COLAMD_DENSE_ROW])\n"
-    output *= "        dense col: $(meta.knobs[AMDPkg.COLAMD_DENSE_COL])\n"
-    output *= "        aggressive: $(meta.knobs[AMDPkg.COLAMD_AGGRESSIVE])\n"
-    output *= "    information:\n"
-    output *= "        status: $(AMDPkg.colamd_statuses[meta.stats[AMDPkg.COLAMD_STATUS]])\n"
-    output *= "        memory defragmentation: $(meta.stats[AMDPkg.COLAMD_DEFRAG_COUNT])\n"
-    print(io, output)
+    println(io, "SymAMD:")
+    println(io, "    parameters:")
+    println(io, "        dense row: $(meta.knobs[AMDPkg.COLAMD_DENSE_ROW])")
+    println(io, "        dense col: $(meta.knobs[AMDPkg.COLAMD_DENSE_COL])")
+    println(io, "        aggressive: $(meta.knobs[AMDPkg.COLAMD_AGGRESSIVE])")
+    println(io, "    information:")
+    println(io, "        status: $(AMDPkg.colamd_statuses[meta.stats[AMDPkg.COLAMD_STATUS]])")
+    println(io, "        memory defragmentation: $(meta.stats[AMDPkg.COLAMD_DEFRAG_COUNT])")
 end
 
 
 function Base.show(io::IO, alg::FlowCutter)
-    output = "FlowCutter:\n"
-    output *= "    parameters:\n"
-    output *= "        time: $(alg.time)\n"
-    output *= "        seed: $(alg.seed)\n"
+    println(io, "FlowCutter:")
+    println(io, "    parameters:")
+    println(io, "        time: $(alg.time)")
+    println(io, "        seed: $(alg.seed)")
     
     if !isempty(alg.history)
-        output *= "    information:\n"
+        println(io, "    information:")
     
         for line in alg.history
             if startswith(line, "status")
                 break
             end
 
-            output *= "        $line\n"
+            println(io, "        $line")
         end
     end
-
-    print(io, output)
 end
 
 
 function Base.show(io::IO, alg::Spectral)
-    output = "Spectral:\n"
-    output *= "    parameters:\n"
-    output *= "        tol: $(alg.tol)\n"
-    output *= "        restarts: $(alg.restarts)\n"
-
-    if !isnothing(alg.mindim)
-        output *= "        mindim: $(alg.mindim)\n"
-    end
-
-    if !isnothing(alg.maxdim)
-        output *= "        maxdim: $(alg.maxdim)\n"
-    end
-
-    if !isnothing(alg.history)
-        history = lowercase(string(alg.history))
-        output *= "    information:\n"
-        output *= "        $history\n"
-    end
-
-    print(io, output)
+    println(io, "Spectral:")
+    println(io, "    parameters:")
+    println(io, "        tol: $(alg.tol)")
 end
 
 

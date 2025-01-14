@@ -30,15 +30,15 @@ isperfect
 ```@docs
 EliminationAlgorithm
 PermutationOrAlgorithm
-MMD
+MCS
+RCM
 AMD
 SymAMD
+MMD
 NodeND
-RCM
-BT
-MCS
 FlowCutter
 Spectral
+BT
 permutation   
 ```
 
