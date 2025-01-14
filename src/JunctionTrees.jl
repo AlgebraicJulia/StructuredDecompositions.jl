@@ -12,8 +12,8 @@ using Sparspak: SpkMmd
 
 
 import AMD as AMDPkg
-import ArnoldiMethod
 import FlowCutterPACE17_jll
+import Laplacians
 import Metis
 import SymRCM
 import TreeWidthSolver

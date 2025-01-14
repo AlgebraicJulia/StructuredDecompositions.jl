@@ -35,7 +35,7 @@ const PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
 
 The maximum cardinality search algorithm.
 """
-mutable struct MCS <: EliminationAlgorithm end
+struct MCS <: EliminationAlgorithm end
 
 
 """
@@ -46,7 +46,7 @@ mutable struct MCS <: EliminationAlgorithm end
 The [reverse Cuthill-McKee algorithm](https://en.wikipedia.org/wiki/Cuthill–McKee_algorithm). Uses [SymRCM.jl](https://github.com/PetrKryslUCSD/SymRCM.jl).
 - `sortbydeg`: whether to sort neighbor lists by degree
 """
-mutable struct RCM <: EliminationAlgorithm
+struct RCM <: EliminationAlgorithm
     sortbydeg::Bool
 
     function RCM(; sortbydeg=true)
@@ -64,7 +64,7 @@ The approximate minimum degree algorithm. Uses [AMD.jl](https://github.com/Julia
 - `dense`: dense row parameter
 - `aggressive`: aggressive absorbtion
 """
-mutable struct AMD <: EliminationAlgorithm
+struct AMD <: EliminationAlgorithm
     meta::AMDPkg.Amd
 
     function AMD(; dense=nothing, aggressive=nothing)
@@ -96,7 +96,7 @@ The column approximate minimum degree algorithm. Uses [AMD.jl](https://github.co
     - `dense_column`: dense column parameter
     - `aggressive`: aggressive absorbtion
 """
-mutable struct SymAMD{Index} <: EliminationAlgorithm
+struct SymAMD{Index} <: EliminationAlgorithm
     meta::AMDPkg.Colamd{Index}
 
     function SymAMD(; dense_row=nothing, dense_col=nothing, aggressive=nothing)
@@ -130,7 +130,7 @@ end
 
 The multiple minimum degree algorithm. Uses [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl/tree/main).
 """
-mutable struct MMD <: EliminationAlgorithm end
+struct MMD <: EliminationAlgorithm end
 
 
 
@@ -141,7 +141,7 @@ mutable struct MMD <: EliminationAlgorithm end
 
 The [nested dissection heuristic](https://en.wikipedia.org/wiki/Nested_dissection). Uses [Metis.jl](https://github.com/JuliaSparse/Metis.jl).
 """
-mutable struct NodeND <: EliminationAlgorithm end
+struct NodeND <: EliminationAlgorithm end
 
 
 """
@@ -153,7 +153,7 @@ The FlowCutter algorithm. Uses [FlowCutterPACE17_jll.jl](https://github.com/Juli
     - `time`: running time
     - `seed`: random seed
 """
-mutable struct FlowCutter <: EliminationAlgorithm
+struct FlowCutter <: EliminationAlgorithm
     time::Int
     seed::Int
     history::Vector{String}
@@ -167,23 +167,16 @@ end
 """
     Spectral <: EliminationAlgorithm
 
-    Spectral(; tol=sqrt(eps(Float64)), restarts=200, mindim=nothing, maxdim=nothing)
+    Spectral(; tol=0.0)
 
-Spectral ordering. Uses [ArnoldiMethod.jl](https://github.com/JuliaLinearAlgebra/ArnoldiMethod.jl).
+Spectral ordering. Uses [Laplacians.jl](https://github.com/danspielman/Laplacians.jl).
     - `tol`: tolerance for convergence
-    - `restarts`: maximum number of restarts
-    - `mindim`: minimum Krylov dimension (≥ 2)
-    - `maxdim`: maximum Krylov dimension (≥ mindim)
 """
-mutable struct Spectral <: EliminationAlgorithm
+struct Spectral <: EliminationAlgorithm
     tol::Float64
-    restarts::Int
-    mindim::Union{Int, Nothing}
-    maxdim::Union{Int, Nothing}
-    history::Union{ArnoldiMethod.History, Nothing}
 
-    function Spectral(; tol=sqrt(eps(Float64)), restarts=200, mindim=nothing, maxdim=nothing)
-        new(tol, restarts, mindim, maxdim, nothing)
+    function Spectral(; tol=0.0)
+        new(tol)
     end    
 end
 
@@ -195,7 +188,7 @@ end
 
 The Bouchitte-Todinca algorithm. Uses [TreeWidthSolver.jl](https://github.com/ArrogantGao/TreeWidthSolver.jl).
 """
-mutable struct BT <: EliminationAlgorithm end
+struct BT <: EliminationAlgorithm end
 
 
 
@@ -318,18 +311,7 @@ end
 
 
 function permutation(matrix::SparseMatrixCSC, alg::Spectral)
-    kwargs = Dict{Symbol, Real}(:tol => alg.tol, :restarts => alg.restarts)
-       
-    if !isnothing(alg.mindim)
-        kwargs[:mindim] = alg.mindim        
-    end
-
-    if !isnothing(alg.maxdim)
-        kwargs[:maxdim] = alg.maxdim
-    end
-
-    order, history = spectralorder(matrix; kwargs...)
-    alg.history = history
+    order = spectralorder(matrix; tol=alg.tol)
     order, invperm(order)
 end
 
@@ -426,21 +408,6 @@ function Base.show(io::IO, alg::Spectral)
     output = "Spectral:\n"
     output *= "    parameters:\n"
     output *= "        tol: $(alg.tol)\n"
-    output *= "        restarts: $(alg.restarts)\n"
-
-    if !isnothing(alg.mindim)
-        output *= "        mindim: $(alg.mindim)\n"
-    end
-
-    if !isnothing(alg.maxdim)
-        output *= "        maxdim: $(alg.maxdim)\n"
-    end
-
-    if !isnothing(alg.history)
-        history = lowercase(string(alg.history))
-        output *= "    information:\n"
-        output *= "        $history\n"
-    end
 
     print(io, output)
 end

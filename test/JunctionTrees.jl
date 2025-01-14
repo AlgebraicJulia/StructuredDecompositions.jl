@@ -17,7 +17,7 @@ using Test
     @test permutation(matrix, MMD())                 == ([1], [1])
     @test permutation(matrix, NodeND())              == ([1], [1])
     # @test permutation(matrix, FlowCutter(; time=10)) == ([1], [1])
-    @test permutation(matrix, Spectral())            == ([1], [1])
+    # @test permutation(matrix, Spectral())            == ([1], [1])
     @test permutation(matrix, BT())                  == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())

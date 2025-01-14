@@ -72,56 +72,20 @@ function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::Ab
 end
 
 
-# See below. The function returns a sparse matrix with elementts of type `Int`.
-function laplacian(matrix::SparseMatrixCSC)
-    laplacian(Int, matrix)
-end
-
-
-# Compute the graph laplacian of a graph. The function returns a sparse matrix with elements of type `Element`.
-function laplacian(Element::Type, matrix::SparseMatrixCSC{<:Any, Index}) where Index
-    colptr = sizehint!(Index[], size(matrix, 2) + 1)
-    rowval = sizehint!(Index[], size(matrix, 2) + nnz(matrix))
-    nzval = sizehint!(Element[], size(matrix, 2) + nnz(matrix))
-    push!(colptr, 1)
-    
-    for j in axes(matrix, 2)
-        flag = true
-        
-        for i in @view rowvals(matrix)[nzrange(matrix, j)]
-            if flag && i > j
-                push!(rowval, j)
-                push!(nzval, length(nzrange(matrix, j)))
-                flag = false
-            end
-            
-            push!(rowval, i)
-            push!(nzval, -1)
-        end
-        
-        if flag
-            push!(rowval, j)
-            push!(nzval, length(nzrange(matrix, j)))
-        end
-        
-        push!(colptr, length(rowval) + 1)
-    end
-    
-    SparseMatrixCSC(size(matrix)..., colptr, rowval, nzval)    
-end
-
-
 # A Spectral Algorithm for Envelope Reduction of Sparse Matrices
 # Barnard, Pothen, and Simon
 # Algorithm 1: Spectral Algorithm
 #
 # Compute the spectral ordering of a graph.
-function spectralorder(matrix::SparseMatrixCSC; kwargs...)
-    n = min(2, size(matrix, 2))
-    decomposition, history = ArnoldiMethod.partialschur(laplacian(matrix); which=:SR, nev=n, kwargs...)
-    eigenvalues, eigenvectors = ArnoldiMethod.partialeigen(decomposition)
-    order = sortperm(eigenvectors[:, n])
-    order, history
+function spectralorder(matrix::SparseMatrixCSC{Float64}; tol=0.0)
+    value, vector = Laplacians.fiedler(matrix; tol)
+    sortperm(reshape(vector, size(matrix, 2)))
+end
+
+
+function spectralorder(matrix::SparseMatrixCSC; tol=0.0)
+    matrix = SparseMatrixCSC(size(matrix)..., getcolptr(matrix), rowvals(matrix), ones(nnz(matrix)))
+    spectralorder(matrix; tol)
 end
 
 
