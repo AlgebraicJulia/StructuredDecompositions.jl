@@ -59,7 +59,6 @@ export ischordal, isperfect, chordalgraph
 include("junction_trees/singly_linked_lists.jl")
 include("junction_trees/linked_lists.jl")
 include("junction_trees/elimination_algorithms.jl")
-include("junction_trees/children.jl")
 include("junction_trees/trees.jl")
 include("junction_trees/supernode_types.jl")
 include("junction_trees/bags.jl")

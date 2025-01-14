@@ -211,7 +211,7 @@ end
 
 
 function Base.show(io::IO, ::MIME"text/plain", tree::JunctionTree)
-    print(io, "$(length(tree))-element JunctionTree:\n")
+    println(io, "$(length(tree))-element JunctionTree:")
     print_tree(io, IndexNode(tree))
 end
 

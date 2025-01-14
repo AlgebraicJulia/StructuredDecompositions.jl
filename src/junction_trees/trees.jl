@@ -110,12 +110,12 @@ end
 
 
 function eliminationtree(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    supernodetree!(sparse(matrix); alg)
+    eliminationtree!(sparse(matrix); alg)
 end
 
 
 function eliminationtree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    label, tree, upper, cache = eliminationtree!(matrix, alg, snd)
+    label, tree, upper, cache = eliminationtree!(matrix, alg)
     label, tree
 end
 
@@ -333,7 +333,7 @@ end
 
 
 function Base.show(io::IO, ::MIME"text/plain", tree::Tree)
-    print(io, "$(length(tree))-element Tree:\n")
+    println(io, "$(length(tree))-element Tree:")
     print_tree(io, IndexNode(tree))
 end
 

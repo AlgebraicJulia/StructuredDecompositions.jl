@@ -31,7 +31,8 @@ function Base.show(io::IO, list::T) where T <: SinglyLinkedList
         items[end] = "..."
     end
 
-    print(io, "$T:\n$(join(items, " → "))")
+    println(io, T)
+    println(io, join(items, " → "))
 end
 
 

@@ -336,80 +336,73 @@ end
 
 
 function Base.show(io::IO, alg::RCM)
-    output = "RCM:\n"
-    output *= "    parameters:\n"
-    output *= "        sortbydeg: $(alg.sortbydeg)\n"
-    print(io, output)
+    println(io, "RCM:")
+    println(io, "    parameters:")
+    println(io, "        sortbydeg: $(alg.sortbydeg)")
 end
 
 
 function Base.show(io::IO, alg::AMD)
     meta = alg.meta
-    output = "AMD:\n"
-    output *= "    parameters:\n"
-    output *= "        dense: $(meta.control[AMDPkg.AMD_DENSE])\n"
-    output *= "        aggressive: $(meta.control[AMDPkg.AMD_AGGRESSIVE])\n"
-    output *= "    information:\n"
-    output *= "        status: $(AMDPkg.amd_statuses[meta.info[AMDPkg.AMD_STATUS]])\n"
-    output *= "        matrix size: $(meta.info[AMDPkg.AMD_N])\n"
-    output *= "        number of nonzeros: $(meta.info[AMDPkg.AMD_NZ])\n"
-    output *= "        pattern symmetry: $(meta.info[AMDPkg.AMD_SYMMETRY])\n"
-    output *= "        number of nonzeros on diagonal: $(meta.info[AMDPkg.AMD_NZDIAG])\n"
-    output *= "        number of nonzeros in A + Aᵀ: $(meta.info[AMDPkg.AMD_NZ_A_PLUS_AT])\n"
-    output *= "        number of dense columns: $(meta.info[AMDPkg.AMD_NDENSE])\n"
-    output *= "        memory used: $(meta.info[AMDPkg.AMD_MEMORY])\n"
-    output *= "        number of garbage collections: $(meta.info[AMDPkg.AMD_NCMPA])\n"
-    output *= "        approximate number of nonzeros in factor: $(meta.info[AMDPkg.AMD_LNZ])\n"
-    output *= "        number of float divides: $(meta.info[AMDPkg.AMD_NDIV])\n"
-    output *= "        number of float * or - for LDL: $(meta.info[AMDPkg.AMD_NMULTSUBS_LDL])\n"
-    output *= "        number of float * or - for LU: $(meta.info[AMDPkg.AMD_NMULTSUBS_LU])\n"
-    output *= "        max nonzeros in any column of factor: $(meta.info[AMDPkg.AMD_DMAX])\n"
-    print(io, output)
+    println(io, "AMD:")
+    println(io, "    parameters:")
+    println(io, "        dense: $(meta.control[AMDPkg.AMD_DENSE])")
+    println(io, "        aggressive: $(meta.control[AMDPkg.AMD_AGGRESSIVE])")
+    println(io, "    information:")
+    println(io, "        status: $(AMDPkg.amd_statuses[meta.info[AMDPkg.AMD_STATUS]])")
+    println(io, "        matrix size: $(meta.info[AMDPkg.AMD_N])")
+    println(io, "        number of nonzeros: $(meta.info[AMDPkg.AMD_NZ])")
+    println(io, "        pattern symmetry: $(meta.info[AMDPkg.AMD_SYMMETRY])")
+    println(io, "        number of nonzeros on diagonal: $(meta.info[AMDPkg.AMD_NZDIAG])")
+    println(io, "        number of nonzeros in A + Aᵀ: $(meta.info[AMDPkg.AMD_NZ_A_PLUS_AT])")
+    println(io, "        number of dense columns: $(meta.info[AMDPkg.AMD_NDENSE])")
+    println(io, "        memory used: $(meta.info[AMDPkg.AMD_MEMORY])")
+    println(io, "        number of garbage collections: $(meta.info[AMDPkg.AMD_NCMPA])")
+    println(io, "        approximate number of nonzeros in factor: $(meta.info[AMDPkg.AMD_LNZ])")
+    println(io, "        number of float divides: $(meta.info[AMDPkg.AMD_NDIV])")
+    println(io, "        number of float * or - for LDL: $(meta.info[AMDPkg.AMD_NMULTSUBS_LDL])")
+    println(io, "        number of float * or - for LU: $(meta.info[AMDPkg.AMD_NMULTSUBS_LU])")
+    println(io, "        max nonzeros in any column of factor: $(meta.info[AMDPkg.AMD_DMAX])")
 end
 
 
 function Base.show(io::IO, alg::SymAMD)
     meta = alg.meta
-    output = "SymAMD:\n"
-    output *= "    parameters:\n"
-    output *= "        dense row: $(meta.knobs[AMDPkg.COLAMD_DENSE_ROW])\n"
-    output *= "        dense col: $(meta.knobs[AMDPkg.COLAMD_DENSE_COL])\n"
-    output *= "        aggressive: $(meta.knobs[AMDPkg.COLAMD_AGGRESSIVE])\n"
-    output *= "    information:\n"
-    output *= "        status: $(AMDPkg.colamd_statuses[meta.stats[AMDPkg.COLAMD_STATUS]])\n"
-    output *= "        memory defragmentation: $(meta.stats[AMDPkg.COLAMD_DEFRAG_COUNT])\n"
-    print(io, output)
+    println(io, "SymAMD:")
+    println(io, "    parameters:")
+    println(io, "        dense row: $(meta.knobs[AMDPkg.COLAMD_DENSE_ROW])")
+    println(io, "        dense col: $(meta.knobs[AMDPkg.COLAMD_DENSE_COL])")
+    println(io, "        aggressive: $(meta.knobs[AMDPkg.COLAMD_AGGRESSIVE])")
+    println(io, "    information:")
+    println(io, "        status: $(AMDPkg.colamd_statuses[meta.stats[AMDPkg.COLAMD_STATUS]])")
+    println(io, "        memory defragmentation: $(meta.stats[AMDPkg.COLAMD_DEFRAG_COUNT])")
 end
 
 
 function Base.show(io::IO, alg::FlowCutter)
-    output = "FlowCutter:\n"
-    output *= "    parameters:\n"
-    output *= "        time: $(alg.time)\n"
-    output *= "        seed: $(alg.seed)\n"
+    println(io, "FlowCutter:")
+    println(io, "    parameters:")
+    println(io, "        time: $(alg.time)")
+    println(io, "        seed: $(alg.seed)")
     
     if !isempty(alg.history)
-        output *= "    information:\n"
+        println(io, "    information:")
     
         for line in alg.history
             if startswith(line, "status")
                 break
             end
 
-            output *= "        $line\n"
+            println(io, "        $line")
         end
     end
-
-    print(io, output)
 end
 
 
 function Base.show(io::IO, alg::Spectral)
-    output = "Spectral:\n"
-    output *= "    parameters:\n"
-    output *= "        tol: $(alg.tol)\n"
-
-    print(io, output)
+    println(io, "Spectral:")
+    println(io, "    parameters:")
+    println(io, "        tol: $(alg.tol)")
 end
 
 

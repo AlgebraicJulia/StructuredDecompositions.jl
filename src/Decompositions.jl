@@ -16,6 +16,7 @@ using Base.Threads
 using Catlab
 using Catlab.CategoricalAlgebra
 using Catlab.Graphs
+using Catlab.Graphs: add_edges!
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra.Diagrams
 using SparseArrays

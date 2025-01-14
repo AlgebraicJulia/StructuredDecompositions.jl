@@ -148,33 +148,13 @@ end
 
 
 # Construct the adjacency matrix of an undirected graph.
-function adjacency_matrix(graph::HasGraph, neighbors::Function, ne::Function)
-    rowval = Vector{Int}(undef, 2ne(graph))
-    colptr = Vector{Int}(undef, nv(graph) + 1)
-    colptr[1] = 1
-
-    for i in vertices(graph)
-        p = colptr[i]
-
-        for j in neighbors(graph, i)
-            rowval[p] = j
-            p += 1
-        end
-
-        colptr[i + 1] = p
-        sort!(rowval, colptr[i], colptr[i + 1] - 1, DEFAULT_STABLE, ForwardOrdering())
-    end
-
-    nzval = ones(Bool, 2ne(graph))
-    SparseMatrixCSC(nv(graph), nv(graph), colptr, rowval, nzval)
-end
-
-
-function adjacency_matrix(graph::AbstractGraph)
-    adjacency_matrix(graph, all_neighbors, ne)
+function adjacency_matrix(graph::HasGraph)
+    symmetric = SymmetricGraph(nv(graph))
+    add_edges!(symmetric, src(graph), tgt(graph))
+    adjacency_matrix(symmetric)
 end
 
 
 function adjacency_matrix(graph::AbstractSymmetricGraph)
-    adjacency_matrix(graph, neighbors, g -> ne(g) ÷ 2)
+    sparse(src(graph), tgt(graph), ones(Bool, ne(graph)), nv(graph), nv(graph))
 end

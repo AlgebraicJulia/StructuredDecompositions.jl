@@ -120,7 +120,7 @@ end
 
 
 function Base.show(io::IO, ::MIME"text/plain", tree::SupernodeTree)
-    print(io, "$(length(tree))-element SupernodeTree:\n")
+    println(io, "$(length(tree))-element SupernodeTree:")
     print_tree(io, IndexNode(tree))
 end
 

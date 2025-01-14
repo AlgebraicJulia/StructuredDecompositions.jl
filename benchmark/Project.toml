@@ -4,6 +4,8 @@ Catlab = "134e5e36-593f-5add-ad60-77f754baafbe"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 MatrixMarket = "4d4711f2-db25-561a-b6b3-d35e7d4047d3"
 PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
+SimpleGraphAlgorithms = "41400c72-0c58-5c16-8579-4ecbce768449"
+SimpleGraphs = "55797a34-41de-5266-9ec1-32ac4eb504d3"
 StructuredDecompositions = "ba32925c-6e4c-4640-bed9-b00febeea19a"
 SuiteSparseMatrixCollection = "ac199af8-68bc-55b8-82c4-7abd6f96ed98"
 
