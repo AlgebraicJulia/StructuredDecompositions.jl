@@ -36,8 +36,8 @@ function writemd(io::IO, group::BenchmarkGroup)
     println(io)
     println(io, "## Junction Tree Construction")
     println(io)
-    println(io, "| library | name | supernode | edges | time | memory |")
-    println(io, "| :------ | :--- | :---------| :---- | :--- | :----- |")
+    println(io, "| library | supernode | name | edges | time | memory |")
+    println(io, "| :------ | :-------- | :----| :---- | :--- | :----- |")
 
     for graph in GRAPHS
         name = graph[:name]
@@ -46,32 +46,32 @@ function writemd(io::IO, group::BenchmarkGroup)
 
         for snd in SUPERNODES
             trial = group["junction trees"][library][name][snd]
-            println(io, "| $library | $name | $snd | $ne | $(row(trial)) |")
+            println(io, "| $library | $snd | $name | $ne | $(row(trial)) |")
         end
 
         for library in ("QDLDL",)
             trial = group["junction trees"][library][name]
-            println(io, "| $library | $name |      | $ne | $(row(trial)) |")
+            println(io, "| $library |      | $name | $ne | $(row(trial)) |")
         end
     end
 
     println(io)
     println(io, "## Vertex Coloring")
     println(io)
-    println(io, "| library | colors | bags | time | memory |")
-    println(io, "| :------ | :----- | :--- | :----| :----- |")
+    println(io, "| library | bags | colors | time | memory |")
+    println(io, "| :------ | :--- | :----- | :----| :----- |")
    
     for nc in COLORS
         library = "StructuredDecompositions"
 
         for nb in BAGS
             trial = group["graph coloring fixed"]["$nc coloring"][library]["$nb bags"]
-            println(io, "| $library | $nc | $nb | $(row(trial)) |")
+            println(io, "| $library | $nb | $nc | $(row(trial)) |")
         end
 
         for library in ("Catlab", "SimpleGraphAlgorithms")
             trial = group["graph coloring fixed"]["$nc coloring"][library]
-            println(io, "| $library | $nc |     | $(row(trial)) |")
+            println(io, "| $library |     | $nc | $(row(trial)) |")
         end
     end
 end
