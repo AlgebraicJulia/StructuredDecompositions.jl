@@ -3,7 +3,7 @@ using PkgBenchmark: benchmarkpkg
 using StructuredDecompositions
 
 
-const DEFAULT_NAME = "benchmarks.md"
+const DEFAULT_NAME = "README.md"
 const SUPERNODES = ("maximal", "fundamental", "nodal")
 const COLORS = (2, 3)
 const BAGS = (1, 2, 4, 8, 12)
@@ -22,7 +22,7 @@ const GRAPHS = (
 
 function row(trial::Trial)
     estimate = minimum(trial)
-    "$(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs)"
+    "$(prettytime(estimate.time)) | $(prettymemory(estimate.memory))"
 end
 
 
@@ -36,31 +36,30 @@ function writemd(io::IO, group::BenchmarkGroup)
     println(io)
     println(io, "## Junction Tree Construction")
     println(io)
-    println(io, "| library | name | supernode partition | vertices | edges | time | gctime | memory | allocs |")
-    println(io, "| :------ | :--- | :------------------ | :------- | :---- | :--- | :----- | :----- | :----- |")
+    println(io, "| library | name | supernode | edges | time | memory |")
+    println(io, "| :------ | :--- | :---------| :---- | :--- | :----- |")
 
     for graph in GRAPHS
         name = graph[:name]
-        nv = graph[:nv]
         ne = graph[:ne]
         library = "StructuredDecompositions"
 
         for snd in SUPERNODES
             trial = group["junction trees"][library][name][snd]
-            println(io, "| $library | $name | $snd | $nv | $ne | $(row(trial)) |")
+            println(io, "| $library | $name | $snd | $ne | $(row(trial)) |")
         end
 
         for library in ("QDLDL",)
             trial = group["junction trees"][library][name]
-            println(io, "| $library | $name |      | $nv | $ne | $(row(trial)) |")
+            println(io, "| $library | $name |      | $ne | $(row(trial)) |")
         end
     end
 
     println(io)
     println(io, "## Vertex Coloring")
     println(io)
-    println(io, "| library | colors | bags | time | gctime | memory | allocs |")
-    println(io, "| :------ | :----- | :--- | :----| :----- | :----- | :----- |")
+    println(io, "| library | colors | bags | time | memory |")
+    println(io, "| :------ | :----- | :--- | :----| :----- |")
    
     for nc in COLORS
         library = "StructuredDecompositions"
