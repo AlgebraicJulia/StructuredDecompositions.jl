@@ -6,6 +6,9 @@
 # We will first benchmark the coloring algorithm in graphs.jl
 
 
+colors = (2, 3)
+
+
 struct Coloring
     n::Int    
 end
@@ -41,16 +44,16 @@ graph = @acset Graph begin
 end
 
 
-for i in (2, 3, 4)
+for i in colors
     target = K(i)
-    SUITE["graph coloring fixed"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $target)
+    SUITE["graph coloring fixed"]["$i coloring"]["Catlab"] = @benchmarkable is_homomorphic($graph, $target)
 end
 
 
 simple = UndirectedGraph(adjacency_matrix(graph))
 
 
-for i in (2, 3, 4)
+for i in colors
     SUITE["graph coloring fixed"]["$i coloring"]["SimpleGraphAlgorithms"] = @benchmarkable chromatic_number($simple)
 end
 
@@ -93,8 +96,8 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3)
-    SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["1 bag"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
+for i in colors
+    SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["1 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
 # 2 bag case 
@@ -139,7 +142,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3)
+for i in colors
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["2 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -216,7 +219,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3, 4)
+for i in colors
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["4 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -352,7 +355,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3, 4)
+for i in colors
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["8 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -548,7 +551,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3, 4)
+for i in colors
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["12 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 

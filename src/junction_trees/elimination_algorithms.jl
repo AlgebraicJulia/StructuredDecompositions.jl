@@ -23,7 +23,7 @@ abstract type EliminationAlgorithm end
 """
     PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
 
-Either a permutation or a graph elimination algorithm.
+Either a permutation or an algorithm.
 """
 const PermutationOrAlgorithm = Union{AbstractVector, EliminationAlgorithm}
 
@@ -91,10 +91,10 @@ end
     SymAMD(; dense_row=nothing, dense_col=nothing, aggressive=nothing)
 
 The column approximate minimum degree algorithm. Uses [AMD.jl](https://github.com/JuliaSmoothOptimizers/AMD.jl).
-    - `Index`: either `Int` or `Cint`
-    - `dense_row`: dense row parameter
-    - `dense_column`: dense column parameter
-    - `aggressive`: aggressive absorbtion
+- `Index`: either `Int` or `Cint`
+- `dense_row`: dense row parameter
+- `dense_column`: dense column parameter
+- `aggressive`: aggressive absorbtion
 """
 struct SymAMD{Index} <: EliminationAlgorithm
     meta::AMDPkg.Colamd{Index}
@@ -128,7 +128,8 @@ end
 
     MMD()
 
-The multiple minimum degree algorithm. Uses [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl/tree/main).
+The [multiple minimum degree algorithm](https://en.wikipedia.org/wiki/Minimum_degree_algorithm).
+Uses [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl/tree/main).
 """
 struct MMD <: EliminationAlgorithm end
 
@@ -139,7 +140,7 @@ struct MMD <: EliminationAlgorithm end
 
     NodeND()
 
-The [nested dissection heuristic](https://en.wikipedia.org/wiki/Nested_dissection). Uses [Metis.jl](https://github.com/JuliaSparse/Metis.jl).
+The [nested dissection algorithm](https://en.wikipedia.org/wiki/Nested_dissection). Uses [Metis.jl](https://github.com/JuliaSparse/Metis.jl).
 """
 struct NodeND <: EliminationAlgorithm end
 
@@ -150,8 +151,8 @@ struct NodeND <: EliminationAlgorithm end
     FlowCutter(; time=10, seed=0)
 
 The FlowCutter algorithm. Uses [FlowCutterPACE17_jll.jl](https://github.com/JuliaBinaryWrappers/FlowCutterPACE17_jll.jl). 
-    - `time`: running time
-    - `seed`: random seed
+- `time`: running time
+- `seed`: random seed
 """
 struct FlowCutter <: EliminationAlgorithm
     time::Int
@@ -169,8 +170,8 @@ end
 
     Spectral(; tol=0.0)
 
-Spectral ordering. Uses [Laplacians.jl](https://github.com/danspielman/Laplacians.jl).
-    - `tol`: tolerance for convergence
+The spectral ordering algorithm. Uses [Laplacians.jl](https://github.com/danspielman/Laplacians.jl).
+- `tol`: tolerance for convergence
 """
 struct Spectral <: EliminationAlgorithm
     tol::Float64
@@ -195,9 +196,7 @@ struct BT <: EliminationAlgorithm end
 """
     permutation(matrix::AbstractMatrix, alg::PermutationOrAlgorithm)
 
-Construct a fill-reducing permutation of the vertices of a [simple graph](https://mathworld.wolfram.com/SimpleGraph.html).
-- `matrix`: adjacency matrix
-- `alg`: ordering algortihm
+Construct a fill-reducing permutation of the vertices of a simple graph.
 ```julia
 julia> using StructuredDecompositions.JunctionTrees
 

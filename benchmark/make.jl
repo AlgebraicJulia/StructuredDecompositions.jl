@@ -1,66 +1,85 @@
-using BenchmarkTools: BenchmarkGroup, prettytime, prettymemory
+using BenchmarkTools: BenchmarkGroup, Trial, prettytime, prettymemory
 using PkgBenchmark: benchmarkpkg
 using StructuredDecompositions
 
 
 const DEFAULT_NAME = "benchmarks.md"
+const SUPERNODES = ("maximal", "fundamental", "nodal")
+const COLORS = (2, 3)
+const BAGS = (1, 2, 4, 8, 12)
 
 
-function writemarkdown(io::IO, group::BenchmarkGroup)
+const GRAPHS = (
+    (name="mycielskian2", nv=2,       ne=1),
+    (name="mycielskian4", nv=11,      ne=23),
+    (name="dwt_59",       nv=59,      ne=104),
+    (name="can_292",      nv=292,     ne=1124),
+    (name="lshp3466",     nv=3466,    ne=10215),
+    (name="wing",         nv=62032,   ne=121544),
+    (name="144",          nv=144649,  ne=1074393),
+    (name="333SP",        nv=3712815, ne=11108633),)
+
+
+function row(trial::Trial)
+    estimate = minimum(trial)
+    "$(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs)"
+end
+
+
+function writemd(io::IO, group::BenchmarkGroup)
     println(io, "# Benchmarks")
     println(io)
+    println(io, "To regenerate this file, navigate to the ``benchmark`` directory and run the following command.")
+    println(io, "```")
+    println(io, "julia --project make.jl")
+    println(io, "```")
+    println(io)
+    println(io, "## Junction Tree Construction")
+    println(io)
+    println(io, "| library | name | supernode partition | vertices | edges | time | gctime | memory | allocs |")
+    println(io, "| :------ | :--- | :------------------ | :------- | :---- | :--- | :----- | :----- | :----- |")
 
-    for colors in (2, 3)
-        println(io, "## $colors Coloring")
-        println(io)
-        println(io, "| library | bags | time | gctime | memory | allocs |")
-        println(io, "| :------ | :--- | :----| :----- | :----- | :----- |")
+    for graph in GRAPHS
+        name = graph[:name]
+        nv = graph[:nv]
+        ne = graph[:ne]
+        library = "StructuredDecompositions"
 
-        trial = group["graph coloring fixed"]["$colors coloring"]["StructuredDecompositions"]["1 bag"]
-        estimate = minimum(trial)
-        println(io, "| StructuredDecompositions | 1 | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
-
-        for bags in (2, 4, 8, 12)
-            trial = group["graph coloring fixed"]["$colors coloring"]["StructuredDecompositions"]["$bags bags"]
-            estimate = minimum(trial)
-            println(io, "| StructuredDecompositions | $bags | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
+        for snd in SUPERNODES
+            trial = group["junction trees"][library][name][snd]
+            println(io, "| $library | $name | $snd | $nv | $ne | $(row(trial)) |")
         end
 
-        trial = group["graph coloring fixed"]["$colors coloring"]["HomSearch"]
-        estimate = minimum(trial)
-        println(io, "| HomSearch |  | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
-
-        trial = group["graph coloring fixed"]["$colors coloring"]["SimpleGraphAlgorithms"]
-        estimate = minimum(trial)
-        println(io, "| SimpleGraphAlgorithms |  | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
-        println(io)
+        for library in ("QDLDL",)
+            trial = group["junction trees"][library][name]
+            println(io, "| $library | $name |      | $nv | $ne | $(row(trial)) |")
+        end
     end
 
-    for colors in (4,)
-        println(io, "## $colors Coloring")
-        println(io)
-        println(io, "| library | bags | time | gctime | memory | allocs |")
-        println(io, "| :------ | :--- | :--- | :----- | :----- | :----- |")
-        
-        for bags in (4, 8, 12)
-            trial = group["graph coloring fixed"]["$colors coloring"]["StructuredDecompositions"]["$bags bags"]
-            estimate = minimum(trial)
-            println(io, "| StructuredDecompositions | $bags | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
+    println(io)
+    println(io, "## Vertex Coloring")
+    println(io)
+    println(io, "| library | colors | bags | time | gctime | memory | allocs |")
+    println(io, "| :------ | :----- | :--- | :----| :----- | :----- | :----- |")
+   
+    for nc in COLORS
+        library = "StructuredDecompositions"
+
+        for nb in BAGS
+            trial = group["graph coloring fixed"]["$nc coloring"][library]["$nb bags"]
+            println(io, "| $library | $nc | $nb | $(row(trial)) |")
         end
 
-        trial = group["graph coloring fixed"]["4 coloring"]["HomSearch"]
-        estimate = minimum(trial)
-        println(io, "| HomSearch |  | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
-
-        trial = group["graph coloring fixed"]["$colors coloring"]["SimpleGraphAlgorithms"]
-        estimate = minimum(trial)
-        println(io, "| SimpleGraphAlgorithms |  | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
+        for library in ("Catlab", "SimpleGraphAlgorithms")
+            trial = group["graph coloring fixed"]["$nc coloring"][library]
+            println(io, "| $library | $nc |     | $(row(trial)) |")
+        end
     end
 end
 
 
 function postprocess(group::BenchmarkGroup)
-    open(io -> writemarkdown(io, group), get(ARGS, 1, DEFAULT_NAME); write=true)
+    open(io -> writemd(io, group), get(ARGS, 1, DEFAULT_NAME); write=true)
     group
 end
 
