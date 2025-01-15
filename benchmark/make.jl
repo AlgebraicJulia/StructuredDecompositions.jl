@@ -1,9 +1,10 @@
-using BenchmarkTools: BenchmarkGroup, prettytime, prettymemory
+using BenchmarkTools: BenchmarkGroup, Trial, prettytime, prettymemory
 using PkgBenchmark: benchmarkpkg
 using StructuredDecompositions
 
 
 const DEFAULT_NAME = "benchmarks.md"
+const SUPERNODES = ("maximal", "fundamental", "nodal")
 const COLORS = (2, 3)
 const BAGS = (1, 2, 4, 8, 12)
 
@@ -19,25 +20,39 @@ const GRAPHS = (
     (name="333SP",        nv=3712815, ne=11108633),)
 
 
+function row(trial::Trial)
+    estimate = minimum(trial)
+    "$(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs)"
+end
+
+
 function writemd(io::IO, group::BenchmarkGroup)
     println(io, "# Benchmarks")
     println(io)
-    println(io, "To regenerate this file, navigate to the ``benchmarks`` directory and run the command ``julia --project make.jl``.")
+    println(io, "To regenerate this file, navigate to the ``benchmark`` directory and run the following command.")
+    println(io, "```")
+    println(io, "julia --project make.jl")
+    println(io, "```")
     println(io)
     println(io, "## Junction Tree Construction")
     println(io)
-    println(io, "| library | name | vertices | edges | time | gctime | memory | allocs |")
-    println(io, "| :------ | :--- | :--------| :-----| :----| :----- | :----- | :----- |")
+    println(io, "| library | name | supernode partition | vertices | edges | time | gctime | memory | allocs |")
+    println(io, "| :------ | :--- | :------------------ | :------- | :---- | :--- | :----- | :----- | :----- |")
 
     for graph in GRAPHS
         name = graph[:name]
         nv = graph[:nv]
         ne = graph[:ne]
+        library = "StructuredDecompositions"
 
-        for library in ("StructuredDecompositions", "QDLDL")
+        for snd in SUPERNODES
+            trial = group["junction trees"][library][name][snd]
+            println(io, "| $library | $name | $snd | $nv | $ne | $(row(trial)) |")
+        end
+
+        for library in ("QDLDL",)
             trial = group["junction trees"][library][name]
-            estimate = minimum(trial)
-            println(io, "| $library | $name | $nv | $ne | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
+            println(io, "| $library | $name |      | $nv | $ne | $(row(trial)) |")
         end
     end
 
@@ -52,14 +67,12 @@ function writemd(io::IO, group::BenchmarkGroup)
 
         for nb in BAGS
             trial = group["graph coloring fixed"]["$nc coloring"][library]["$nb bags"]
-            estimate = minimum(trial)
-            println(io, "| $library | $nc | $nb | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
+            println(io, "| $library | $nc | $nb | $(row(trial)) |")
         end
 
         for library in ("Catlab", "SimpleGraphAlgorithms")
             trial = group["graph coloring fixed"]["$nc coloring"][library]
-            estimate = minimum(trial)
-            println(io, "| $library | $nc |     | $(prettytime(estimate.time)) | $(prettytime(estimate.gctime)) | $(prettymemory(estimate.memory)) | $(estimate.allocs) |")
+            println(io, "| $library | $nc |     | $(row(trial)) |")
         end
     end
 end

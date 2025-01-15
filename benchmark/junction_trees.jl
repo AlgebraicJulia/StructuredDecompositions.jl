@@ -12,6 +12,8 @@ for name in names
     order, index = permutation(graph, AMD())
 
     # construct benchmarks
-    SUITE["junction trees"]["StructuredDecompositions"][name] = @benchmarkable junctiontree($graph; alg=$order, snd=$(Maximal()))
+    SUITE["junction trees"]["StructuredDecompositions"][name]["maximal"] = @benchmarkable junctiontree($graph; alg=$order, snd=$(Maximal()))
+    SUITE["junction trees"]["StructuredDecompositions"][name]["fundamental"] = @benchmarkable junctiontree($graph; alg=$order, snd=$(Fundamental()))
+    SUITE["junction trees"]["StructuredDecompositions"][name]["nodal"] = @benchmarkable junctiontree($graph; alg=$order, snd=$(Nodal()))
     SUITE["junction trees"]["QDLDL"][name] = @benchmarkable qdldl($(graph + (1.0)I); perm=$order, logical=true)
 end
