@@ -108,38 +108,56 @@ end
     @test treewidth(extension; alg=1:17) == 4
 
     order, index = permutation(matrix, MCS())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
     order, index = permutation(matrix, RCM())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
     order, index = permutation(matrix, AMD())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
     order, index = permutation(matrix, SymAMD())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
     order, index = permutation(matrix, MMD())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
     order, index = permutation(matrix, NodeND())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
     # order, index = permutation(matrix, FlowCutter(; time=10))
+    # @test isa(order, Vector{Int})
+    # @test isa(index, Vector{Int})
     # @test length(order) == 17
     # @test order[index] == 1:17
 
     order, index = permutation(matrix, Spectral())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
     order, index = permutation(matrix, BT())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 

@@ -1,5 +1,9 @@
-# A rooted tree.
-# This type implements the indexed tree interface.
+"""
+    Tree <: AbstractUnitRange{Int}
+
+A rooted tree. This type implements the
+[indexed tree interface](https://juliacollections.github.io/AbstractTrees.jl/stable/#The-Indexed-Tree-Interface).
+"""
 struct Tree <: AbstractUnitRange{Int}
     parent::Vector{Int}  # vector of parents
     root::Scalar{Int}    # root
@@ -109,11 +113,51 @@ function Tree(matrix::SparseMatrixCSC, root::Integer)
 end
 
 
+"""
+    eliminationtree!(matrix::AbstractMatrix;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+
+Construct a [tree-depth decomposition](https://en.wikipedia.org/wiki/Trémaux_tree) of a connected simple graph.
+See [junctiontree!](@ref) for the meaning of `alg`.
+```julia
+julia> using StructuredDecompositions.JunctionTrees
+
+julia> graph = [
+           0 1 1 0 0 0 0 0
+           1 0 1 0 0 1 0 0
+           1 1 0 1 1 0 0 0
+           0 0 1 0 1 0 0 0
+           0 0 1 1 0 0 1 1
+           0 1 0 0 0 0 1 0
+           0 0 0 0 1 1 0 1
+           0 0 0 0 1 0 1 0
+       ];
+
+julia> label, tree = eliminationtree(graph);
+
+julia> tree
+8-element Tree:
+8
+└─ 7
+   ├─ 5
+   │  ├─ 1
+   │  └─ 4
+   │     └─ 3
+   │        └─ 2
+   └─ 6
+```
+"""
 function eliminationtree(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     eliminationtree!(sparse(matrix); alg)
 end
 
 
+"""
+    eliminationtree(matrix::AbstractMatrix;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+
+A non-mutating version of [eliminationtree!](@ref).
+"""
 function eliminationtree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     label, tree, upper, cache = eliminationtree!(matrix, alg)
     label, tree
@@ -122,9 +166,42 @@ end
 
 function eliminationtree!(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm)
     label, index = permutation(matrix, alg)
-    cache = triu(matrix)
+    cache = triu(matrix, 1)
     upper = sympermute!(matrix, cache, index)
     label, etree(upper), upper, cache
+end
+
+
+"""
+    treedepth(tree::Tree)
+
+Compute the depth of a topologically ordered tree.
+"""
+function treedepth(tree::Tree)
+    maximum(levels(tree))
+end
+
+
+"""
+    treedepth(matrix::AbstractMatrix;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+
+A non-mutating version of [treedepth!](@ref).
+"""
+function treedepth(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    treedepth!(sparse(matrix); alg)
+end
+
+
+"""
+    treedepth!(matrix::SparseMatrixCSC;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+
+Compute an upper bound to the [tree-depth](https://en.wikipedia.org/wiki/Tree-depth) of a connected simple graph.
+See [junctiontree!](@ref) for the meaning of `alg`.
+"""
+function treedepth!(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    treedepth(eliminationtree!(matrix, alg))
 end
 
 
