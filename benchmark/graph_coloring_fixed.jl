@@ -20,7 +20,7 @@ end
 
 
 function (coloring::Coloring)(graph::Graph)
-    FinSet(homomorphisms(graph, K(coloring.n)))
+    FinSet(homomorphisms(graph, K(coloring.n); alg=HomomorphismQuery()))
 end
 
 
