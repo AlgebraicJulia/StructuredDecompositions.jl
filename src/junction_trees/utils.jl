@@ -77,15 +77,12 @@ end
 # Algorithm 1: Spectral Algorithm
 #
 # Compute the spectral ordering of a graph.
-function spectralorder(matrix::SparseMatrixCSC{Float64}; tol=0.0)
+function spectralorder(matrix::SparseMatrixCSC; tol=0.0)
+    matrix = SparseMatrixCSC{Float64, Int}(matrix)
+    fill!(nonzeros(matrix), 1)
+    fkeep!((i, j, v) -> i != j, matrix)
     value, vector = Laplacians.fiedler(matrix; tol)
     sortperm(reshape(vector, size(matrix, 2)))
-end
-
-
-function spectralorder(matrix::SparseMatrixCSC; tol=0.0)
-    matrix = SparseMatrixCSC(size(matrix)..., getcolptr(matrix), rowvals(matrix), ones(nnz(matrix)))
-    spectralorder(matrix; tol)
 end
 
 

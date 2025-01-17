@@ -10,13 +10,9 @@ const BAGS = (1, 2, 4, 8, 12)
 
 
 const GRAPHS = (
-    (name="mycielskian2", nv=2,       ne=1),
     (name="mycielskian4", nv=11,      ne=23),
-    (name="dwt_59",       nv=59,      ne=104),
     (name="can_292",      nv=292,     ne=1124),
-    (name="lshp3466",     nv=3466,    ne=10215),
     (name="wing",         nv=62032,   ne=121544),
-    (name="144",          nv=144649,  ne=1074393),
     (name="333SP",        nv=3712815, ne=11108633),)
 
 

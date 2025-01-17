@@ -4,6 +4,14 @@
 CurrentModule = StructuredDecompositions.JunctionTrees
 ```
 
+## Trees
+```@docs
+Tree
+SinglyLinkedList
+eliminationtree
+eliminationtree!
+```
+
 ## Junction Trees
 
 ```@docs

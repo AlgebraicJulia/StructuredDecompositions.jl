@@ -194,7 +194,8 @@ struct BT <: EliminationAlgorithm end
 
 
 """
-    permutation(matrix::AbstractMatrix, alg::PermutationOrAlgorithm)
+    permutation(matrix::AbstractMatrix;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
 Construct a fill-reducing permutation of the vertices of a simple graph.
 ```julia
@@ -211,7 +212,7 @@ julia> graph = [
     0 0 0 0 1 0 1 0
 ];
 
-julia> order, index = permutation(graph, MCS());
+julia> order, index = permutation(graph; alg=MCS());
 
 julia> order
 8-element Vector{Int64}:
@@ -228,7 +229,9 @@ julia> index == invperm(order)
 true
 ```
 """
-permutation(matrix::AbstractMatrix, alg::PermutationOrAlgorithm)
+function permutation(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    permutation(matrix, alg)
+end
 
 
 function permutation(matrix::AbstractMatrix, alg::EliminationAlgorithm)
@@ -237,7 +240,7 @@ end
 
 
 function permutation(matrix::AbstractMatrix, alg::AbstractVector)
-    order = collect(alg)
+    order = Vector{Int}(alg)
     order, invperm(order)
 end
 
@@ -276,6 +279,8 @@ end
 
 function permutation(matrix::SparseMatrixCSC, alg::NodeND)
     order, index = Metis.permutation(matrix)
+    order = convert(Vector{Int}, order)
+    index = convert(Vector{Int}, index)
     order, index
 end
 

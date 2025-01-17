@@ -10,15 +10,15 @@ using Test
     @test ischordal(matrix)
     @test iszero(treewidth(matrix))
 
-    @test permutation(matrix, MCS())                 == ([1], [1])
-    @test permutation(matrix, RCM())                 == ([1], [1])
-    @test permutation(matrix, AMD())                 == ([1], [1])
-    @test permutation(matrix, SymAMD())              == ([1], [1])
-    @test permutation(matrix, MMD())                 == ([1], [1])
-    @test permutation(matrix, NodeND())              == ([1], [1])
+    @test permutation(matrix; alg=MCS())                 == ([1], [1])
+    @test permutation(matrix; alg=RCM())                 == ([1], [1])
+    @test permutation(matrix; alg=AMD())                 == ([1], [1])
+    @test permutation(matrix; alg=SymAMD())              == ([1], [1])
+    @test permutation(matrix; alg=MMD())                 == ([1], [1])
+    @test permutation(matrix; alg=NodeND())              == ([1], [1])
     # @test permutation(matrix, FlowCutter(; time=10)) == ([1], [1])
     # @test permutation(matrix, Spectral())            == ([1], [1])
-    @test permutation(matrix, BT())                  == ([1], [1])
+    @test permutation(matrix; alg=BT())                  == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())
     @test isone(length(tree))
@@ -107,39 +107,57 @@ end
     @test treewidth(matrix; alg=1:17) == 4
     @test treewidth(extension; alg=1:17) == 4
 
-    order, index = permutation(matrix, MCS())
+    order, index = permutation(matrix; alg=MCS())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, RCM())
+    order, index = permutation(matrix; alg=RCM())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, AMD())
+    order, index = permutation(matrix; alg=AMD())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, SymAMD())
+    order, index = permutation(matrix; alg=SymAMD())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, MMD())
+    order, index = permutation(matrix; alg=MMD())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, NodeND())
+    order, index = permutation(matrix; alg=NodeND())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    # order, index = permutation(matrix, FlowCutter(; time=10))
+    # order, index = permutation(matrix; alg=FlowCutter(; time=10))
+    # @test isa(order, Vector{Int})
+    # @test isa(index, Vector{Int})
     # @test length(order) == 17
     # @test order[index] == 1:17
 
-    order, index = permutation(matrix, Spectral())
+    order, index = permutation(matrix; alg=Spectral())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, BT())
+    order, index = permutation(matrix; alg=BT())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 

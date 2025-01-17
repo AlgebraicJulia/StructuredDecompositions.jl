@@ -1,4 +1,4 @@
-names = ("mycielskian2", "mycielskian4", "dwt_59", "can_292", "lshp3466", "wing", "144", "333SP")
+names = ("mycielskian4", "can_292", "wing", "333SP")
 ssmc = ssmc_db()
 
 for name in names

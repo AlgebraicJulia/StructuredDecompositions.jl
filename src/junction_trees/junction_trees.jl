@@ -60,12 +60,9 @@ end
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
         snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a simple graph.
+Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a connected simple graph.
 The vertices of the graph are first ordered by a fill-reducing permutation computed by the algorithm `alg`.
 The size of the resulting decomposition is determined by the supernode partition `snd`.
-- `matrix`: adjacency matrix
-- `alg`: ordering algorithm
-- `snd`: supernode partition type
 ```julia
 julia> using StructuredDecompositions.JunctionTrees
 
