@@ -3,7 +3,7 @@
 JunctionTrees.jl is a Julia package for constructing [tree decompositions](https://en.wikipedia.org/wiki/Tree_decomposition) of simple graphs. You can use it as follows.
 
 ```julia
-julia> using StructuredDecompositions.JunctionTrees
+julia> using StructuredDecompositions
 
 julia> graph = [
            0 1 1 0 0 0 0 0

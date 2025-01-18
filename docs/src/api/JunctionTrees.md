@@ -54,6 +54,6 @@ permutation
 ```@docs
 SupernodeType
 Nodal
-Fundamental
 Maximal
+Fundamental
 ```

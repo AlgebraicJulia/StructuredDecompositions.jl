@@ -56,15 +56,15 @@ export JunctionTree, junctiontree, junctiontree!, treewidth, treewidth!, relativ
 export ischordal, isperfect, chordalgraph
 
 
-include("junction_trees/singly_linked_lists.jl")
-include("junction_trees/linked_lists.jl")
-include("junction_trees/elimination_algorithms.jl")
-include("junction_trees/trees.jl")
-include("junction_trees/supernode_types.jl")
-include("junction_trees/bags.jl")
-include("junction_trees/supernode_trees.jl")
-include("junction_trees/junction_trees.jl")
-include("junction_trees/chordal_graphs.jl")
-include("junction_trees/utils.jl")
+include("singly_linked_lists.jl")
+include("linked_lists.jl")
+include("elimination_algorithms.jl")
+include("trees.jl")
+include("supernode_types.jl")
+include("bags.jl")
+include("supernode_trees.jl")
+include("junction_trees.jl")
+include("chordal_graphs.jl")
+include("utils.jl")
 
 end

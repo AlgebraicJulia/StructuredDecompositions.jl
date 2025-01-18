@@ -23,7 +23,7 @@ using SparseArrays
 
 import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map, colimit, limit
 
-include("decompositions/str_decomps.jl")
-include("decompositions/junction_trees.jl")
+include("str_decomps.jl")
+include("junction_trees.jl")
 
 end

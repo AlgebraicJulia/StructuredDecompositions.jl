@@ -114,13 +114,24 @@ end
 
 
 """
+    eliminationtree(matrix::AbstractMatrix;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+
+A non-mutating version of [`eliminationtree!`](@ref).
+"""
+function eliminationtree(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    eliminationtree!(sparse(matrix); alg)
+end
+
+
+"""
     eliminationtree!(matrix::AbstractMatrix;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
 Construct a [tree-depth decomposition](https://en.wikipedia.org/wiki/Trémaux_tree) of a connected simple graph.
-See [junctiontree!](@ref) for the meaning of `alg`.
+See [`junctiontree!`](@ref) for the meaning of `alg`.
 ```julia
-julia> using StructuredDecompositions.JunctionTrees
+julia> using StructuredDecompositions
 
 julia> graph = [
            0 1 1 0 0 0 0 0
@@ -146,17 +157,6 @@ julia> tree
    │        └─ 2
    └─ 6
 ```
-"""
-function eliminationtree(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    eliminationtree!(sparse(matrix); alg)
-end
-
-
-"""
-    eliminationtree(matrix::AbstractMatrix;
-        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-
-A non-mutating version of [eliminationtree!](@ref).
 """
 function eliminationtree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     label, tree, upper, cache = eliminationtree!(matrix, alg)
@@ -186,7 +186,7 @@ end
     treedepth(matrix::AbstractMatrix;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
-A non-mutating version of [treedepth!](@ref).
+A non-mutating version of [`treedepth!`](@ref).
 """
 function treedepth(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     treedepth!(sparse(matrix); alg)
@@ -198,7 +198,7 @@ end
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
 Compute an upper bound to the [tree-depth](https://en.wikipedia.org/wiki/Tree-depth) of a connected simple graph.
-See [junctiontree!](@ref) for the meaning of `alg`.
+See [`junctiontree!`](@ref) for the meaning of `alg`.
 """
 function treedepth!(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     treedepth(eliminationtree!(matrix, alg))

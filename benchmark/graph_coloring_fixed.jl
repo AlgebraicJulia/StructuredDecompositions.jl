@@ -54,7 +54,7 @@ simple = UndirectedGraph(adjacency_matrix(graph))
 
 
 for i in colors
-    SUITE["graph coloring fixed"]["$i coloring"]["SimpleGraphAlgorithms"] = @benchmarkable chromatic_number($simple)
+    SUITE["graph coloring fixed"]["$i coloring"]["SimpleGraphAlgorithms"] = @benchmarkable chromatic_number(deepcopy($simple))
 end
 
 

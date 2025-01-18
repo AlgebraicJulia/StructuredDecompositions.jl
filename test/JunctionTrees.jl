@@ -1,6 +1,6 @@
 using LinearAlgebra
 using SparseArrays
-using StructuredDecompositions.JunctionTrees
+using StructuredDecompositions
 using Test
 
 
