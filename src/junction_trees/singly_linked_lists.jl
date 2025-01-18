@@ -2,7 +2,7 @@
     SinglyLinkedList{Init <: AbstractScalar{Int}, Next <: AbstractVector{Int}}
 
 A [singly linked list](https://en.wikipedia.org/wiki/Linked_list).
-This type supports the [iteration interface](https://docs.julialang.org/en/v1/manual/interfaces/).
+This type implements the [iteration interface](https://docs.julialang.org/en/v1/manual/interfaces/).
 """
 struct SinglyLinkedList{Init <: AbstractScalar{Int}, Next <: AbstractVector{Int}}
     head::Init

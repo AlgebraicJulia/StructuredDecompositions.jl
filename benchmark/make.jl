@@ -1,4 +1,5 @@
 using BenchmarkTools: BenchmarkGroup, Trial, prettytime, prettymemory
+using Dates
 using PkgBenchmark: benchmarkpkg
 using StructuredDecompositions
 
@@ -25,7 +26,7 @@ end
 function writemd(io::IO, group::BenchmarkGroup)
     println(io, "# Benchmarks")
     println(io)
-    println(io, "To regenerate this file, navigate to the ``benchmark`` directory and run the following command.")
+    println(io, "This file was automatically generated on $(today()). To regenerate it, navigate to the ``benchmark`` directory and run the following command.")
     println(io, "```")
     println(io, "julia --project make.jl")
     println(io, "```")

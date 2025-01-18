@@ -64,7 +64,7 @@ Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decompositio
 The vertices of the graph are first ordered by a fill-reducing permutation computed by the algorithm `alg`.
 The size of the resulting decomposition is determined by the supernode partition `snd`.
 ```julia
-julia> using StructuredDecompositions.JunctionTrees
+julia> using StructuredDecompositions
 
 julia> graph = [
            0 1 1 0 0 0 0 0
@@ -167,7 +167,7 @@ Get the indices in `tree[parentindex(tree, i)]` corresponding to the elements of
 ```julia
 julia> using AbstractTrees
 
-julia> using StructuredDecompositions.JunctionTrees
+julia> using StructuredDecompositions
 
 julia> graph = [
            0 1 1 0 0 0 0 0

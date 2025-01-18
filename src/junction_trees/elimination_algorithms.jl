@@ -199,7 +199,7 @@ struct BT <: EliminationAlgorithm end
 
 Construct a fill-reducing permutation of the vertices of a simple graph.
 ```julia
-julia> using StructuredDecompositions.JunctionTrees
+julia> using StructuredDecompositions
 
 julia> graph = [
     0 1 1 0 0 0 0 0
