@@ -10,15 +10,13 @@ using Test
     @test ischordal(matrix)
     @test iszero(treewidth(matrix))
 
-    @test permutation(matrix; alg=MCS())                 == ([1], [1])
-    @test permutation(matrix; alg=RCM())                 == ([1], [1])
-    @test permutation(matrix; alg=AMD())                 == ([1], [1])
-    @test permutation(matrix; alg=SymAMD())              == ([1], [1])
-    @test permutation(matrix; alg=MMD())                 == ([1], [1])
-    @test permutation(matrix; alg=NodeND())              == ([1], [1])
-    # @test permutation(matrix, FlowCutter(; time=10)) == ([1], [1])
-    # @test permutation(matrix, Spectral())            == ([1], [1])
-    @test permutation(matrix; alg=BT())                  == ([1], [1])
+    @test permutation(matrix; alg=MCS())    == ([1], [1])
+    @test permutation(matrix; alg=RCM())    == ([1], [1])
+    @test permutation(matrix; alg=AMD())    == ([1], [1])
+    @test permutation(matrix; alg=SymAMD()) == ([1], [1])
+    @test permutation(matrix; alg=MMD())    == ([1], [1])
+    @test permutation(matrix; alg=NodeND()) == ([1], [1])
+    @test permutation(matrix; alg=BT())     == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())
     @test isone(length(tree))
@@ -142,12 +140,6 @@ end
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
-
-    # order, index = permutation(matrix; alg=FlowCutter(; time=10))
-    # @test isa(order, Vector{Int})
-    # @test isa(index, Vector{Int})
-    # @test length(order) == 17
-    # @test order[index] == 1:17
 
     order, index = permutation(matrix; alg=Spectral())
     @test isa(order, Vector{Int})

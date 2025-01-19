@@ -78,6 +78,13 @@ function chordalgraph(tree::JunctionTree)
 end
 
 
+# Construct a chordal completion of a connected simple graph.
+function chordalgraph(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    label, tree = junctiontree(matrix; alg)
+    chordalgraph(tree)
+end
+
+
 """
     chordalgraph([element=true,] tree::JunctionTree)
 
@@ -91,28 +98,48 @@ end
 
 
 """
-    chordalgraph(Element::Type, tree::JunctionTree)
+    chordalgraph(T::Type, tree::JunctionTree)
 
 Construct the [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph) of the subtrees of
-a junction tree. The function returns a sparse matrix with elements of type `Element`
-and the same sparsity structure as the lower triangular part of the graph's adjacency matrix.
+a junction tree. The function returns a sparse matrix with elements of type `T`.
 """
-function chordalgraph(Element::Type, tree::JunctionTree)
+function chordalgraph(T::Type, tree::JunctionTree)
     n = last(residual(last(tree)))
     colptr = sizehint!(Int[], n + 1)
     rowval = sizehint!(Int[], nnz(tree))
     push!(colptr, 1) 
 
     for bag in tree
-        for i in eachindex(residual(bag))
-            for v in @view bag[i + 1:end]
-                push!(rowval, v)
-            end
+        res = residual(bag)
+        sep = separator(bag)
 
+        for i in eachindex(res)
+            append!(rowval, res[i + 1:end])
+            append!(rowval, sep)
             push!(colptr, length(rowval) + 1)
         end
     end
 
-    nzval = Vector{Element}(undef, nnz(tree))
+    nzval = Vector{T}(undef, nnz(tree))
     SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end
+
+
+"""
+    chordalgraph([element=true,] matrix::AbstractMatrix)
+
+See below. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
+"""
+function chordalgraph(element, matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    label, tree = junctiontree(matrix; alg)
+    label, chordalgraph(element, tree)
+end
+
+
+"""
+    chordalgraph(T::Type, matrix::AbstractMatrix)
+
+Construct the chordal completion of a connected simple graph. 
+The function returns a sparse matrix with elements of type `T`.
+"""
+chordalgraph(T::Type, matrix::AbstractMatrix)

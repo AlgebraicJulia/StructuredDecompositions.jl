@@ -11,7 +11,6 @@ A graph elimination algorithm. The options are
 | [`SymAMD`](@ref)     | column approximate minimum degree | O(mn)       |
 | [`MMD`](@ref)        | multiple minimum degree           | O(mn²)      |
 | [`NodeND`](@ref)     | nested dissection                 |             |
-| [`FlowCutter`](@ref) | FlowCutter                        |             |
 | [`Spectral`](@ref)   | spectral ordering                 |             |
 | [`BT`](@ref)         | Bouchitte-Todinca                 | O(2.6183ⁿ)  |
 
@@ -146,26 +145,6 @@ struct NodeND <: EliminationAlgorithm end
 
 
 """
-    FlowCutter <: EliminationAlgorithm
-
-    FlowCutter(; time=10, seed=0)
-
-The FlowCutter algorithm. Uses [FlowCutterPACE17_jll.jl](https://github.com/JuliaBinaryWrappers/FlowCutterPACE17_jll.jl). 
-- `time`: running time
-- `seed`: random seed
-"""
-struct FlowCutter <: EliminationAlgorithm
-    time::Int
-    seed::Int
-    history::Vector{String}
-
-    function FlowCutter(; time=10, seed=0)
-        new(time, seed, String[])
-    end
-end
-
-
-"""
     Spectral <: EliminationAlgorithm
 
     Spectral(; tol=0.0)
@@ -285,35 +264,6 @@ function permutation(matrix::SparseMatrixCSC, alg::NodeND)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::FlowCutter)
-    nb, tw, nv, bagptr, bagval, treerow, treecol, history = flowcutter(matrix, alg.time, alg.seed)
-    tree = Tree(sparse(treerow, treecol, ones(Bool, 2nb - 2), nb, nb), nb)
-    order = sizehint!(Int[], nv)
-
-    for i in tree
-        bag = @view bagval[bagptr[i]:bagptr[i + 1] - 1]
-        sort!(bag)
-    end
-
-    for i in invperm(dfs(tree))
-        j = parentindex(tree, i)
-
-        if isnothing(j)
-            for v in @view bagval[bagptr[i]:bagptr[i + 1] - 1]
-                push!(order, v)
-            end
-        else
-            left = @view bagval[bagptr[i]:bagptr[i + 1] - 1]
-            right = @view bagval[bagptr[j]:bagptr[j + 1] - 1]
-            diffsorted!(order, left, right)
-        end
-    end
-
-    append!(alg.history, history)
-    order, invperm(order)
-end
-
-
 function permutation(matrix::SparseMatrixCSC, alg::Spectral)
     order = spectralorder(matrix; tol=alg.tol)
     order, invperm(order)
@@ -380,26 +330,6 @@ function Base.show(io::IO, alg::SymAMD)
     println(io, "    information:")
     println(io, "        status: $(AMDPkg.colamd_statuses[meta.stats[AMDPkg.COLAMD_STATUS]])")
     println(io, "        memory defragmentation: $(meta.stats[AMDPkg.COLAMD_DEFRAG_COUNT])")
-end
-
-
-function Base.show(io::IO, alg::FlowCutter)
-    println(io, "FlowCutter:")
-    println(io, "    parameters:")
-    println(io, "        time: $(alg.time)")
-    println(io, "        seed: $(alg.seed)")
-    
-    if !isempty(alg.history)
-        println(io, "    information:")
-    
-        for line in alg.history
-            if startswith(line, "status")
-                break
-            end
-
-            println(io, "        $line")
-        end
-    end
 end
 
 
