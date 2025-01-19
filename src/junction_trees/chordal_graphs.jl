@@ -104,11 +104,12 @@ function chordalgraph(Element::Type, tree::JunctionTree)
     push!(colptr, 1) 
 
     for bag in tree
-        for i in eachindex(residual(bag))
-            for v in @view bag[i + 1:end]
-                push!(rowval, v)
-            end
+        res = residual(bag)
+        sep = separator(bag)
 
+        for i in eachindex(res)
+            append!(rowval, res[i + 1:end])
+            append!(rowval, sep)
             push!(colptr, length(rowval) + 1)
         end
     end
