@@ -98,22 +98,10 @@ end
 
 
 """
-    chordalgraph([element=true,] matrix::AbstractMatrix)
-
-See below. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
-"""
-function chordalgraph(element, matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    label, tree = junctiontree(matrix; alg)
-    label, chordalgraph(element, tree)
-end
-
-
-"""
     chordalgraph(T::Type, tree::JunctionTree)
 
 Construct the [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph) of the subtrees of
-a junction tree. The function returns a sparse matrix with elements of type `T`
-and the same sparsity structure as the lower triangular part of the graph's adjacency matrix.
+a junction tree. The function returns a sparse matrix with elements of type `T`.
 """
 function chordalgraph(T::Type, tree::JunctionTree)
     n = last(residual(last(tree)))
@@ -138,10 +126,20 @@ end
 
 
 """
+    chordalgraph([element=true,] matrix::AbstractMatrix)
+
+See below. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
+"""
+function chordalgraph(element, matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    label, tree = junctiontree(matrix; alg)
+    label, chordalgraph(element, tree)
+end
+
+
+"""
     chordalgraph(T::Type, matrix::AbstractMatrix)
 
 Construct the chordal completion of a connected simple graph. 
-The function returns a sparse matrix with elements of type `T`
-and the same sparsity structure as the lower triangular part of the graph's adjacency matrix.
+The function returns a sparse matrix with elements of type `T`.
 """
 chordalgraph(T::Type, matrix::AbstractMatrix)

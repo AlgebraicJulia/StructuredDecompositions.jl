@@ -43,18 +43,26 @@ graph = @acset Graph begin
           22, 23, 23, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 32, 33, 33, 34, 35, 35, 36, 36, 37, 38, 38, 39, 39, 40]
 end
 
+simple = SimpleGraphs.UndirectedGraph(adjacency_matrix(graph))
+graphs = GraphsPkg.Graph(adjacency_matrix(graph))
+config = GenericTensorNetworks.SingleConfigMin()
 
-for i in colors
-    target = K(i)
-    SUITE["graph coloring fixed"]["$i coloring"]["Catlab"] = @benchmarkable is_homomorphic($graph, $target)
+
+function vertex_color(simple, i)
+    try
+        SimpleGraphAlgorithms.vertex_color(deepcopy(simple), i)
+    catch
+        nothing
+    end
 end
 
 
-simple = UndirectedGraph(adjacency_matrix(graph))
-
-
 for i in colors
-    SUITE["graph coloring fixed"]["$i coloring"]["SimpleGraphAlgorithms"] = @benchmarkable chromatic_number(deepcopy($simple))
+    target = K(i)
+    network = GenericTensorNetworks.GenericTensorNetwork(GenericTensorNetworks.Coloring{i}(graphs))
+    SUITE["graph coloring fixed"]["$i coloring"]["Catlab"] = @benchmarkable is_homomorphic($graph, $target)
+    SUITE["graph coloring fixed"]["$i coloring"]["SimpleGraphAlgorithms"] = @benchmarkable vertex_color($simple, $i)
+    SUITE["graph coloring fixed"]["$i coloring"]["GenericTensorNetworks"] = @benchmarkable GenericTensorNetworks.solve($network, $config)
 end
 
 

@@ -8,10 +8,15 @@ using StructuredDecompositions.DecidingSheaves
 using StructuredDecompositions.FunctorUtils
 using StructuredDecompositions.JunctionTrees
 using SuiteSparseMatrixCollection
-using SimpleGraphs
-using SimpleGraphAlgorithms
 using SparseArrays
-using QDLDL
+
+
+import SimpleGraphs
+import SimpleGraphAlgorithms
+import QDLDL
+import GenericTensorNetworks
+import Graphs as GraphsPkg
+
 
 const SUITE = BenchmarkGroup()
 

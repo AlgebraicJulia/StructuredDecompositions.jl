@@ -66,7 +66,7 @@ function writemd(io::IO, group::BenchmarkGroup)
             println(io, "| $library | $nb | $nc | $(row(trial)) |")
         end
 
-        for library in ("Catlab", "SimpleGraphAlgorithms")
+        for library in ("Catlab", "SimpleGraphAlgorithms", "GenericTensorNetworks")
             trial = group["graph coloring fixed"]["$nc coloring"][library]
             println(io, "| $library |     | $nc | $(row(trial)) |")
         end
