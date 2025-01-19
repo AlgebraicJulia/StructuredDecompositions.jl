@@ -3,7 +3,7 @@ module JunctionTrees
 
 using AbstractTrees
 using Base.Order
-using Base.Iterators: drop, filter as ifilter, map as imap, reverse as ireverse, take
+using Base.Iterators: drop, filter as ifilter, map as imap, reverse as ireverse, peel, take
 using DataStructures: IntDisjointSets, find_root!, root_union!
 using LinearAlgebra
 using SparseArrays
@@ -12,7 +12,6 @@ using Sparspak: SpkMmd
 
 
 import AMD as AMDPkg
-import FlowCutterPACE17_jll
 import Laplacians
 import Metis
 import SymRCM
@@ -29,7 +28,7 @@ export SinglyLinkedList
 
 
 # Elimination Algorithms
-export MCS, RCM, AMD, SymAMD, MMD, NodeND, FlowCutter, Spectral, BT, permutation
+export MCS, RCM, AMD, SymAMD, MMD, NodeND, Spectral, BT, permutation
 
 
 # Trees

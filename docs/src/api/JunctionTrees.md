@@ -44,7 +44,6 @@ AMD
 SymAMD
 MMD
 NodeND
-FlowCutter
 Spectral
 BT
 permutation   
