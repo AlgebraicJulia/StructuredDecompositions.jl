@@ -24,7 +24,23 @@ end
 
 # Determine whether a graph is chordal.
 function ischordal(matrix::SparseMatrixCSC)
-    isperfect(matrix, permutation(matrix, MCS())...)
+    # validate arguments
+    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
+
+    # run algorithm
+    ischordal(size(matrix, 2)) do j
+        @view rowvals(matrix)[nzrange(matrix, j)]
+    end
+end
+
+
+function ischordal(neighbors::Function, n::Integer)
+    # validate arguments
+    n < 0 && throw(ArgumentError("n < 0"))
+
+    # run algorithm
+    index, size = mcs(neighbors, n)
+    isperfect(neighbors, invperm(index), index)
 end
 
 
@@ -38,9 +54,23 @@ function isfilled(matrix::AbstractMatrix)
 end
 
 
-# Determine whether a directed graph is filled.
 function isfilled(matrix::SparseMatrixCSC)
-    isperfect(matrix, axes(matrix)...)
+    # validate arguments
+    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
+
+    # run algorithm
+    isfilled(size(matrix, 2)) do j
+        @view rowvals(matrix)[nzrange(matrix, j)]
+    end
+end
+
+
+function isfilled(neighbors::Function, n::Integer)
+    # validate arguments
+    n < 0 && throw(ArgumentError("n < 0"))
+
+    # run algorithm
+    isperfect(neighbors, 1:n, 1:n)
 end
 
 
@@ -136,7 +166,7 @@ end
 """
     filledgraph!(target::SparseMatrixCSC, tree::JunctionTree)
 
-Construct the [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph) of the subtrees of
+Construct the [subtree graph](https://en.wikipedia.org/wiki/Chordal_graph) of 
 a junction tree. The result is stored in `target`.
 """
 function filledgraph!(target::SparseMatrixCSC, tree::JunctionTree)

@@ -7,6 +7,7 @@ using Test
 @testset "null graph" begin
     matrix = zeros(0, 0)
     @test ischordal(matrix)
+    @test isfilled(matrix)
     @test iszero(treewidth(matrix))
 
     @test permutation(matrix; alg=MCS())      == ([], [])
@@ -41,6 +42,7 @@ end
 @testset "singleton graph" begin
     matrix = zeros(1, 1)
     @test ischordal(matrix)
+    @test isfilled(matrix)
     @test iszero(treewidth(matrix))
 
     @test permutation(matrix; alg=MCS())      == ([1], [1])
@@ -136,6 +138,7 @@ end
 
     @test !ischordal(matrix)
     @test ischordal(extension)
+    @test isfilled(tril(extension))
     @test treewidth(matrix; alg=1:17) == 4
     @test treewidth(extension; alg=1:17) == 4
 

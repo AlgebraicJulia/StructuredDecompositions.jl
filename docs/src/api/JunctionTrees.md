@@ -36,6 +36,7 @@ relative
 ```@docs
 filledgraph
 ischordal
+isfilled
 isperfect
 ```
 
