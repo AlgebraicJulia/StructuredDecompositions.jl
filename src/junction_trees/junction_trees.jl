@@ -23,6 +23,15 @@ struct JunctionTree <: AbstractVector{Bag}
 end
 
 
+"""
+    AbstractTree = Union{Tree, SupernodeTree, JunctionTree}
+
+A rooted forest.
+This type implements the [indexed tree interface](https://juliacollections.github.io/AbstractTrees.jl/stable/#The-Indexed-Tree-Interface).
+"""
+const AbstractTree = Union{Tree, SupernodeTree, JunctionTree}
+
+
 function JunctionTree(tree::JunctionTree)
     JunctionTree(tree.tree, tree.sepptr, tree.sepval, tree.relval)
 end
@@ -60,7 +69,7 @@ end
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
         snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a connected simple graph.
+Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a simple graph.
 The vertices of the graph are first ordered by a fill-reducing permutation computed by the algorithm `alg`.
 The size of the resulting decomposition is determined by the supernode partition `snd`.
 ```julia
@@ -110,7 +119,7 @@ end
 Compute the width of a junction tree.
 """
 function treewidth(tree::JunctionTree)
-    maximum(length, tree) - 1
+    maximum(length, tree; init=1) - 1
 end
 
 
@@ -135,7 +144,7 @@ See [`junctiontree!`](@ref) for the meaning of `alg`.
 function treewidth!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     label, tree, upper, cache = eliminationtree!(matrix, alg)
     rowcount, colcount = supcnt(transpose!(cache, upper), tree)
-    maximum(colcount) - 1
+    maximum(colcount; init=1) - 1
 end
 
 
@@ -207,9 +216,12 @@ function relative(tree::JunctionTree, i::Integer)
 end
 
 
-function Base.show(io::IO, ::MIME"text/plain", tree::JunctionTree)
-    println(io, "$(length(tree))-element JunctionTree:")
-    print_tree(io, IndexNode(tree))
+function Base.show(io::IO, ::MIME"text/plain", tree::T) where T <: AbstractTree
+    println(io, "$(length(tree))-element $T:")
+
+    if !isempty(tree)
+        print_tree(io, IndexNode(tree))
+    end
 end
 
 
@@ -218,48 +230,83 @@ end
 ###########################
 
 
-function firstchildindex(tree::JunctionTree, i::Integer)
-    firstchildindex(tree.tree, i)
-end
+"""
+    rootindex(tree::AbstractTree)
 
-
+Get the least root of a rooted forest.
+"""
 function AbstractTrees.rootindex(tree::JunctionTree)
     rootindex(tree.tree)
 end
 
 
+"""
+    parentindex(tree::AbstractTree)
+
+Get the parent index of node `i`. Returns `nothing` if `i` is a root.
+"""
 function AbstractTrees.parentindex(tree::JunctionTree, i::Integer)
     parentindex(tree.tree, i)
 end
 
 
+"""
+    firstchildindex(tree::AbstractTree, i::Integer)
+
+Get the least child of node `i`. Returns `nothing` if `i` is a leaf.
+"""
+function firstchildindex(tree::JunctionTree, i::Integer)
+    firstchildindex(tree.tree, i)
+end
+
+
+"""
+    nextsiblingindex(tree::AbstractTree, i::Integer)
+
+Get the next sibling of node `i`. Returns `nothing` if `i` is the greatest sibling.
+"""
 function AbstractTrees.nextsiblingindex(tree::JunctionTree, i::Integer)
     nextsiblingindex(tree.tree, i)
 end
 
 
+"""
+    rootindices(tree::AbstractTree)
+
+Construct an iterator over the roots of a rooted forest.
+"""
+function rootindices(tree::JunctionTree)
+    rootindices(tree.tree)
+end
+
+
+"""
+    childindices(tree::AbstractTree, i::Integer)
+
+Construct an iterator over the children of node `i`.
+"""
 function AbstractTrees.childindices(tree::JunctionTree, i::Integer)
     childindices(tree.tree, i)
 end
 
 
-function AbstractTrees.ParentLinks(::Type{IndexNode{JunctionTree, Int}})
+function AbstractTrees.ParentLinks(::Type{IndexNode{T, Int}}) where T <: AbstractTree
     StoredParents()
 end
 
 
-function AbstractTrees.SiblingLinks(::Type{IndexNode{JunctionTree, Int}})
+function AbstractTrees.SiblingLinks(::Type{IndexNode{T, Int}}) where T <: AbstractTree
     StoredSiblings()
 end
 
 
-function AbstractTrees.NodeType(::Type{IndexNode{JunctionTree, Int}})
+function AbstractTrees.NodeType(::Type{IndexNode{T, Int}}) where T <: AbstractTree
     HasNodeType()
 end
 
 
-function AbstractTrees.nodetype(::Type{IndexNode{JunctionTree, Int}})
-    IndexNode{JunctionTree, Int}
+function AbstractTrees.nodetype(::Type{IndexNode{T, Int}}) where T <: AbstractTree
+    IndexNode{T, Int}
 end
 
 

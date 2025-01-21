@@ -5,16 +5,8 @@
 
 Construct a structured decomposition of a simple graph. See [`junctiontree!`](@ref) for the meaning of `alg` and `snd`.
 """
-function StrDecomp(graph::HasGraph;
-    alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
-    snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-
-    merge_decompositions(decompositions(graph, alg, snd))
-end
-
-
-# Construct a tree decomposition.
-function StrDecomp(graph::HasGraph, label::AbstractVector, tree::JunctionTree)
+function StrDecomp(graph::HasGraph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    label, tree = junctiontree!(adjacency_matrix(graph); alg, snd)
     n = length(tree)
     shape = Graph(n)
     
@@ -27,105 +19,37 @@ function StrDecomp(graph::HasGraph, label::AbstractVector, tree::JunctionTree)
 end
 
 
-function merge_decompositions(decomposition::AbstractVector)      
-    tree = apex(coproduct(map(d -> d.decomp_shape, decomposition)))
-    l = length(decomposition)
-    m = nv(tree)
-    subgraph = Vector(undef, 2m - l)
-    homomorphism = Vector(undef, 2m - 2l)
-
-    i = 0
-
-    for j in 1:l
-        n = nv(decomposition[j].decomp_shape)
-
-        for k in 1:n
-            subgraph[i + k] = ob_map(decomposition[j].diagram, k)
-        end
-
-        for k in 1:n - 1
-            subgraph[i - j + k + m + 1] = ob_map(decomposition[j].diagram, k + n)
-        end
-
-        for k in 1:n - 1
-            homomorphism[i - j + k + 1] = hom_map(decomposition[j].diagram, k)
-        end
-
-        for k in 1:n - 1
-            homomorphism[i - j + k - l + m + 1] = hom_map(decomposition[j].diagram, k + n - 1)
-        end
-
-        i += n
-    end  
-
-    diagram = FinDomFunctor(subgraph, homomorphism, ∫(tree))
-    StrDecomp(tree, diagram, Decomposition, dom(diagram))
-end
-
-
-function decompositions(graph::HasGraph, alg::EliminationAlgorithm, snd::SupernodeType)
-    component = connected_components(graph)
-
-    n = length(component)
-    decomposition = Vector(undef, n)
-    
-    @threads for i in 1:n
-        subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph); alg, snd)...)
-    end
-    
-    decomposition
-end
-
-
-function decompositions(graph::HasGraph, alg::AbstractVector, snd::SupernodeType)
-    component = connected_components(graph)
-
-    n = length(component)
-    decomposition = Vector(undef, n)
-    
-    @threads for i in 1:n
-        subgraph = induced_subgraph(graph, component[i])
-        decomposition[i] = StrDecomp(subgraph, junctiontree!(adjacency_matrix(subgraph); alg=induced_order(invperm(alg), component[i]), snd)...)
-    end
-    
-    decomposition
-end
-
-
 function homomorphisms(graph::HasGraph, label::AbstractVector, tree::JunctionTree)
+    m = length(collect(rootindices(tree)))
     n = length(tree)
-    subgraph = Vector{Any}(undef, 2n - 1)
-    homomorphism = Vector{Any}(undef, 2n - 2)
+    subgraph = Vector{Any}(undef, 2n - m)
+    homomorphism = Vector{Any}(undef, 2n - 2m)
     
     for i in 1:n
         # bag(i)
         subgraph[i] = induced_subgraph(graph, view(label, getindex(tree, i)))
     end
  
-    for i in 1:n - 1 
-        # separator(i)
-        subgraph[n + i] = induced_subgraph(graph, view(label, separator(tree, i)))
-    end
- 
-    for i in 1:n - 1 
-        # separator(i) → bag(j)
-        j = parentindex(tree, i)
-        homomorphism[i] = induced_homomorphism(subgraph[n + i], subgraph[j], relative(tree, i))
-    end
+    k = 0
 
-    for i in 1:n - 1    
-        # separator(i) → bag(i)
+    for i in 1:n
         j = parentindex(tree, i)
-        homomorphism[n + i - 1] = induced_homomorphism(subgraph[n + i], subgraph[i], length(residual(tree, i)) .+ eachindex(separator(tree, i)))
+
+        if !isnothing(j)
+            k += 1
+
+            # separator(i)
+            subgraph[n + k] = induced_subgraph(graph, view(label, separator(tree, i)))
+
+            # separator(i) → bag(j)
+            homomorphism[k] = induced_homomorphism(subgraph[n + k], subgraph[j], relative(tree, i))
+
+            # separator(i) → bag(i)
+            homomorphism[n - m + k] = induced_homomorphism(subgraph[n + k], subgraph[i], length(residual(tree, i)) .+ eachindex(separator(tree, i)))
+        end
     end
     
     subgraph, homomorphism
-end
-
-
-function induced_order(index::AbstractVector, elements::AbstractVector)
-    sortperm(elements; by=i -> index[i])
 end
 
 

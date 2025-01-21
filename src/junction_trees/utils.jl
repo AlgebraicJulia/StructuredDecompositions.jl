@@ -124,35 +124,3 @@ function mergesorted!(target, source1, source2, order::Ordering=ForwardOrdering(
    
     target
 end
-
-
-# Compute the difference of sorted sets `source1` and `source2`.
-# The result is appended to `target`.
-function diffsorted!(target, source1, source2, order::Ordering=ForwardOrdering())
-    i1 = iterate(source1)
-    i2 = iterate(source2)
-
-    while !isnothing(i1) && !isnothing(i2)
-        x1, s1 = i1
-        x2, s2 = i2
-
-        if isequal(x1, x2)
-            i1 = iterate(source1, s1)
-            i2 = iterate(source2, s2)
-        elseif lt(order, x1, x2)
-            push!(target, x1)
-            i1 = iterate(source1, s1)
-        else
-            i2 = iterate(source2, s2)
-        end
-
-    end
-
-    while !isnothing(i1)
-        x1, s1 = i1
-        push!(target, x1)
-        i1 = iterate(source1, s1)
-    end
-
-    target
-end
