@@ -73,7 +73,7 @@ end
 
 # Get the separators of every node of a supernodal elimination tree.
 function sepvals(lower::SparseMatrixCSC, tree::SupernodeTree, sepptr::AbstractVector)
-    cache = sizehint!(Int[], maximum(i -> sepptr[i + 1] - sepptr[i], eachindex(tree)))
+    cache = sizehint!(Int[], maximum(i -> sepptr[i + 1] - sepptr[i], eachindex(tree); init=0))
     sepval = sizehint!(Int[], last(sepptr) - 1)
 
     for (j, residual) in enumerate(tree)
@@ -119,20 +119,9 @@ function relvals(tree::SupernodeTree, sepptr::AbstractVector, sepval::AbstractVe
 end
 
 
-function Base.show(io::IO, ::MIME"text/plain", tree::SupernodeTree)
-    println(io, "$(length(tree))-element SupernodeTree:")
-    print_tree(io, IndexNode(tree))
-end
-
-
 ###########################
 # Abstract Tree Interface #
 ###########################
-
-
-function firstchildindex(tree::SupernodeTree, i::Integer)
-    firstchildindex(tree.tree, i)
-end
 
 
 function AbstractTrees.rootindex(tree::SupernodeTree)
@@ -145,33 +134,23 @@ function AbstractTrees.parentindex(tree::SupernodeTree, i::Integer)
 end
 
 
+function firstchildindex(tree::SupernodeTree, i::Integer)
+    firstchildindex(tree.tree, i)
+end
+
+
 function AbstractTrees.nextsiblingindex(tree::SupernodeTree, i::Integer)
     nextsiblingindex(tree.tree, i)
 end
 
 
+function rootindices(tree::SupernodeTree)
+    rootindices(tree.tree)
+end
+
+
 function AbstractTrees.childindices(tree::SupernodeTree, i::Integer)
     childindices(tree.tree, i)
-end
-
-
-function AbstractTrees.ParentLinks(::Type{IndexNode{SupernodeTree, Int}})
-    StoredParents()
-end
-
-
-function AbstractTrees.SiblingLinks(::Type{IndexNode{SupernodeTree, Int}})
-    StoredSiblings()
-end
-
-
-function AbstractTrees.NodeType(::Type{IndexNode{SupernodeTree, Int}})
-    HasNodeType()
-end
-
-
-function AbstractTrees.nodetype(::Type{IndexNode{SupernodeTree, Int}})
-    IndexNode{SupernodeTree, Int}
 end
 
 

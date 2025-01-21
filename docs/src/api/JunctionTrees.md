@@ -7,9 +7,15 @@ CurrentModule = StructuredDecompositions.JunctionTrees
 ## Trees
 ```@docs
 Tree
-SinglyLinkedList
+AbstractTree
 eliminationtree
 eliminationtree!
+rootindex
+parentindex
+firstchildindex
+nextsiblingindex
+rootindices
+childindices
 ```
 
 ## Junction Trees
@@ -28,8 +34,9 @@ relative
 
 ## Chordal Graphs
 ```@docs
-chordalgraph
+filledgraph
 ischordal
+isfilled
 isperfect
 ```
 
@@ -38,6 +45,7 @@ isperfect
 ```@docs
 EliminationAlgorithm
 PermutationOrAlgorithm
+DEFAULT_ELIMINATION_ALGORITHM
 MCS
 RCM
 AMD
@@ -52,6 +60,7 @@ permutation
 ## Supernodes
 ```@docs
 SupernodeType
+DEFAULT_SUPERNODE_TYPE
 Nodal
 Maximal
 Fundamental

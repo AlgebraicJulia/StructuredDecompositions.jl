@@ -32,7 +32,7 @@ export MCS, RCM, AMD, SymAMD, MMD, NodeND, Spectral, BT, permutation
 
 
 # Trees
-export Tree, eliminationtree, eliminationtree!, firstchildindex, rootindex, nextsiblingindex, parentindex, childindices
+export Tree, eliminationtree, eliminationtree!, rootindex, firstchildindex, nextsiblingindex, parentindex, rootindices, childindices
 
 
 # Supernode Types
@@ -52,7 +52,7 @@ export JunctionTree, junctiontree, junctiontree!, treewidth, treewidth!, relativ
 
 
 # Chordal Graphs
-export ischordal, isperfect, chordalgraph
+export ischordal, isfilled, isperfect, filledgraph
 
 
 include("singly_linked_lists.jl")

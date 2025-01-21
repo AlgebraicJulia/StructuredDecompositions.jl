@@ -56,51 +56,60 @@ function Base.delete!(list::LinkedList, v::Integer)
 end
 
 
+function mcs(matrix::SparseMatrixCSC)
+    # validate arguments
+    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
+
+    # run algorithm
+    mcs(size(matrix, 2)) do j
+        @view rowvals(matrix)[nzrange(matrix, j)]
+    end
+end
+
+
 # Simple Linear-Time Algorithms to Test Chordality of Graphs, Test Acyclicity of Hypergraphs, and Selectively Reduce Acyclic Hypergraphs
 # Tarjan and Yannakakis
 # Maximum Cardinality Search
 #
-# Construct a fill-reducing permutation of a simple graph, represented by its adjacency matrix.
+# Construct a fill-reducing permutation of a simple graph.
 # The complexity is O(m + n), where m = |E| and n = |V|.
-function mcs(matrix::SparseMatrixCSC)
+function mcs(neighbors::Function, n::Integer) 
     # validate arguments
-    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
-    
+    n < 0 && throw(ArgumentError("n < 0"))
+
     # construct disjoint sets data structure
-    head = zeros(Int, size(matrix, 2) + 1)
-    prev = Vector{Int}(undef, size(matrix, 2) + 1)
-    next = Vector{Int}(undef, size(matrix, 2) + 1)
+    head = zeros(Int, n + 1)
+    prev = Vector{Int}(undef, n + 1)
+    next = Vector{Int}(undef, n + 1)
     
     function set(i)
         LinkedList(view(head, i), prev, next)
     end
     
     # run algorithm
-    order = Vector{Int}(undef, size(matrix, 2))
-    number = Vector{Int}(undef, size(matrix, 2))
+    alpha = Vector{Int}(undef, n)
+    size = Vector{Int}(undef, n)
 
-    for v in axes(matrix, 2)
-        number[v] = 1
+    for v in n:-1:1
+        size[v] = 1
         pushfirst!(set(1), v)
     end
 
-    i = size(matrix, 2)
     j = 1
 
-    while i >= 1
+    for i in n:-1:1
         v = popfirst!(set(j))
-        order[i] = v
-        number[v] = 0
+        alpha[v] = i
+        size[v] = 1 - size[v]
 
-        for w in @view rowvals(matrix)[nzrange(matrix, v)]
-            if number[w] >= 1 && v != w
-                delete!(set(number[w]), w)
-                number[w] += 1
-                pushfirst!(set(number[w]), w)
+        for w in neighbors(v)
+            if size[w] >= 1 && v != w
+                delete!(set(size[w]), w)
+                size[w] += 1
+                pushfirst!(set(size[w]), w)
             end
         end
 
-        i -= 1
         j += 1
 
         while j >= 1 && isempty(set(j))
@@ -108,7 +117,7 @@ function mcs(matrix::SparseMatrixCSC)
         end
     end
 
-    order
+    alpha, size
 end
 
 
@@ -124,9 +133,9 @@ function Base.show(io::IO, list::T) where T <: LinkedList
 end
 
 
-######################
-# Iterator Interface #
-######################
+#######################
+# Iteration Interface #
+#######################
 
 
 function Base.iterate(list::LinkedList, i::Integer=list.head[])

@@ -133,5 +133,9 @@ function stree(tree::Tree, colcount::AbstractVector, snd::Nodal)
 end
 
 
+""" 
+    DEFAULT_SUPERNODE_TYPE = Maximal()
 
+The default supernode partition.
+"""
 const DEFAULT_SUPERNODE_TYPE = Maximal()

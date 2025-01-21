@@ -4,19 +4,55 @@ using StructuredDecompositions
 using Test
 
 
-@testset "singleton graph" begin
-    # singleton graph
-    matrix = [0;;]
+@testset "null graph" begin
+    matrix = zeros(0, 0)
     @test ischordal(matrix)
+    @test isfilled(matrix)
     @test iszero(treewidth(matrix))
 
-    @test permutation(matrix; alg=MCS())    == ([1], [1])
-    @test permutation(matrix; alg=RCM())    == ([1], [1])
-    @test permutation(matrix; alg=AMD())    == ([1], [1])
-    @test permutation(matrix; alg=SymAMD()) == ([1], [1])
-    @test permutation(matrix; alg=MMD())    == ([1], [1])
-    @test permutation(matrix; alg=NodeND()) == ([1], [1])
-    @test permutation(matrix; alg=BT())     == ([1], [1])
+    @test permutation(matrix; alg=MCS())      == ([], [])
+    @test permutation(matrix; alg=RCM())      == ([], [])
+    @test permutation(matrix; alg=AMD())      == ([], [])
+    @test permutation(matrix; alg=SymAMD())   == ([], [])
+    @test permutation(matrix; alg=MMD())      == ([], []) skip=true
+    @test permutation(matrix; alg=NodeND())   == ([], []) skip=true
+    @test permutation(matrix; alg=Spectral()) == ([], []) skip=true
+    @test permutation(matrix; alg=BT())       == ([], [])
+
+    label, tree = junctiontree(matrix; snd=Nodal())
+    @test iszero(length(tree))
+    @test isnothing(rootindex(tree))
+    @test iszero(treewidth(tree))
+    @test iszero(nnz(tree))
+
+    label, tree = junctiontree(matrix; snd=Maximal())
+    @test iszero(length(tree))
+    @test isnothing(rootindex(tree))
+    @test iszero(treewidth(tree))
+    @test iszero(nnz(tree))
+
+    label, tree = junctiontree(matrix; snd=Fundamental())
+    @test iszero(length(tree))
+    @test isnothing(rootindex(tree))
+    @test iszero(treewidth(tree))
+    @test iszero(nnz(tree))
+end
+
+
+@testset "singleton graph" begin
+    matrix = zeros(1, 1)
+    @test ischordal(matrix)
+    @test isfilled(matrix)
+    @test iszero(treewidth(matrix))
+
+    @test permutation(matrix; alg=MCS())      == ([1], [1])
+    @test permutation(matrix; alg=RCM())      == ([1], [1])
+    @test permutation(matrix; alg=AMD())      == ([1], [1])
+    @test permutation(matrix; alg=SymAMD())   == ([1], [1])
+    @test permutation(matrix; alg=MMD())      == ([1], [1])
+    @test permutation(matrix; alg=NodeND())   == ([1], [1])
+    @test permutation(matrix; alg=Spectral()) == ([1], [1]) skip=true
+    @test permutation(matrix; alg=BT())       == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())
     @test isone(length(tree))
@@ -102,6 +138,7 @@ end
 
     @test !ischordal(matrix)
     @test ischordal(extension)
+    @test isfilled(tril(extension))
     @test treewidth(matrix; alg=1:17) == 4
     @test treewidth(extension; alg=1:17) == 4
 
@@ -159,7 +196,7 @@ end
     @test rootindex(tree) == 17
     @test treewidth(tree) == 4
     @test nnz(tree) == sum(extension) ÷ 2
-    @test chordalgraph(tree) == tril(extension[label, label])
+    @test filledgraph(tree) == tril(extension[label, label])
 
     @test map(i -> parentindex(tree, i), 1:17)  == [
         2,
@@ -259,7 +296,7 @@ end
     @test rootindex(tree) == 8
     @test treewidth(tree) == 4
     @test nnz(tree) == sum(extension) ÷ 2
-    @test chordalgraph(tree) == tril(extension[label, label])
+    @test filledgraph(tree) == tril(extension[label, label])
 
     @test map(i -> parentindex(tree, i), 1:8)  == [
         8,
@@ -323,7 +360,7 @@ end
     @test rootindex(tree) == 12
     @test treewidth(tree) == 4
     @test nnz(tree) == sum(extension) ÷ 2
-    @test chordalgraph(tree) == tril(extension[label, label])
+    @test filledgraph(tree) == tril(extension[label, label])
 
     @test map(i -> parentindex(tree, i), 1:12)  == [
         3,

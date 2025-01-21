@@ -225,8 +225,8 @@ end
 
 
 function permutation(matrix::SparseMatrixCSC, alg::MCS)
-    order = mcs(matrix)
-    order, invperm(order)
+    index, size = mcs(matrix)
+    invperm(index), index
 end
 
 
@@ -271,20 +271,8 @@ end
 
 
 function permutation(matrix::SparseMatrixCSC, alg::BT)
-    T = TreeWidthSolver.LongLongUInt{size(matrix, 2) ÷ 64 + 1}
-    fadjlist = Vector{Vector{Int}}(undef, size(matrix, 2))
-    bitgraph = Vector{T}(undef, size(matrix, 2))
-
-    for j in axes(matrix, 2)
-        neighbors = rowvals(matrix)[nzrange(matrix, j)]
-        fadjlist[j] = neighbors
-        bitgraph[j] = TreeWidthSolver.bmask(T, neighbors)
-    end
-
-    graph = TreeWidthSolver.MaskedBitGraph(bitgraph, fadjlist, TreeWidthSolver.bmask(T, axes(matrix, 2)))
-    cliques = TreeWidthSolver.all_pmc_enmu(graph, false)
-    decomposition = TreeWidthSolver.bt_algorithm(graph, cliques, ones(size(matrix, 2)), false, true)
-    order = reverse!(reduce(vcat, TreeWidthSolver.EliminationOrder(decomposition.tree).order))
+    graph = TreeWidthSolver.simple_graph(matrix)
+    order = reverse!(reduce(vcat, TreeWidthSolver.elimination_order(graph); init=Int[]))
     order, invperm(order)
 end
 
@@ -340,4 +328,9 @@ function Base.show(io::IO, alg::Spectral)
 end
 
 
+"""
+    DEFAULT_ELIMINATION_ALGORITHM = AMD()
+
+The default algorithm.
+"""
 const DEFAULT_ELIMINATION_ALGORITHM = AMD()

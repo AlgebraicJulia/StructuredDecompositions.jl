@@ -41,9 +41,9 @@ function Base.show(io::IO, list::T) where T <: SinglyLinkedList
 end
 
 
-######################
-# Iterator Interface #
-######################
+#######################
+# Iteration Interface #
+#######################
 
 
 function Base.iterate(list::SinglyLinkedList, i::Integer=list.head[])
