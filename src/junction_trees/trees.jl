@@ -72,7 +72,7 @@ end
     eliminationtree!(matrix::AbstractMatrix;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
-Construct a [tree-depth decomposition](https://en.wikipedia.org/wiki/Trémaux_tree) of a connected simple graph.
+Construct a [tree-depth decomposition](https://en.wikipedia.org/wiki/Trémaux_tree) of a simple graph.
 See [`junctiontree!`](@ref) for the meaning of `alg`.
 ```julia
 julia> using StructuredDecompositions
@@ -141,7 +141,7 @@ end
     treedepth!(matrix::SparseMatrixCSC;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
-Compute an upper bound to the [tree-depth](https://en.wikipedia.org/wiki/Tree-depth) of a connected simple graph.
+Compute an upper bound to the [tree-depth](https://en.wikipedia.org/wiki/Tree-depth) of a simple graph.
 See [`junctiontree!`](@ref) for the meaning of `alg`.
 """
 function treedepth!(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
