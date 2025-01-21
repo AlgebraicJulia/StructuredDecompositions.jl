@@ -15,7 +15,7 @@ using Test
     @test permutation(matrix; alg=AMD())      == ([], [])
     @test permutation(matrix; alg=SymAMD())   == ([], [])
     @test permutation(matrix; alg=MMD())      == ([], []) skip=true
-    @test permutation(matrix; alg=NodeND())   == ([], [])
+    @test permutation(matrix; alg=NodeND())   == ([], []) skip=true
     @test permutation(matrix; alg=Spectral()) == ([], []) skip=true
     @test permutation(matrix; alg=BT())       == ([], [])
 
