@@ -1,4 +1,4 @@
-# A doubly linked list.
+# A doubly linked list of distinct integers.
 struct LinkedList{Init <: AbstractScalar{Int}, Prev <: AbstractVector{Int}, Next <: AbstractVector{Int}}
     head::Init
     prev::Prev
@@ -121,7 +121,7 @@ function mcs(neighbors::Function, n::Integer)
 end
 
 
-function Base.show(io::IO, list::T) where T <: LinkedList
+function Base.show(io::IO, ::MIME"text/plain", list::T) where T <: LinkedList
     items = pushfirst!(map(string, take(list, MAX_ITEMS_PRINTED)), "head")
 
     if MAX_ITEMS_PRINTED < length(items)

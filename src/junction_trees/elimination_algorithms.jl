@@ -243,34 +243,34 @@ end
 
 
 function throwextension(::Type{NodeND})
-    throw(ArgumentError("In order to use the algorithm `NodeND`, import the package `Metis`."))
+    throw(ArgumentError("In order to use the algorithm `NodeND`, you must import the package `Metis`."))
 end
 
 
 function throwextension(::Type{Spectral})
-    throw(ArgumentError("In order to use the algorithm `Spectral`, import the package `Laplacians`."))
+    throw(ArgumentError("In order to use the algorithm `Spectral`, you must import the package `Laplacians`."))
 end
 
 
 function throwextension(::Type{BT})
-    throw(ArgumentError("In order to use the algorithm `BT`, import the package `TreeWidthSolver`."))
+    throw(ArgumentError("In order to use the algorithm `BT`, you must import the package `TreeWidthSolver`."))
 end
 
 
-function Base.show(io::IO, alg::RCM)
+function Base.show(io::IO, ::MIME"text/plain", alg::RCM)
     println(io, "RCM:")
     println(io, "   sortbydeg: $(alg.sortbydeg)")
 end
 
 
-function Base.show(io::IO, alg::AMD)
+function Base.show(io::IO, ::MIME"text/plain", alg::AMD)
     println(io, "AMD:")
     println(io, "   dense: $(alg.dense)")
     println(io, "   aggressive: $(alg.aggressive)")
 end
 
 
-function Base.show(io::IO, alg::SymAMD)
+function Base.show(io::IO, ::MIME"text/plain", alg::SymAMD)
     println(io, "SymAMD:")
     println(io, "   dense row: $(alg.dense_row)")
     println(io, "   dense col: $(alg.dense_col)")
@@ -278,7 +278,7 @@ function Base.show(io::IO, alg::SymAMD)
 end
 
 
-function Base.show(io::IO, alg::Spectral)
+function Base.show(io::IO, ::MIME"text/plain", alg::Spectral)
     println(io, "Spectral:")
     println(io, "   tol: $(alg.tol)")
 end

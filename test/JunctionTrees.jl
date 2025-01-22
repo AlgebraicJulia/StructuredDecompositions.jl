@@ -25,18 +25,21 @@ using Test
     @test permutation(matrix; alg=BT())       == ([], [])
 
     label, tree = junctiontree(matrix; snd=Nodal())
+    @test isa(repr("text/plain", tree), String)
     @test iszero(length(tree))
     @test isnothing(rootindex(tree))
     @test iszero(treewidth(tree))
     @test iszero(nnz(tree))
 
     label, tree = junctiontree(matrix; snd=Maximal())
+    @test isa(repr("text/plain", tree), String)
     @test iszero(length(tree))
     @test isnothing(rootindex(tree))
     @test iszero(treewidth(tree))
     @test iszero(nnz(tree))
 
     label, tree = junctiontree(matrix; snd=Fundamental())
+    @test isa(repr("text/plain", tree), String)
     @test iszero(length(tree))
     @test isnothing(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -60,6 +63,7 @@ end
     @test permutation(matrix; alg=BT())       == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())
+    @test isa(repr("text/plain", tree), String)
     @test isone(length(tree))
     @test isone(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -72,6 +76,8 @@ end
     @test isone(only(tree[1]))
 
     label, tree = junctiontree(matrix; snd=Maximal())
+    @test isa(repr("text/plain", tree), String)
+    @test isone(length(tree))
     @test isone(length(tree))
     @test isone(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -84,6 +90,7 @@ end
     @test isone(only(tree[1]))
 
     label, tree = junctiontree(matrix; snd=Fundamental())
+    @test isa(repr("text/plain", tree), String)
     @test isone(length(tree))
     @test isone(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -147,49 +154,65 @@ end
     @test treewidth(matrix; alg=1:17) == 4
     @test treewidth(extension; alg=1:17) == 4
 
-    order, index = permutation(matrix; alg=MCS())
+    alg = MCS()
+    order, index = permutation(matrix; alg)
+    @test isa(repr("text/plain", alg), String)
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix; alg=RCM())
+    alg = RCM()
+    order, index = permutation(matrix; alg)
+    @test isa(repr("text/plain", alg), String)
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix; alg=AMD())
+    alg = AMD()
+    order, index = permutation(matrix; alg)
+    @test isa(repr("text/plain", alg), String)
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix; alg=SymAMD())
+    alg = SymAMD()
+    order, index = permutation(matrix; alg)
+    @test isa(repr("text/plain", alg), String)
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix; alg=MMD())
+    alg = MMD()
+    order, index = permutation(matrix; alg)
+    @test isa(repr("text/plain", alg), String)
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix; alg=NodeND())
+    alg = NodeND()
+    order, index = permutation(matrix; alg)
+    @test isa(repr("text/plain", alg), String)
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix; alg=Spectral())
+    alg = Spectral()
+    order, index = permutation(matrix; alg)
+    @test isa(repr("text/plain", alg), String)
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix; alg=BT())
+    alg = BT()
+    order, index = permutation(matrix; alg)
+    @test isa(repr("text/plain", alg), String)
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
@@ -197,6 +220,7 @@ end
 
     # Figure 4.3
     label, tree = junctiontree(matrix; alg=1:17, snd=Nodal())
+    @test isa(repr("text/plain", tree), String)
     @test length(tree) == 17
     @test rootindex(tree) == 17
     @test treewidth(tree) == 4
@@ -297,6 +321,7 @@ end
 
     # Figure 4.7 (left)
     label, tree = junctiontree(matrix; alg=1:17, snd=Maximal())
+    @test isa(repr("text/plain", tree), String)
     @test length(tree) == 8
     @test rootindex(tree) == 8
     @test treewidth(tree) == 4
@@ -361,6 +386,7 @@ end
 
     # Figure 4.9
     label, tree = junctiontree(matrix; alg=1:17, snd=Fundamental())
+    @test isa(repr("text/plain", tree), String)
     @test length(tree) == 12
     @test rootindex(tree) == 12
     @test treewidth(tree) == 4

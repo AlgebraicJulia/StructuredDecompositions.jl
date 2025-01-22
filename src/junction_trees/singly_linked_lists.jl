@@ -1,9 +1,4 @@
-"""
-    SinglyLinkedList{Init <: AbstractScalar{Int}, Next <: AbstractVector{Int}}
-
-A [singly linked list](https://en.wikipedia.org/wiki/Linked_list).
-This type implements the [iteration interface](https://docs.julialang.org/en/v1/manual/interfaces/).
-"""
+# A doubly linked list of distinct integers.
 struct SinglyLinkedList{Init <: AbstractScalar{Int}, Next <: AbstractVector{Int}}
     head::Init
     next::Next
@@ -29,7 +24,7 @@ function Base.popfirst!(list::SinglyLinkedList)
 end
 
 
-function Base.show(io::IO, list::T) where T <: SinglyLinkedList
+function Base.show(io::IO, ::MIME"text/plain", list::T) where T <: SinglyLinkedList
     items = pushfirst!(map(string, take(list, MAX_ITEMS_PRINTED)), "head")
 
     if MAX_ITEMS_PRINTED < length(items)

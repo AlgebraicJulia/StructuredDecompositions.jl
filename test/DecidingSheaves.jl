@@ -11,9 +11,9 @@ using Test
 
 
 # fixing bug upstream
-function Catlab.WiringDiagramAlgebras.make_homomorphism(row, X::StructACSet{S}, Y::StructACSet{S}) where S
+function Catlab.WiringDiagramAlgebras.make_homomorphism(row::AbstractVector{T}, X::StructACSet{S}, Y::StructACSet{S}) where {T, S}
   components = let i = 0
-    NamedTuple{ob(S)}(Int[row[i+=1] for _ in parts(X,c)] for c in ob(S))
+    NamedTuple{ob(S)}(T[row[i+=1] for _ in parts(X,c)] for c in ob(S))
   end
   ACSetTransformation(components, X, Y)
 end
