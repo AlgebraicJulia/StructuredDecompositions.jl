@@ -219,8 +219,8 @@ end
 function Base.show(io::IO, ::MIME"text/plain", tree::T) where T <: AbstractTree
     println(io, "$(length(tree))-element $T:")
 
-    if !isempty(tree)
-        print_tree(io, IndexNode(tree))
+    for i in rootindices(tree)
+        print_tree(io, IndexNode(tree, i))
     end
 end
 

@@ -9,9 +9,7 @@ using StructuredDecompositions.JunctionTrees
 
 
 function JunctionTrees.permutation(matrix::SparseMatrixCSC, alg::NodeND)
-    order, index = Metis.permutation(matrix)
-    order = convert(Vector{Int}, order)
-    index = convert(Vector{Int}, index)
+    order::Vector{Int}, index::Vector{Int} = Metis.permutation(matrix)
     order, index
 end
 

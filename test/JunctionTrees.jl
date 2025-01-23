@@ -1,12 +1,108 @@
+using LinearAlgebra
+using SparseArrays
+using StructuredDecompositions
+using StructuredDecompositions.JunctionTrees: LinkedList
+using Test
+
+
+@testset "linked lists" begin
+    @testset "singly linked list" begin
+        list = SinglyLinkedList(zeros(Int), Vector{Int}(undef, 3))
+        @test isempty(list)
+        @test collect(list) == []
+
+        @test pushfirst!(list, 1) === list
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test pushfirst!(list, 2) === list
+        @test !isempty(list)
+        @test collect(list) == [2, 1]
+
+        @test pushfirst!(list, 3) === list
+        @test !isempty(list)
+        @test collect(list) == [3, 2, 1]
+
+        @test popfirst!(list) == 3
+        @test !isempty(list)
+        @test collect(list) == [2, 1]
+
+        @test popfirst!(list) == 2
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test popfirst!(list) == 1        
+        @test isempty(list)
+        @test collect(list) == []
+    end
+
+    @testset "doubly linked list" begin
+        list = LinkedList(zeros(Int), Vector{Int}(undef, 3), Vector{Int}(undef, 3))
+        @test isempty(list)
+        @test collect(list) == []
+
+        @test pushfirst!(list, 1) === list
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test pushfirst!(list, 2) === list
+        @test !isempty(list)
+        @test collect(list) == [2, 1]
+
+        @test pushfirst!(list, 3) === list
+        @test !isempty(list)
+        @test collect(list) == [3, 2, 1]
+
+        @test delete!(list, 2) === list
+        @test !isempty(list)
+        @test collect(list) == [3, 1]
+
+        @test delete!(list, 3) === list
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test popfirst!(list) == 1       
+        @test isempty(list)
+        @test collect(list) == []
+    end
+end
+
+
+@testset "extension" begin
+    matrix = zeros(0, 0)
+    @test_throws "Laplacians"      permutation(matrix; alg=Spectral())
+    @test_throws "Metis"           permutation(matrix; alg=NodeND())
+    @test_throws "TreeWidthSolver" permutation(matrix; alg=BT())
+end
+
+
 import Laplacians
 import Metis
 import TreeWidthSolver
 
 
-using LinearAlgebra
-using SparseArrays
-using StructuredDecompositions
-using Test
+@testset "representation" begin
+    @test isa(repr("text/plain", MCS()), String)
+    @test isa(repr("text/plain", RCM()), String)
+    @test isa(repr("text/plain", AMD()), String)
+    @test isa(repr("text/plain", SymAMD()), String)
+    @test isa(repr("text/plain", MMD()), String)
+    @test isa(repr("text/plain", NodeND()), String)
+    @test isa(repr("text/plain", BT()), String)
+
+    list = SinglyLinkedList(ones(Int), [2, 0])
+    @test isa(repr("text/plain", list), String)
+    list = LinkedList(ones(Int), [2, 0], [0, 1])
+    @test isa(repr("text/plain", list), String)
+
+    matrix = ones(2, 2)
+    label, tree = eliminationtree(matrix)
+    @test isa(repr("text/plain", tree), String)
+    label, tree = supernodetree(matrix)
+    @test isa(repr("text/plain", tree), String)
+    label, tree = junctiontree(matrix)
+    @test isa(repr("text/plain", tree), String)
+end
 
 
 @testset "null graph" begin
@@ -25,21 +121,18 @@ using Test
     @test permutation(matrix; alg=BT())       == ([], [])
 
     label, tree = junctiontree(matrix; snd=Nodal())
-    @test isa(repr("text/plain", tree), String)
     @test iszero(length(tree))
     @test isnothing(rootindex(tree))
     @test iszero(treewidth(tree))
     @test iszero(nnz(tree))
 
     label, tree = junctiontree(matrix; snd=Maximal())
-    @test isa(repr("text/plain", tree), String)
     @test iszero(length(tree))
     @test isnothing(rootindex(tree))
     @test iszero(treewidth(tree))
     @test iszero(nnz(tree))
 
     label, tree = junctiontree(matrix; snd=Fundamental())
-    @test isa(repr("text/plain", tree), String)
     @test iszero(length(tree))
     @test isnothing(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -63,7 +156,6 @@ end
     @test permutation(matrix; alg=BT())       == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())
-    @test isa(repr("text/plain", tree), String)
     @test isone(length(tree))
     @test isone(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -76,7 +168,6 @@ end
     @test isone(only(tree[1]))
 
     label, tree = junctiontree(matrix; snd=Maximal())
-    @test isa(repr("text/plain", tree), String)
     @test isone(length(tree))
     @test isone(length(tree))
     @test isone(rootindex(tree))
@@ -90,7 +181,6 @@ end
     @test isone(only(tree[1]))
 
     label, tree = junctiontree(matrix; snd=Fundamental())
-    @test isa(repr("text/plain", tree), String)
     @test isone(length(tree))
     @test isone(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -154,65 +244,49 @@ end
     @test treewidth(matrix; alg=1:17) == 4
     @test treewidth(extension; alg=1:17) == 4
 
-    alg = MCS()
-    order, index = permutation(matrix; alg)
-    @test isa(repr("text/plain", alg), String)
+    order, index = permutation(matrix; alg=MCS())
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    alg = RCM()
-    order, index = permutation(matrix; alg)
-    @test isa(repr("text/plain", alg), String)
+    order, index = permutation(matrix; alg=RCM())
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    alg = AMD()
-    order, index = permutation(matrix; alg)
-    @test isa(repr("text/plain", alg), String)
+    order, index = permutation(matrix; alg=AMD())
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    alg = SymAMD()
-    order, index = permutation(matrix; alg)
-    @test isa(repr("text/plain", alg), String)
+    order, index = permutation(matrix; alg=SymAMD())
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    alg = MMD()
-    order, index = permutation(matrix; alg)
-    @test isa(repr("text/plain", alg), String)
+    order, index = permutation(matrix; alg=MMD())
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    alg = NodeND()
-    order, index = permutation(matrix; alg)
-    @test isa(repr("text/plain", alg), String)
+    order, index = permutation(matrix; alg=NodeND())
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    alg = Spectral()
-    order, index = permutation(matrix; alg)
-    @test isa(repr("text/plain", alg), String)
+    order, index = permutation(matrix; alg=Spectral())
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    alg = BT()
-    order, index = permutation(matrix; alg)
-    @test isa(repr("text/plain", alg), String)
+    order, index = permutation(matrix; alg=BT())
     @test isa(order, Vector{Int})
     @test isa(index, Vector{Int})
     @test length(order) == 17
@@ -220,7 +294,6 @@ end
 
     # Figure 4.3
     label, tree = junctiontree(matrix; alg=1:17, snd=Nodal())
-    @test isa(repr("text/plain", tree), String)
     @test length(tree) == 17
     @test rootindex(tree) == 17
     @test treewidth(tree) == 4
@@ -321,7 +394,6 @@ end
 
     # Figure 4.7 (left)
     label, tree = junctiontree(matrix; alg=1:17, snd=Maximal())
-    @test isa(repr("text/plain", tree), String)
     @test length(tree) == 8
     @test rootindex(tree) == 8
     @test treewidth(tree) == 4
@@ -386,7 +458,6 @@ end
 
     # Figure 4.9
     label, tree = junctiontree(matrix; alg=1:17, snd=Fundamental())
-    @test isa(repr("text/plain", tree), String)
     @test length(tree) == 12
     @test rootindex(tree) == 12
     @test treewidth(tree) == 4

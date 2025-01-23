@@ -5,11 +5,14 @@ struct SinglyLinkedList{Init <: AbstractScalar{Int}, Next <: AbstractVector{Int}
 end
 
 
+# Evaluate whether a linked list is empty.
 function Base.isempty(list::SinglyLinkedList)
     iszero(list.head[])
 end
 
 
+# Append an element `v` to the front of a linked list.
+# If `v` ∈ `list`, the behavior of this function is undefined.
 function Base.pushfirst!(list::SinglyLinkedList, v::Integer)
     list.next[v] = list.head[]
     list.head[] = v
@@ -17,6 +20,7 @@ function Base.pushfirst!(list::SinglyLinkedList, v::Integer)
 end
 
 
+# Remove the first element of a linked list.
 function Base.popfirst!(list::SinglyLinkedList)
     v = list.head[]
     list.head[] = list.next[v]

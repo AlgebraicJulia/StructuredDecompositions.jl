@@ -35,28 +35,6 @@ function Tree(tree::Tree)
 end
 
 
-#=
-# Construct a rooted tree.
-function Tree(tree::Tree, root::Integer)
-    # validate arguments
-    root ∉ tree && throw(ArgumentError("root ∉ tree"))
-
-    # construct tree
-    parent = copy(tree.parent)
-    i = root
-    j = 0
-
-    while !isnothing(i)
-        parent[i] = j
-        j = i
-        i = parentindex(tree, j)
-    end
-
-    Tree(parent)
-end
-=#
-
-
 """
     eliminationtree(matrix::AbstractMatrix;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
@@ -119,7 +97,7 @@ end
 """
     treedepth(tree::Tree)
 
-Compute the depth of a topologically ordered tree.
+Compute the depth of a topologically ordered forest.
 """
 function treedepth(tree::Tree)
     maximum(levels(tree))
@@ -244,20 +222,22 @@ function supcnt(neighbors::Function, tree::Tree, index::AbstractVector=dfs(tree)
     prev_p = zeros(Int, length(tree))
     prev_nbr = zeros(Int, length(tree))
     rc = ones(Int, length(tree))
-    wt = ones(Int, length(tree))
+    cc = ones(Int, length(tree))
 
     for p in tree
-        parent = parentindex(tree, p)
+        r = parentindex(tree, p)
         
-        if !isnothing(parent)
-            wt[parent] = 0
+        if !isnothing(r)
+            cc[r] = 0
         end
     end
 
     for p in invperm(index)
+        r = parentindex(tree, p)
+
         for u in neighbors(p)
             if iszero(prev_nbr[u]) || lt(order, prev_nbr[u], fdesc[p])
-                wt[p] += 1
+                cc[p] += 1
                 pp = prev_p[u]
 
                 if iszero(pp)
@@ -265,7 +245,7 @@ function supcnt(neighbors::Function, tree::Tree, index::AbstractVector=dfs(tree)
                 else
                     q = find(pp)
                     rc[u] += level[p] - level[q]
-                    wt[q] -= 1
+                    cc[q] -= 1
                 end
 
                 prev_p[u] = p
@@ -274,21 +254,17 @@ function supcnt(neighbors::Function, tree::Tree, index::AbstractVector=dfs(tree)
             prev_nbr[u] = p
         end
 
-        parent = parentindex(tree, p)
-
-        if !isnothing(parent)
-            wt[parent] -= 1
-            union(p, parent)
+        if !isnothing(r)
+            cc[r] -= 1
+            union(p, r)
         end
     end
 
-    cc = wt
-
     for p in tree
-        parent = parentindex(tree, p)
+        r = parentindex(tree, p)
 
-        if !isnothing(parent)
-            cc[parent] += cc[p]
+        if !isnothing(r)
+            cc[r] += cc[p]
         end
     end
 
@@ -296,31 +272,30 @@ function supcnt(neighbors::Function, tree::Tree, index::AbstractVector=dfs(tree)
 end
 
 
-# Compute a postordering of a rooted tree.
+# Compute a postordering of a forest.
 function dfs(tree::Tree)
-    stack = Vector{Int}(undef, length(tree))
-    index = Vector{Int}(undef, length(tree))
-    head = copy(tree.child)
-    p = q = 0
+    # construct disjoint sets data structure
+    child = copy(tree.child)
 
-    for i in rootindices(tree)
-        p += 1
-        stack[p] = i
+    function set(i)
+        head = @view child[i]
+        SinglyLinkedList(head, tree.brother)
     end
+ 
+    # run algorithm
+    index = Vector{Int}(undef, length(tree))
+    stack = sizehint!(Int[], length(tree))
+    append!(stack, rootindices(tree))
 
-    while !iszero(p)
-        j = stack[p]
-        i = head[j]
+    for i in tree
+        j = pop!(stack)
 
-        if iszero(i)
-            q += 1
-            index[stack[p]] = q
-            p -= 1
-        else
-            head[j] = tree.brother[i]
-            p += 1
-            stack[p] = i
+        while !isempty(set(j))
+            push!(stack, j)
+            j = popfirst!(set(j))
         end
+
+        index[j] = i
     end
 
     index
@@ -340,7 +315,7 @@ function levels(tree::Tree)
 end
 
 
-# Get the first descendant of every vertex in a topologically ordered tree.
+# Get the first descendant of every vertex in a topologically ordered forest.
 function firstdescendants(tree::Tree, order::Ordering=ForwardOrdering())
     fdesc = collect(tree)
 
@@ -361,13 +336,15 @@ function firstdescendants(tree::Tree, order::Ordering=ForwardOrdering())
 end
 
 
-# Compute the `root`, `child`, and `brother` fields of a tree.
+# Compute the `root`, `child`, and `brother` fields of a forest.
 function lcrs!(tree::Tree)
     fill!(tree.root, 0)
     fill!(tree.child, 0)
 
-    for (i, j) in ireverse(enumerate(tree.parent))
-        if iszero(j)
+    for i in reverse(tree)
+        j = parentindex(tree, i)
+
+        if isnothing(j)
             tree.brother[i] = tree.root[]
             tree.root[] = i
         else
@@ -380,7 +357,25 @@ function lcrs!(tree::Tree)
 end
 
 
-# Permute the vertices of a rooted tree.
+# Make the node `j` a root.
+function setrootindex!(tree::Tree, j::Integer)
+    # validate arguments
+    j ∉ tree && throw(ArgumentError("j ∉ tree"))
+
+    # run algorithm
+    i = 0
+
+    while !iszero(j)
+        k = tree.parent[j]
+        tree.parent[j] = i
+        i, j = j, k
+    end
+
+    lcrs!(tree)
+end
+
+
+# Permute the vertices of a forest.
 function Base.invpermute!(tree::Tree, index::AbstractVector)
     # validate arguments
     tree != eachindex(index) && throw(ArgumentError("tree != eachindex(index)"))
@@ -429,7 +424,8 @@ end
 
 
 function AbstractTrees.childindices(tree::Tree, i::Integer)
-    SinglyLinkedList(view(tree.child, i), tree.brother)
+    head = @view tree.child[i]
+    SinglyLinkedList(head, tree.brother)
 end
 
 

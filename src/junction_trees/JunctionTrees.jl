@@ -3,7 +3,7 @@ module JunctionTrees
 
 using AbstractTrees
 using Base.Order
-using Base.Iterators: filter as ifilter, reverse as ireverse
+using Base.Iterators: filter as ifilter, take
 using DataStructures: IntDisjointSets, find_root!, root_union!
 using LinearAlgebra
 using SparseArrays
@@ -29,7 +29,7 @@ export EliminationAlgorithm, MCS, RCM, AMD, SymAMD, MMD, NodeND, Spectral, BT, p
 
 
 # Trees
-export Tree, eliminationtree, eliminationtree!, rootindex, firstchildindex, nextsiblingindex, parentindex, rootindices, childindices
+export Tree, eliminationtree, eliminationtree!, setrootindex!, rootindex, firstchildindex, nextsiblingindex, parentindex, rootindices, childindices
 
 
 # Supernode Types
