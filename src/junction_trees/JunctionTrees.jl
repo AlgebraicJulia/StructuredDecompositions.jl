@@ -3,7 +3,7 @@ module JunctionTrees
 
 using AbstractTrees
 using Base.Order
-using Base.Iterators: drop, filter as ifilter, map as imap, reverse as ireverse, peel, take
+using Base.Iterators: filter as ifilter, take
 using DataStructures: IntDisjointSets, find_root!, root_union!
 using LinearAlgebra
 using SparseArrays
@@ -12,10 +12,7 @@ using Sparspak: SpkMmd
 
 
 import AMD as AMDPkg
-import Laplacians
-import Metis
 import SymRCM
-import TreeWidthSolver
 
 
 const AbstractScalar{T} = AbstractArray{T, 0}
@@ -28,15 +25,15 @@ export SinglyLinkedList
 
 
 # Elimination Algorithms
-export MCS, RCM, AMD, SymAMD, MMD, NodeND, Spectral, BT, permutation
+export EliminationAlgorithm, MCS, RCM, AMD, SymAMD, MMD, NodeND, Spectral, BT, permutation
 
 
 # Trees
-export Tree, eliminationtree, eliminationtree!, rootindex, firstchildindex, nextsiblingindex, parentindex, rootindices, childindices
+export Tree, eliminationtree, eliminationtree!, setrootindex!, rootindex, firstchildindex, nextsiblingindex, parentindex, rootindices, childindices
 
 
 # Supernode Types
-export Nodal, Maximal, Fundamental 
+export SupernodeType, Nodal, Maximal, Fundamental 
 
 
 # Bags
@@ -52,7 +49,7 @@ export JunctionTree, junctiontree, junctiontree!, treewidth, treewidth!, relativ
 
 
 # Chordal Graphs
-export ischordal, isfilled, isperfect, filledgraph
+export eliminationgraph, eliminationgraph!, ischordal, isfilled, isperfect
 
 
 include("singly_linked_lists.jl")

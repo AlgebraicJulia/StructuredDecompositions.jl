@@ -72,20 +72,6 @@ function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::Ab
 end
 
 
-# A Spectral Algorithm for Envelope Reduction of Sparse Matrices
-# Barnard, Pothen, and Simon
-# Algorithm 1: Spectral Algorithm
-#
-# Compute the spectral ordering of a graph.
-function spectralorder(matrix::SparseMatrixCSC; tol=0.0)
-    matrix = SparseMatrixCSC{Float64, Int}(matrix)
-    fill!(nonzeros(matrix), 1)
-    fkeep!((i, j, v) -> i != j, matrix)
-    value, vector = Laplacians.fiedler(matrix; tol)
-    sortperm(reshape(vector, size(matrix, 2)))
-end
-
-
 # Compute the union of sorted sets `source1` and `source2`.
 # The result is appended to `target`.
 function mergesorted!(target, source1, source2, order::Ordering=ForwardOrdering())

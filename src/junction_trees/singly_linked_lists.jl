@@ -1,20 +1,18 @@
-"""
-    SinglyLinkedList{Init <: AbstractScalar{Int}, Next <: AbstractVector{Int}}
-
-A [singly linked list](https://en.wikipedia.org/wiki/Linked_list).
-This type implements the [iteration interface](https://docs.julialang.org/en/v1/manual/interfaces/).
-"""
+# A doubly linked list of distinct integers.
 struct SinglyLinkedList{Init <: AbstractScalar{Int}, Next <: AbstractVector{Int}}
     head::Init
     next::Next
 end
 
 
+# Evaluate whether a linked list is empty.
 function Base.isempty(list::SinglyLinkedList)
     iszero(list.head[])
 end
 
 
+# Append an element `v` to the front of a linked list.
+# If `v` ∈ `list`, the behavior of this function is undefined.
 function Base.pushfirst!(list::SinglyLinkedList, v::Integer)
     list.next[v] = list.head[]
     list.head[] = v
@@ -22,6 +20,7 @@ function Base.pushfirst!(list::SinglyLinkedList, v::Integer)
 end
 
 
+# Remove the first element of a linked list.
 function Base.popfirst!(list::SinglyLinkedList)
     v = list.head[]
     list.head[] = list.next[v]
@@ -29,7 +28,7 @@ function Base.popfirst!(list::SinglyLinkedList)
 end
 
 
-function Base.show(io::IO, list::T) where T <: SinglyLinkedList
+function Base.show(io::IO, ::MIME"text/plain", list::T) where T <: SinglyLinkedList
     items = pushfirst!(map(string, take(list, MAX_ITEMS_PRINTED)), "head")
 
     if MAX_ITEMS_PRINTED < length(items)

@@ -42,7 +42,7 @@ struct MCS <: EliminationAlgorithm end
 
     RCM(; sortbydeg=true)
 
-The [reverse Cuthill-McKee algorithm](https://en.wikipedia.org/wiki/Cuthill–McKee_algorithm). Uses [SymRCM.jl](https://github.com/PetrKryslUCSD/SymRCM.jl).
+The [reverse Cuthill-McKee algorithm](https://en.wikipedia.org/wiki/Cuthill–McKee_algorithm).
 - `sortbydeg`: whether to sort neighbor lists by degree
 """
 struct RCM <: EliminationAlgorithm
@@ -57,67 +57,39 @@ end
 """
     AMD <: EliminationAlgorithm
 
-    AMD(; dense=nothing, aggressive=nothing)
+    AMD(; dense=10.0, aggressive=1.0)
 
-The approximate minimum degree algorithm. Uses [AMD.jl](https://github.com/JuliaSmoothOptimizers/AMD.jl).
+The approximate minimum degree algorithm.
 - `dense`: dense row parameter
 - `aggressive`: aggressive absorbtion
 """
 struct AMD <: EliminationAlgorithm
-    meta::AMDPkg.Amd
+    dense::Float64
+    aggressive::Float64
 
-    function AMD(; dense=nothing, aggressive=nothing)
-        meta = AMDPkg.Amd()
-
-        if !isnothing(dense)
-            meta.control[AMDPkg.AMD_DENSE] = dense
-        end
-
-        if !isnothing(aggressive)
-            meta.control[AMDPkg.AMD_AGGRESSIVE] = aggressive
-        end
-
-        new(meta)
+    function AMD(; dense=10.0, aggressive=1.0)
+        new(dense, aggressive)
     end
 end
 
 
 """
-    SymAMD{Index} <: EliminationAlgorithm
+    SymAMD <: EliminationAlgorithm
 
-    SymAMD{Index}(; dense_row=nothing, dense_col=nothing, aggressive=nothing) where Index
+    SymAMD(; dense_row=10.0, dense_col=10.0, aggressive=1.0)
 
-    SymAMD(; dense_row=nothing, dense_col=nothing, aggressive=nothing)
-
-The column approximate minimum degree algorithm. Uses [AMD.jl](https://github.com/JuliaSmoothOptimizers/AMD.jl).
-- `Index`: either `Int` or `Cint`
+The column approximate minimum degree algorithm.
 - `dense_row`: dense row parameter
 - `dense_column`: dense column parameter
 - `aggressive`: aggressive absorbtion
 """
-struct SymAMD{Index} <: EliminationAlgorithm
-    meta::AMDPkg.Colamd{Index}
+struct SymAMD <: EliminationAlgorithm
+    dense_row::Float64
+    dense_col::Float64
+    aggressive::Float64
 
-    function SymAMD(; dense_row=nothing, dense_col=nothing, aggressive=nothing)
-        SymAMD{Int}(; dense_row, dense_col, aggressive)
-    end
-
-    function SymAMD{Index}(; dense_row=nothing, dense_col=nothing, aggressive=nothing) where Index
-        meta = AMDPkg.Colamd{Index}()
-
-        if !isnothing(dense_row)
-            meta.knobs[AMDPkg.COLAMD_DENSE_ROW] = dense_row
-        end
-
-        if !isnothing(dense_col)
-            meta.knobs[AMDPkg.COLAMD_DENSE_COL] = dense_col
-        end
-
-        if !isnothing(aggressive)
-            meta.knobs[AMDPkg.COLAMD_AGGRESSIVE] = aggressive
-        end
-
-        new{Index}(meta)
+    function SymAMD(; dense_row=10.0, dense_col=10.0, aggressive=1.0)
+        new(dense_row, dense_col, aggressive)
     end
 end
 
@@ -128,7 +100,6 @@ end
     MMD()
 
 The [multiple minimum degree algorithm](https://en.wikipedia.org/wiki/Minimum_degree_algorithm).
-Uses [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl/tree/main).
 """
 struct MMD <: EliminationAlgorithm end
 
@@ -139,7 +110,8 @@ struct MMD <: EliminationAlgorithm end
 
     NodeND()
 
-The [nested dissection algorithm](https://en.wikipedia.org/wiki/Nested_dissection). Uses [Metis.jl](https://github.com/JuliaSparse/Metis.jl).
+The [nested dissection algorithm](https://en.wikipedia.org/wiki/Nested_dissection).
+In order to use this algorithm, import the package [Metis](https://github.com/JuliaSparse/Metis.jl).
 """
 struct NodeND <: EliminationAlgorithm end
 
@@ -149,7 +121,8 @@ struct NodeND <: EliminationAlgorithm end
 
     Spectral(; tol=0.0)
 
-The spectral ordering algorithm. Uses [Laplacians.jl](https://github.com/danspielman/Laplacians.jl).
+The spectral ordering algorithm.
+In order to use this algorithm, import the package [Laplacians](https://github.com/danspielman/Laplacians.jl).
 - `tol`: tolerance for convergence
 """
 struct Spectral <: EliminationAlgorithm
@@ -166,7 +139,8 @@ end
 
     BT()
 
-The Bouchitte-Todinca algorithm. Uses [TreeWidthSolver.jl](https://github.com/ArrogantGao/TreeWidthSolver.jl).
+The Bouchitte-Todinca algorithm.
+In order to use this algorithm, import the package [TreeWidthSolver](https://github.com/ArrogantGao/TreeWidthSolver.jl).
 """
 struct BT <: EliminationAlgorithm end
 
@@ -218,6 +192,11 @@ function permutation(matrix::AbstractMatrix, alg::EliminationAlgorithm)
 end
 
 
+function permutation(matrix::SparseMatrixCSC, alg::T) where T <: Union{NodeND, Spectral, BT}
+    throwextension(T)
+end
+
+
 function permutation(matrix::AbstractMatrix, alg::AbstractVector)
     order = Vector{Int}(alg)
     order, invperm(order)
@@ -237,13 +216,20 @@ end
 
 
 function permutation(matrix::SparseMatrixCSC, alg::AMD)
-    order = AMDPkg.amd(matrix, alg.meta)
+    meta = AMDPkg.Amd()
+    meta.control[AMDPkg.AMD_DENSE] = alg.dense
+    meta.control[AMDPkg.AMD_AGGRESSIVE] = alg.aggressive
+    order = AMDPkg.amd(matrix, meta)
     order, invperm(order)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::SymAMD)
-    order = AMDPkg.symamd(matrix, alg.meta)
+function permutation(matrix::SparseMatrixCSC{T, I}, alg::SymAMD) where {T, I}
+    meta = AMDPkg.Colamd{I}()
+    meta.knobs[AMDPkg.COLAMD_DENSE_ROW] = alg.dense_row
+    meta.knobs[AMDPkg.COLAMD_DENSE_COL] = alg.dense_col
+    meta.knobs[AMDPkg.COLAMD_AGGRESSIVE] = alg.aggressive
+    order = AMDPkg.symamd(matrix, meta)
     order, invperm(order)
 end
 
@@ -256,75 +242,45 @@ function permutation(matrix::SparseMatrixCSC, alg::MMD)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::NodeND)
-    order, index = Metis.permutation(matrix)
-    order = convert(Vector{Int}, order)
-    index = convert(Vector{Int}, index)
-    order, index
+function throwextension(::Type{NodeND})
+    throw(ArgumentError("In order to use the algorithm `NodeND`, you must import the package `Metis`."))
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::Spectral)
-    order = spectralorder(matrix; tol=alg.tol)
-    order, invperm(order)
+function throwextension(::Type{Spectral})
+    throw(ArgumentError("In order to use the algorithm `Spectral`, you must import the package `Laplacians`."))
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::BT)
-    graph = TreeWidthSolver.simple_graph(matrix)
-    order = reverse!(reduce(vcat, TreeWidthSolver.elimination_order(graph); init=Int[]))
-    order, invperm(order)
+function throwextension(::Type{BT})
+    throw(ArgumentError("In order to use the algorithm `BT`, you must import the package `TreeWidthSolver`."))
 end
 
 
-function Base.show(io::IO, alg::RCM)
+function Base.show(io::IO, ::MIME"text/plain", alg::RCM)
     println(io, "RCM:")
-    println(io, "    parameters:")
-    println(io, "        sortbydeg: $(alg.sortbydeg)")
+    println(io, "   sortbydeg: $(alg.sortbydeg)")
 end
 
 
-function Base.show(io::IO, alg::AMD)
-    meta = alg.meta
+function Base.show(io::IO, ::MIME"text/plain", alg::AMD)
     println(io, "AMD:")
-    println(io, "    parameters:")
-    println(io, "        dense: $(meta.control[AMDPkg.AMD_DENSE])")
-    println(io, "        aggressive: $(meta.control[AMDPkg.AMD_AGGRESSIVE])")
-    println(io, "    information:")
-    println(io, "        status: $(AMDPkg.amd_statuses[meta.info[AMDPkg.AMD_STATUS]])")
-    println(io, "        matrix size: $(meta.info[AMDPkg.AMD_N])")
-    println(io, "        number of nonzeros: $(meta.info[AMDPkg.AMD_NZ])")
-    println(io, "        pattern symmetry: $(meta.info[AMDPkg.AMD_SYMMETRY])")
-    println(io, "        number of nonzeros on diagonal: $(meta.info[AMDPkg.AMD_NZDIAG])")
-    println(io, "        number of nonzeros in A + Aᵀ: $(meta.info[AMDPkg.AMD_NZ_A_PLUS_AT])")
-    println(io, "        number of dense columns: $(meta.info[AMDPkg.AMD_NDENSE])")
-    println(io, "        memory used: $(meta.info[AMDPkg.AMD_MEMORY])")
-    println(io, "        number of garbage collections: $(meta.info[AMDPkg.AMD_NCMPA])")
-    println(io, "        approximate number of nonzeros in factor: $(meta.info[AMDPkg.AMD_LNZ])")
-    println(io, "        number of float divides: $(meta.info[AMDPkg.AMD_NDIV])")
-    println(io, "        number of float * or - for LDL: $(meta.info[AMDPkg.AMD_NMULTSUBS_LDL])")
-    println(io, "        number of float * or - for LU: $(meta.info[AMDPkg.AMD_NMULTSUBS_LU])")
-    println(io, "        max nonzeros in any column of factor: $(meta.info[AMDPkg.AMD_DMAX])")
+    println(io, "   dense: $(alg.dense)")
+    println(io, "   aggressive: $(alg.aggressive)")
 end
 
 
-function Base.show(io::IO, alg::SymAMD)
-    meta = alg.meta
+function Base.show(io::IO, ::MIME"text/plain", alg::SymAMD)
     println(io, "SymAMD:")
-    println(io, "    parameters:")
-    println(io, "        dense row: $(meta.knobs[AMDPkg.COLAMD_DENSE_ROW])")
-    println(io, "        dense col: $(meta.knobs[AMDPkg.COLAMD_DENSE_COL])")
-    println(io, "        aggressive: $(meta.knobs[AMDPkg.COLAMD_AGGRESSIVE])")
-    println(io, "    information:")
-    println(io, "        status: $(AMDPkg.colamd_statuses[meta.stats[AMDPkg.COLAMD_STATUS]])")
-    println(io, "        memory defragmentation: $(meta.stats[AMDPkg.COLAMD_DEFRAG_COUNT])")
+    println(io, "   dense row: $(alg.dense_row)")
+    println(io, "   dense col: $(alg.dense_col)")
+    println(io, "   aggressive: $(alg.aggressive)")
 end
 
 
-function Base.show(io::IO, alg::Spectral)
+function Base.show(io::IO, ::MIME"text/plain", alg::Spectral)
     println(io, "Spectral:")
-    println(io, "    parameters:")
-    println(io, "        tol: $(alg.tol)")
+    println(io, "   tol: $(alg.tol)")
 end
 
 

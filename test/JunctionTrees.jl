@@ -1,7 +1,108 @@
 using LinearAlgebra
 using SparseArrays
 using StructuredDecompositions
+using StructuredDecompositions.JunctionTrees: LinkedList
 using Test
+
+
+@testset "linked lists" begin
+    @testset "singly linked list" begin
+        list = SinglyLinkedList(zeros(Int), Vector{Int}(undef, 3))
+        @test isempty(list)
+        @test collect(list) == []
+
+        @test pushfirst!(list, 1) === list
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test pushfirst!(list, 2) === list
+        @test !isempty(list)
+        @test collect(list) == [2, 1]
+
+        @test pushfirst!(list, 3) === list
+        @test !isempty(list)
+        @test collect(list) == [3, 2, 1]
+
+        @test popfirst!(list) == 3
+        @test !isempty(list)
+        @test collect(list) == [2, 1]
+
+        @test popfirst!(list) == 2
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test popfirst!(list) == 1        
+        @test isempty(list)
+        @test collect(list) == []
+    end
+
+    @testset "doubly linked list" begin
+        list = LinkedList(zeros(Int), Vector{Int}(undef, 3), Vector{Int}(undef, 3))
+        @test isempty(list)
+        @test collect(list) == []
+
+        @test pushfirst!(list, 1) === list
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test pushfirst!(list, 2) === list
+        @test !isempty(list)
+        @test collect(list) == [2, 1]
+
+        @test pushfirst!(list, 3) === list
+        @test !isempty(list)
+        @test collect(list) == [3, 2, 1]
+
+        @test delete!(list, 2) === list
+        @test !isempty(list)
+        @test collect(list) == [3, 1]
+
+        @test delete!(list, 3) === list
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test popfirst!(list) == 1       
+        @test isempty(list)
+        @test collect(list) == []
+    end
+end
+
+
+@testset "chordal" begin
+    matrix = zeros(0, 0)
+    @test_throws "Laplacians"      permutation(matrix; alg=Spectral())
+    @test_throws "Metis"           permutation(matrix; alg=NodeND())
+    @test_throws "TreeWidthSolver" permutation(matrix; alg=BT())
+end
+
+
+import Laplacians
+import Metis
+import TreeWidthSolver
+
+
+@testset "representation" begin
+    @test isa(repr("text/plain", MCS()), String)
+    @test isa(repr("text/plain", RCM()), String)
+    @test isa(repr("text/plain", AMD()), String)
+    @test isa(repr("text/plain", SymAMD()), String)
+    @test isa(repr("text/plain", MMD()), String)
+    @test isa(repr("text/plain", NodeND()), String)
+    @test isa(repr("text/plain", BT()), String)
+
+    list = SinglyLinkedList(ones(Int), [2, 0])
+    @test isa(repr("text/plain", list), String)
+    list = LinkedList(ones(Int), [2, 0], [0, 1])
+    @test isa(repr("text/plain", list), String)
+
+    matrix = ones(2, 2)
+    label, tree = eliminationtree(matrix)
+    @test isa(repr("text/plain", tree), String)
+    label, tree = supernodetree(matrix)
+    @test isa(repr("text/plain", tree), String)
+    label, tree = junctiontree(matrix)
+    @test isa(repr("text/plain", tree), String)
+end
 
 
 @testset "null graph" begin
@@ -68,6 +169,7 @@ end
 
     label, tree = junctiontree(matrix; snd=Maximal())
     @test isone(length(tree))
+    @test isone(length(tree))
     @test isone(rootindex(tree))
     @test iszero(treewidth(tree))
     @test iszero(nnz(tree))
@@ -116,7 +218,7 @@ end
     ]
 
     # Figure 4.2
-    extension = [
+    chordal = [
         0  0  1  1  1  0  0  0  0  0  0  0  0  0  1  0  0
         0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0
         1  1  0  1  1  0  0  0  0  0  0  0  0  0  1  0  0
@@ -137,10 +239,15 @@ end
     ]
 
     @test !ischordal(matrix)
-    @test ischordal(extension)
-    @test isfilled(tril(extension))
+    @test ischordal(chordal)
+    @test isfilled(chordal)
     @test treewidth(matrix; alg=1:17) == 4
-    @test treewidth(extension; alg=1:17) == 4
+    @test treewidth(chordal; alg=1:17) == 4
+
+    label, filled = eliminationgraph(matrix; alg=1:17)
+    fill!(nonzeros(filled), 1)
+    @test isfilled(filled)
+    @test filled == tril(chordal[label, label])
 
     order, index = permutation(matrix; alg=MCS())
     @test isa(order, Vector{Int})
@@ -195,8 +302,8 @@ end
     @test length(tree) == 17
     @test rootindex(tree) == 17
     @test treewidth(tree) == 4
-    @test nnz(tree) == sum(extension) ÷ 2
-    @test filledgraph(tree) == tril(extension[label, label])
+    @test nnz(tree) == sum(chordal) ÷ 2
+    @test eliminationgraph(tree) == tril(chordal[label, label])
 
     @test map(i -> parentindex(tree, i), 1:17)  == [
         2,
@@ -295,8 +402,8 @@ end
     @test length(tree) == 8
     @test rootindex(tree) == 8
     @test treewidth(tree) == 4
-    @test nnz(tree) == sum(extension) ÷ 2
-    @test filledgraph(tree) == tril(extension[label, label])
+    @test nnz(tree) == sum(chordal) ÷ 2
+    @test eliminationgraph(tree) == tril(chordal[label, label])
 
     @test map(i -> parentindex(tree, i), 1:8)  == [
         8,
@@ -359,8 +466,8 @@ end
     @test length(tree) == 12
     @test rootindex(tree) == 12
     @test treewidth(tree) == 4
-    @test nnz(tree) == sum(extension) ÷ 2
-    @test filledgraph(tree) == tril(extension[label, label])
+    @test nnz(tree) == sum(chordal) ÷ 2
+    @test eliminationgraph(tree) == tril(chordal[label, label])
 
     @test map(i -> parentindex(tree, i), 1:12)  == [
         3,

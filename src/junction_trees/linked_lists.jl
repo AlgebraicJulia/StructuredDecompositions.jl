@@ -1,4 +1,4 @@
-# A doubly linked list.
+# A doubly linked list of distinct integers.
 struct LinkedList{Init <: AbstractScalar{Int}, Prev <: AbstractVector{Int}, Next <: AbstractVector{Int}}
     head::Init
     prev::Prev
@@ -6,11 +6,14 @@ struct LinkedList{Init <: AbstractScalar{Int}, Prev <: AbstractVector{Int}, Next
 end
 
 
+# Evaluate whether a linked list is empty.
 function Base.isempty(list::LinkedList)
     iszero(list.head[])
 end
 
 
+# Append an element `v` to the front of a linked list.
+# If `v` ∈ `list`, the behavior of this function is undefined.
 function Base.pushfirst!(list::LinkedList, v::Integer)
     n = list.head[]
     list.head[] = v
@@ -25,6 +28,7 @@ function Base.pushfirst!(list::LinkedList, v::Integer)
 end
 
 
+# Remove the first element of a linked list.
 function Base.popfirst!(list::LinkedList)
     v = list.head[]
     n = list.next[v]
@@ -38,6 +42,8 @@ function Base.popfirst!(list::LinkedList)
 end
 
 
+# Delete an element `v` from a linked list.
+# If `v` ∉ `list`, the behavior of this function is undefined.
 function Base.delete!(list::LinkedList, v::Integer)
     p = list.prev[v]
     n = list.next[v]
@@ -121,7 +127,7 @@ function mcs(neighbors::Function, n::Integer)
 end
 
 
-function Base.show(io::IO, list::T) where T <: LinkedList
+function Base.show(io::IO, ::MIME"text/plain", list::T) where T <: LinkedList
     items = pushfirst!(map(string, take(list, MAX_ITEMS_PRINTED)), "head")
 
     if MAX_ITEMS_PRINTED < length(items)

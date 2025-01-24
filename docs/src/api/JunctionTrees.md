@@ -34,7 +34,8 @@ relative
 
 ## Chordal Graphs
 ```@docs
-filledgraph
+eliminationgraph
+eliminationgraph!
 ischordal
 isfilled
 isperfect
