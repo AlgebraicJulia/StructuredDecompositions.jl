@@ -1,3 +1,113 @@
+# Construct the subtree graph of a junction tree.
+function eliminationgraph(tree::JunctionTree)
+    eliminationgraph(true, tree)
+end
+
+
+"""
+    eliminationgraph([element=true,] tree::JunctionTree)
+
+See [`eliminationgraph!`]. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
+"""
+function eliminationgraph(element::T, tree::JunctionTree) where T
+    matrix = eliminationgraph(T, tree)
+    fill!(nonzeros(matrix), element)
+    matrix
+end
+
+
+"""
+    eliminationgraph(T::Type, tree::JunctionTree)
+
+See [`eliminationgraph!`]. The function returns a sparse matrix with elements of type `T`.
+"""
+function eliminationgraph(T::Type, tree::JunctionTree)
+    n = last(residual(last(tree)))
+    eliminationgraph!(spzeros(T, n, n), tree)
+end
+
+
+"""
+    eliminationgraph!(target::SparseMatrixCSC, tree::JunctionTree)
+
+Construct the [subtree graph](https://en.wikipedia.org/wiki/Chordal_graph) of 
+a junction tree. The result is stored in `target`.
+"""
+function eliminationgraph!(target::SparseMatrixCSC, tree::JunctionTree)
+    sizehint!(empty!(rowvals(target)), nnz(tree))
+    push!(empty!(getcolptr(target)), 1)
+
+    for bag in tree
+        res = residual(bag)
+        sep = separator(bag)
+
+        for i in eachindex(res)
+            append!(rowvals(target), res[i + 1:end])
+            append!(rowvals(target), sep)
+            push!(getcolptr(target), length(rowvals(target)) + 1)
+        end
+    end
+
+    resize!(nonzeros(target), nnz(tree))
+    target
+end
+
+
+"""
+    eliminationgraph(matrix::AbstractMatrix;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+
+Construct the elimination graph of a simple graph.
+```julia
+julia> using StructuredDecompositions, SparseArrays
+
+julia> graph = [
+           0 1 1 0 0 0 0 0
+           1 0 1 0 0 1 0 0
+           1 1 0 1 1 0 0 0
+           0 0 1 0 1 0 0 0
+           0 0 1 1 0 0 1 1
+           0 1 0 0 0 0 1 0
+           0 0 0 0 1 1 0 1
+           0 0 0 0 1 0 1 0
+       ];
+
+julia> label, filled = label, filled = eliminationgraph(graph);
+
+julia> filled
+8×8 SparseMatrixCSC{Int64, Int64} with 13 stored entries:
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  1  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ 1  1  1  1  ⋅  ⋅  ⋅  ⋅
+ 1  ⋅  ⋅  ⋅  1  1  ⋅  ⋅
+ ⋅  ⋅  ⋅  1  1  1  1  ⋅
+
+julia> isfilled(filled)
+true
+
+julia> ischordal(filled + filled')
+true
+"""
+function eliminationgraph(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    eliminationgraph!(sparse(matrix); alg)
+end
+
+
+"""
+    eliminationgraph!(matrix::SparseMatrixCSC;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+
+A mutating version of [`eliminationgraph`](@ref).
+"""
+function eliminationgraph!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    label, tree = junctiontree!(matrix; alg)
+    label, eliminationgraph!(matrix, tree)
+end
+
+
 """
     nnz(tree::JunctionTree)
 
@@ -131,59 +241,4 @@ function isperfect(neighbors::Function, order::AbstractVector, index::AbstractVe
     end
 
     true
-end
-
-
-# Construct the intersection graph of a junction tree.
-function filledgraph(tree::JunctionTree)
-    filledgraph(true, tree)
-end
-
-
-"""
-    filledgraph([element=true,] tree::JunctionTree)
-
-See below. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
-"""
-function filledgraph(element::T, tree::JunctionTree) where T
-    matrix = filledgraph(T, tree)
-    fill!(nonzeros(matrix), element)
-    matrix
-end
-
-
-"""
-    filledgraph(T::Type, tree::JunctionTree)
-
-See below. The function returns a sparse matrix with elements of type `T`.
-"""
-function filledgraph(T::Type, tree::JunctionTree)
-    n = last(residual(last(tree)))
-    filledgraph!(spzeros(T, n, n), tree)
-end
-
-
-"""
-    filledgraph!(target::SparseMatrixCSC, tree::JunctionTree)
-
-Construct the [subtree graph](https://en.wikipedia.org/wiki/Chordal_graph) of 
-a junction tree. The result is stored in `target`.
-"""
-function filledgraph!(target::SparseMatrixCSC, tree::JunctionTree)
-    sizehint!(empty!(rowvals(target)), nnz(tree))
-    push!(empty!(getcolptr(target)), 1)
-
-    for bag in tree
-        res = residual(bag)
-        sep = separator(bag)
-
-        for i in eachindex(res)
-            append!(rowvals(target), res[i + 1:end])
-            append!(rowvals(target), sep)
-            push!(getcolptr(target), length(rowvals(target)) + 1)
-        end
-    end
-
-    resize!(nonzeros(target), nnz(tree)) 
-    target
 end

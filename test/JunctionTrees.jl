@@ -68,7 +68,7 @@ using Test
 end
 
 
-@testset "extension" begin
+@testset "chordal" begin
     matrix = zeros(0, 0)
     @test_throws "Laplacians"      permutation(matrix; alg=Spectral())
     @test_throws "Metis"           permutation(matrix; alg=NodeND())
@@ -218,7 +218,7 @@ end
     ]
 
     # Figure 4.2
-    extension = [
+    chordal = [
         0  0  1  1  1  0  0  0  0  0  0  0  0  0  1  0  0
         0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0
         1  1  0  1  1  0  0  0  0  0  0  0  0  0  1  0  0
@@ -239,10 +239,15 @@ end
     ]
 
     @test !ischordal(matrix)
-    @test ischordal(extension)
-    @test isfilled(tril(extension))
+    @test ischordal(chordal)
+    @test isfilled(chordal)
     @test treewidth(matrix; alg=1:17) == 4
-    @test treewidth(extension; alg=1:17) == 4
+    @test treewidth(chordal; alg=1:17) == 4
+
+    label, filled = eliminationgraph(matrix; alg=1:17)
+    fill!(nonzeros(filled), 1)
+    @test isfilled(filled)
+    @test filled == tril(chordal[label, label])
 
     order, index = permutation(matrix; alg=MCS())
     @test isa(order, Vector{Int})
@@ -297,8 +302,8 @@ end
     @test length(tree) == 17
     @test rootindex(tree) == 17
     @test treewidth(tree) == 4
-    @test nnz(tree) == sum(extension) ÷ 2
-    @test filledgraph(tree) == tril(extension[label, label])
+    @test nnz(tree) == sum(chordal) ÷ 2
+    @test eliminationgraph(tree) == tril(chordal[label, label])
 
     @test map(i -> parentindex(tree, i), 1:17)  == [
         2,
@@ -397,8 +402,8 @@ end
     @test length(tree) == 8
     @test rootindex(tree) == 8
     @test treewidth(tree) == 4
-    @test nnz(tree) == sum(extension) ÷ 2
-    @test filledgraph(tree) == tril(extension[label, label])
+    @test nnz(tree) == sum(chordal) ÷ 2
+    @test eliminationgraph(tree) == tril(chordal[label, label])
 
     @test map(i -> parentindex(tree, i), 1:8)  == [
         8,
@@ -461,8 +466,8 @@ end
     @test length(tree) == 12
     @test rootindex(tree) == 12
     @test treewidth(tree) == 4
-    @test nnz(tree) == sum(extension) ÷ 2
-    @test filledgraph(tree) == tril(extension[label, label])
+    @test nnz(tree) == sum(chordal) ÷ 2
+    @test eliminationgraph(tree) == tril(chordal[label, label])
 
     @test map(i -> parentindex(tree, i), 1:12)  == [
         3,

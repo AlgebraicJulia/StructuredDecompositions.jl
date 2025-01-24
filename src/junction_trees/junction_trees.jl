@@ -57,18 +57,6 @@ end
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
         snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-A non-mutating version of [`junctiontree!`](@ref).
-"""
-function junctiontree(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    junctiontree!(sparse(matrix); alg, snd)
-end
-
-
-"""
-    junctiontree!(matrix::SparseMatrixCSC;
-        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
-        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-
 Construct a [tree decomposition](https://en.wikipedia.org/wiki/Tree_decomposition) of a simple graph.
 The vertices of the graph are first ordered by a fill-reducing permutation computed by the algorithm `alg`.
 The size of the resulting decomposition is determined by the supernode partition `snd`.
@@ -97,6 +85,18 @@ julia> tree
 │     └─ [2, 3, 6]
 └─ [5, 7, 8]
 ```
+"""
+function junctiontree(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    junctiontree!(sparse(matrix); alg, snd)
+end
+
+
+"""
+    junctiontree!(matrix::SparseMatrixCSC;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
+        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+
+A mutating version of [`junctiontree`](@ref).
 """
 function junctiontree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
     label, tree, lower, cache = junctiontree!(matrix, alg, snd)
@@ -127,7 +127,8 @@ end
     treewidth(matrix::AbstractMatrix;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
-A non-mutating version of [`treewidth!`](@ref).
+Compute an upper bound to the [tree width](https://en.wikipedia.org/wiki/Treewidth) of a simple graph.
+See [`junctiontree`](@ref) for the meaning of `alg`.
 """
 function treewidth(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     treewidth!(sparse(matrix); alg)
@@ -138,8 +139,7 @@ end
     treewidth!(matrix::SparseMatrixCSC;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
-Compute an upper bound to the [tree width](https://en.wikipedia.org/wiki/Treewidth) of a simple graph.
-See [`junctiontree!`](@ref) for the meaning of `alg`.
+A mutating version of [`treewidth`](@ref).
 """
 function treewidth!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     label, tree, upper, cache = eliminationtree!(matrix, alg)
