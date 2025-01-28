@@ -1,4 +1,4 @@
-names = ("mycielskian4", "can_292", "wing", "333SP")
+names = ("mycielskian4", "dwt_59", "can_292", "lshp3466", "wing", "144", "333SP")
 ssmc = ssmc_db()
 
 for name in names
@@ -12,8 +12,6 @@ for name in names
     order, index = permutation(graph, AMD())
 
     # construct benchmarks
-    SUITE["junction trees"]["StructuredDecompositions"][name]["maximal"] = @benchmarkable junctiontree($graph; alg=$order, snd=$(Maximal()))
-    SUITE["junction trees"]["StructuredDecompositions"][name]["fundamental"] = @benchmarkable junctiontree($graph; alg=$order, snd=$(Fundamental()))
-    SUITE["junction trees"]["StructuredDecompositions"][name]["nodal"] = @benchmarkable junctiontree($graph; alg=$order, snd=$(Nodal()))
-    SUITE["junction trees"]["QDLDL"][name] = @benchmarkable QDLDL.qdldl($(graph + (1.0)I); perm=$order, logical=true)
+    SUITE["junction trees"][name]["StructuredDecompositions"] = @benchmarkable eliminationgraph($graph; alg=$order)
+    SUITE["junction trees"][name]["QDLDL"] = @benchmarkable QDLDL.qdldl($(graph + (1.0)I); perm=$order, logical=true)
 end
