@@ -1,10 +1,16 @@
 module StructuredDecompositions
 
 
-include("JunctionTrees.jl")
-include("Decompositions.jl")
-include("FunctorUtils.jl")
-include("DecidingSheaves.jl")
+using Reexport
+
+
+include("junction_trees/JunctionTrees.jl")
+include("decompositions/Decompositions.jl")
+include("functor_utils/FunctorUtils.jl")
+include("deciding_sheaves/DecidingSheaves.jl")
+
+
+@reexport using .JunctionTrees
 
 
 end 

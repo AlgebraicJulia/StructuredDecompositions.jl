@@ -1,20 +1,26 @@
-struct SupernodeTree <: AbstractVector{UnitRange{Int}}
-    tree::Tree
-    sndptr::Vector{Int}
+"""
+    SupernodeTree{I} <: AbstractVector{UnitRange{I}}
 
-    function SupernodeTree(tree::Tree, sndptr::AbstractVector)
+A supernodal elimination tree.
+This type implements the [indexed tree interface](https://juliacollections.github.io/AbstractTrees.jl/stable/#The-Indexed-Tree-Interface).
+"""
+struct SupernodeTree{I} <: AbstractVector{UnitRange{I}}
+    tree::Tree{I}
+    sndptr::Vector{I}
+
+    function SupernodeTree{I}(tree::Tree, sndptr::AbstractVector) where I
         # validate parameters
         tree != eachindex(sndptr)[1:end - 1] && throw(ArgumentError("tree != eachindex(sndptr)[1:end - 1]"))
         sndptr[1] != 1 && throw(ArgumentError("sndptr[1] != 1"))
 
         # construct tree
-        new(tree, sndptr)
+        new{I}(tree, sndptr)
     end
 end
 
 
-function SupernodeTree(tree::SupernodeTree)
-    SupernodeTree(tree.tree, tree.sndptr)
+function SupernodeTree(tree::Tree{I}, sndptr::AbstractVector{I}) where I
+    SupernodeTree{I}(tree, sndptr)
 end
 
 
@@ -23,65 +29,104 @@ function Tree(tree::SupernodeTree)
 end
 
 
-function Tree(tree::SupernodeTree, root::Integer)
-    Tree(tree.tree, root)
+function Tree{I}(tree::SupernodeTree) where I
+    Tree{I}(tree.tree)
 end
 
 
-function supernodetree(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    supernodetree!(sparse(matrix); alg, snd)
+"""
+    supernodetree(graph;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
+        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+
+Construct a supernodal elimination tree.
+"""
+function supernodetree(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    supernodetree(graph, alg, snd)
 end
 
 
-function supernodetree!(matrix::SparseMatrixCSC; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    label, tree, index, sepptr, lower, cache = supernodetree!(matrix, alg, snd)
+function supernodetree(graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
+    label, tree, upper = eliminationtree(graph, alg)
+    cache = spzeros(Nothing, indtype(upper), size(upper))
+    supernodetree!(label, tree, upper, cache, snd)
+end
+
+
+"""
+    suoernodetree!(graph;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
+        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+
+A mutating version of [`supernodetree!`](@ref).
+"""
+function supernodetree!(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    label, tree, index, sepptr, lower, cache = supernodetree!(graph, alg, snd)
     label, tree
 end
 
 
-# Construct a postordered supernodal elimination tree.
-function supernodetree!(matrix::SparseMatrixCSC, alg::PermutationOrAlgorithm, snd::SupernodeType)
-    label, etree, upper, cache = eliminationtree!(matrix, alg)
+function supernodetree!(matrix::SparseMatrixCSC{<:Any, I}, alg::PermutationOrAlgorithm, snd::SupernodeType) where I
+    label, tree, upper = eliminationtree(matrix, alg)
+    cache = SparseMatrixCSC{Nothing, I}(size(matrix)..., getcolptr(matrix), rowvals(matrix), Vector{Nothing}(undef, nnz(matrix)))
+    supernodetree!(label, tree, upper, cache, snd)
+end
+
+
+function supernodetree!(label::Vector{I}, etree::Tree{I}, upper::SparseMatrixCSC{Nothing, I}, cache::SparseMatrixCSC{Nothing, I}, snd::SupernodeType) where I
     lower = transpose!(cache, upper)
     rowcount, colcount = supcnt(lower, etree)
     new, ancestor, tree = stree(etree, colcount, snd)
-    index = dfs(tree)
+    index = postorder(tree)
 
-    eindex = Vector{Int}(undef, size(lower, 1))
-    sepptr = sizehint!(Int[], length(tree) + 1)
-    sndptr = sizehint!(Int[], length(tree) + 1)
+    eindex = Vector{I}(undef, size(lower, 2))
+    sepptr = sizehint!(I[], length(tree) + 1)
+    sndptr = sizehint!(I[], length(tree) + 1)
     push!(sndptr, 1)
     push!(sepptr, 1)
 
     for j in invperm(index)
-        u = v = new[j]
-        p = last(sndptr)
+        u = new[j]
+        w = ancestor[j]
+        p = eindex[u] = sndptr[end]
 
-        while !isnothing(v) && v != ancestor[j]
-            eindex[v] = p
-            v = parentindex(etree, v)
-            p += 1
+        for v in ancestorindices(etree, u)
+            if v != w
+                p += 1
+                eindex[v] = p
+            else
+                break
+            end
         end
 
-        push!(sepptr, last(sndptr) + last(sepptr) + colcount[u] - p)
-        push!(sndptr, p)
+        push!(sepptr, sndptr[end] + sepptr[end] + colcount[u] - p - 1)
+        push!(sndptr, p + 1)
     end
 
     invpermute!(label, eindex), SupernodeTree(invpermute!(tree, index), sndptr), eindex, sepptr, lower, upper
 end
 
 
+function sepdiff(column::AbstractVector{I}, residual::AbstractVector{I}) where I
+    vertex = residual[begin]
+    @view column[searchsortedlast(column, vertex; by=v -> v ∉ residual) + 1:end]
+end
+
+
 # Get the separators of every node of a supernodal elimination tree.
-function sepvals(lower::SparseMatrixCSC, tree::SupernodeTree, sepptr::AbstractVector)
-    cache = sizehint!(Int[], maximum(i -> sepptr[i + 1] - sepptr[i], eachindex(tree)))
-    sepval = sizehint!(Int[], last(sepptr) - 1)
+function sepvals(lower::SparseMatrixCSC{Nothing, I}, tree::SupernodeTree{I}, sepptr::Vector{I}) where I
+    cache = sizehint!(I[], maximum(i -> sepptr[i + 1] - sepptr[i], eachindex(tree); init=zero(I)))
+    sepval = sizehint!(I[], sepptr[end] - 1)
 
     for (j, residual) in enumerate(tree)
-        append!(sepval, ifilter(v -> v ∉ residual, view(rowvals(lower), nzrange(lower, first(residual)))))
+        vertex = residual[begin]
+        column = @view rowvals(lower)[nzrange(lower, vertex)]
+        append!(sepval, sepdiff(column, residual))
 
         for i in childindices(tree, j)
             state = @view sepval[sepptr[j]:end]
-            mergesorted!(empty!(cache), state, ifilter(v -> v ∉ residual, view(sepval, sepptr[i]:sepptr[i + 1] - 1)))
+            child = @view sepval[sepptr[i]:sepptr[i + 1] - 1]
+            mergesorted!(empty!(cache), state, sepdiff(child, residual))
             append!(resize!(sepval, sepptr[j] - 1), cache)
         end
     end
@@ -91,8 +136,8 @@ end
 
 
 # Get the relative indices of every node of a supernodal elimination tree.
-function relvals(tree::SupernodeTree, sepptr::AbstractVector, sepval::AbstractVector)
-    relval = Vector{Int}(undef, length(sepval))
+function relvals(tree::SupernodeTree{I}, sepptr::Vector{I}, sepval::Vector{I}) where I
+    relval = Vector{I}(undef, length(sepval))
 
     for (j, residual) in enumerate(tree)
         for i in childindices(tree, j)
@@ -100,7 +145,7 @@ function relvals(tree::SupernodeTree, sepptr::AbstractVector, sepval::AbstractVe
             q = sepptr[j]
 
             while p < sepptr[i + 1] && sepval[p] in residual
-                relval[p] = sepval[p] - first(residual) + 1
+                relval[p] = sepval[p] - residual[begin] + 1
                 p += 1
             end
 
@@ -119,20 +164,9 @@ function relvals(tree::SupernodeTree, sepptr::AbstractVector, sepval::AbstractVe
 end
 
 
-function Base.show(io::IO, ::MIME"text/plain", tree::SupernodeTree)
-    print(io, "$(length(tree))-element SupernodeTree:\n")
-    print_tree(io, IndexNode(tree))
-end
-
-
-###########################
-# Abstract Tree Interface #
-###########################
-
-
-function firstchildindex(tree::SupernodeTree, i::Integer)
-    firstchildindex(tree.tree, i)
-end
+##########################
+# Indexed Tree Interface #
+##########################
 
 
 function AbstractTrees.rootindex(tree::SupernodeTree)
@@ -145,8 +179,18 @@ function AbstractTrees.parentindex(tree::SupernodeTree, i::Integer)
 end
 
 
+function firstchildindex(tree::SupernodeTree, i::Integer)
+    firstchildindex(tree.tree, i)
+end
+
+
 function AbstractTrees.nextsiblingindex(tree::SupernodeTree, i::Integer)
     nextsiblingindex(tree.tree, i)
+end
+
+
+function rootindices(tree::SupernodeTree)
+    rootindices(tree.tree)
 end
 
 
@@ -155,23 +199,8 @@ function AbstractTrees.childindices(tree::SupernodeTree, i::Integer)
 end
 
 
-function AbstractTrees.ParentLinks(::Type{IndexNode{SupernodeTree, Int}})
-    StoredParents()
-end
-
-
-function AbstractTrees.SiblingLinks(::Type{IndexNode{SupernodeTree, Int}})
-    StoredSiblings()
-end
-
-
-function AbstractTrees.NodeType(::Type{IndexNode{SupernodeTree, Int}})
-    HasNodeType()
-end
-
-
-function AbstractTrees.nodetype(::Type{IndexNode{SupernodeTree, Int}})
-    IndexNode{SupernodeTree, Int}
+function ancestorindices(tree::SupernodeTree, i::Integer)
+    ancestorindices(tree.tree, i)
 end
 
 
@@ -180,8 +209,8 @@ end
 #############################
 
 
-function Base.getindex(tree::SupernodeTree, i::Integer)
-    tree.sndptr[i]:tree.sndptr[i + 1] - 1
+function Base.getindex(tree::SupernodeTree{I}, i::Integer) where I
+    tree.sndptr[i]:tree.sndptr[i + 1] - one(I)
 end
 
 

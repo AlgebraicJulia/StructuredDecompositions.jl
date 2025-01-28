@@ -1,40 +1,228 @@
 """
+    eliminationgraph([element=true,] tree::JunctionTree)
+
+See [`eliminationgraph!`]. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
+"""
+function eliminationgraph(tree::JunctionTree)
+    eliminationgraph(true, tree)
+end
+
+
+function eliminationgraph(element::T, tree::JunctionTree) where T
+    matrix = eliminationgraph(T, tree)
+    fill!(nonzeros(matrix), element)
+    matrix
+end
+
+
+function eliminationgraph(T::Type, tree::JunctionTree{I}) where I
+    n = residual(tree[end])[end]
+    eliminationgraph!(spzeros(T, I, n, n), tree)
+end
+
+
+"""
+    eliminationgraph!(graph, tree::JunctionTree)
+
+Construct the [subtree graph](https://en.wikipedia.org/wiki/Chordal_graph) of 
+a junction tree. The result is stored in `graph`.
+"""
+function eliminationgraph!(matrix::SparseMatrixCSC, tree::JunctionTree)
+    sizehint!(empty!(rowvals(matrix)), nnz(tree))
+    push!(empty!(getcolptr(matrix)), 1)
+
+    for bag in tree
+        res = residual(bag)
+        sep = separator(bag)
+
+        for i in eachindex(res)
+            append!(rowvals(matrix), res[i + 1:end])
+            append!(rowvals(matrix), sep)
+            push!(getcolptr(matrix), length(rowvals(matrix)) + 1)
+        end
+    end
+
+    resize!(nonzeros(matrix), nnz(tree))
+    matrix
+end
+
+
+"""
+    eliminationgraph([element=true], graph;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+
+Construct the elimination graph of a simple graph.
+```julia
+julia> using SparseArrays, StructuredDecompositions
+
+julia> graph = sparse([
+           0 1 1 0 0 0 0 0
+           1 0 1 0 0 1 0 0
+           1 1 0 1 1 0 0 0
+           0 0 1 0 1 0 0 0
+           0 0 1 1 0 0 1 1
+           0 1 0 0 0 0 1 0
+           0 0 0 0 1 1 0 1
+           0 0 0 0 1 0 1 0
+       ]);
+
+julia> label, filled = label, filled = eliminationgraph(graph);
+
+julia> filled
+8×8 SparseMatrixCSC{Int64, Int64} with 13 stored entries:
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  1  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ 1  1  1  1  ⋅  ⋅  ⋅  ⋅
+ 1  ⋅  ⋅  ⋅  1  1  ⋅  ⋅
+ ⋅  ⋅  ⋅  1  1  1  1  ⋅
+
+julia> isfilled(filled)
+true
+
+julia> ischordal(filled + filled')
+true
+"""
+function eliminationgraph(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    eliminationgraph(true, graph, alg)
+end
+
+
+function eliminationgraph(element, graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    eliminationgraph(element, graph, alg)
+end
+
+
+function eliminationgraph(element::T, graph, alg::PermutationOrAlgorithm) where T
+    label, matrix = eliminationgraph(T, graph, alg)
+    fill!(nonzeros(matrix), element)
+    label, matrix
+end
+
+
+function eliminationgraph(T::Type, graph, alg::PermutationOrAlgorithm)
+    label, tree, lower, cache = junctiontree(graph, alg, Maximal())
+    eliminationgraph!(T, label, tree, lower)
+end
+
+
+"""
+    eliminationgraph!([element=true], graph;
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+
+A mutating version of [`eliminationgraph`](@ref).
+"""
+function eliminationgraph!(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    eliminationgraph!(true, graph, alg)
+end
+
+
+function eliminationgraph!(element, graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    eliminationgraph!(element, graph, alg)
+end
+
+
+function eliminationgraph!(element::T, graph, alg::PermutationOrAlgorithm) where T
+    label, matrix = eliminationgraph!(T, graph, alg)
+    fill!(nonzeros(matrix), element)
+    label, matrix
+end
+
+
+function eliminationgraph!(T::Type, graph, alg::PermutationOrAlgorithm)
+    label, tree, lower, cache = junctiontree!(graph, alg, Maximal())
+    eliminationgraph!(T, label, tree, lower)
+end
+
+
+function eliminationgraph!(T::Type, label::Vector{I}, tree::JunctionTree{I}, lower::SparseMatrixCSC{Nothing, I}) where I
+    matrix = SparseMatrixCSC{T, I}(size(lower)..., getcolptr(lower), rowvals(lower), Vector{T}(undef, nnz(lower)))
+    label, eliminationgraph!(matrix, tree)
+end
+
+
+"""
     nnz(tree::JunctionTree)
 
 Compute the number of edges in the [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph) of a junction tree.
 """
 function SparseArrays.nnz(tree::JunctionTree)
-    sum(tree) do bag
-        r = length(residual(bag))
-        s = length(separator(bag))
-        div((2s + r - 1)r, 2)
+    sum(tree; init=0) do bag
+        m = length(residual(bag))
+        n = length(separator(bag))
+        (n)m + (m - 1)m ÷ 2
     end 
 end
 
 
 """
-    ischordal(matrix::AbstractMatrix)
+    ischordal(graph)
 
 Determine whether a simple graph is [chordal](https://en.wikipedia.org/wiki/Chordal_graph).
 """
-function ischordal(matrix::AbstractMatrix)
-    ischordal(sparse(matrix))
+function ischordal(matrix::SparseMatrixCSC{<:Any, I}) where I
+    # validate arguments
+    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
+
+    # run algorithm
+    vertices::OneTo{I} = axes(matrix, 2)
+
+    ischordal(vertices) do j
+        @view rowvals(matrix)[nzrange(matrix, j)]
+    end
 end
 
 
-# Determine whether a graph is chordal.
-function ischordal(matrix::SparseMatrixCSC)
-    isperfect(matrix, permutation(matrix, MCS())...)
+function ischordal(neighbors::Function, vertices::AbstractVector)
+    index = mcs(neighbors, vertices)
+    isperfect(neighbors, invperm(index), index)
 end
 
 
 """
-    isperfect(matrix::AbstractMatrix, order::AbstractVector[, index::AbstractVector])
+    isfilled(graph)
+
+Determine whether a directed graph is filled.
+"""
+function isfilled(matrix::SparseMatrixCSC{<:Any, I}) where I
+    # validate arguments
+    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
+
+    # run algorithm
+    vertices::OneTo{I} = axes(matrix, 2)
+
+    isfilled(vertices) do j
+        @view rowvals(matrix)[nzrange(matrix, j)]
+    end
+end
+
+
+function isfilled(neighbors::Function, vertices::AbstractVector)
+    isperfect(neighbors, vertices, vertices)
+end
+
+
+"""
+    isperfect(graph, order::AbstractVector[, index::AbstractVector])
 
 Determine whether an fill-reducing permutation is perfect.
 """
-function isperfect(matrix::AbstractMatrix, order::AbstractVector, index::AbstractVector=invperm(order))
-    isperfect(sparse(matrix))
+function isperfect(graph, order::AbstractVector)
+    isperfect(graph, order, invperm(order))
+end
+
+
+function isperfect(matrix::SparseMatrixCSC{<:Any, I}, order::AbstractVector{I}, index::AbstractVector{I}) where I
+    # validate arguments
+    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
+    axes(matrix, 2) != eachindex(order) && throw(ArgumentError("axes(matrix, 2) != eachindex(order)"))
+
+    # run algorithm
+    isperfect(order, index) do j
+        @view rowvals(matrix)[nzrange(matrix, j)]
+    end
 end
 
 
@@ -43,15 +231,19 @@ end
 # Test for Zero Fill-In.
 #
 # Determine whether a fill-reducing permutation is perfect.
-function isperfect(matrix::SparseMatrixCSC, order::AbstractVector, index::AbstractVector=invperm(order))
-    f = Vector{Int}(undef, size(matrix, 2))
-    findex = similar(f)
+function isperfect(neighbors::Function, order::AbstractVector{I}, index::AbstractVector{I}) where I
+    # validate arguments
+    eachindex(order) != eachindex(index) && throw(ArgumentError("eachindex(order) != eachindex(index)"))
+
+    # run algorithm
+    f = Vector{I}(undef, length(order))
+    findex = Vector{I}(undef, length(order))
 
     for (i, w) in enumerate(order)
         f[w] = w
         findex[w] = i
 
-        for v in @view rowvals(matrix)[nzrange(matrix, w)]
+        for v in neighbors(w)
             if index[v] < i
                 findex[v] = i
 
@@ -61,7 +253,7 @@ function isperfect(matrix::SparseMatrixCSC, order::AbstractVector, index::Abstra
             end
         end
 
-        for v in @view rowvals(matrix)[nzrange(matrix, w)]
+        for v in neighbors(w)
             if index[v] < i && findex[f[v]] < i
                 return false
             end
@@ -69,50 +261,4 @@ function isperfect(matrix::SparseMatrixCSC, order::AbstractVector, index::Abstra
     end
 
     true
-end
-
-
-# Construct the intersection graph of a junction tree.
-function chordalgraph(tree::JunctionTree)
-    chordalgraph(true, tree)
-end
-
-
-"""
-    chordalgraph([element=true,] tree::JunctionTree)
-
-See below. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
-"""
-function chordalgraph(element::T, tree::JunctionTree) where T
-    matrix = chordalgraph(T, tree)
-    fill!(nonzeros(matrix), element)
-    matrix
-end
-
-
-"""
-    chordalgraph(Element::Type, tree::JunctionTree)
-
-Construct the [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph) of the subtrees of
-a junction tree. The function returns a sparse matrix with elements of type `Element`
-and the same sparsity structure as the lower triangular part of the graph's adjacency matrix.
-"""
-function chordalgraph(Element::Type, tree::JunctionTree)
-    n = last(residual(last(tree)))
-    colptr = sizehint!(Int[], n + 1)
-    rowval = sizehint!(Int[], nnz(tree))
-    push!(colptr, 1) 
-
-    for bag in tree
-        for i in eachindex(residual(bag))
-            for v in @view bag[i + 1:end]
-                push!(rowval, v)
-            end
-
-            push!(colptr, length(rowval) + 1)
-        end
-    end
-
-    nzval = Vector{Element}(undef, nnz(tree))
-    SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end

@@ -1,24 +1,149 @@
+import Laplacians
+import Metis
+import TreeWidthSolver
+
+
 using LinearAlgebra
 using SparseArrays
-using StructuredDecompositions.JunctionTrees
+using StructuredDecompositions
+using StructuredDecompositions.JunctionTrees: LinkedList
 using Test
 
 
-@testset "singleton graph" begin
-    # singleton graph
-    matrix = [0;;]
+@testset "linked lists" begin
+    @testset "singly linked list" begin
+        list = SinglyLinkedList(zeros(Int), Vector{Int}(undef, 3))
+        @test isempty(list)
+        @test collect(list) == []
+
+        @test pushfirst!(list, 1) === list
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test pushfirst!(list, 2) === list
+        @test !isempty(list)
+        @test collect(list) == [2, 1]
+
+        @test pushfirst!(list, 3) === list
+        @test !isempty(list)
+        @test collect(list) == [3, 2, 1]
+
+        @test popfirst!(list) == 3
+        @test !isempty(list)
+        @test collect(list) == [2, 1]
+
+        @test popfirst!(list) == 2
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test popfirst!(list) == 1        
+        @test isempty(list)
+        @test collect(list) == []
+    end
+
+    @testset "doubly linked list" begin
+        list = LinkedList(zeros(Int), Vector{Int}(undef, 3), Vector{Int}(undef, 3))
+        @test isempty(list)
+        @test collect(list) == []
+
+        @test pushfirst!(list, 1) === list
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test pushfirst!(list, 2) === list
+        @test !isempty(list)
+        @test collect(list) == [2, 1]
+
+        @test pushfirst!(list, 3) === list
+        @test !isempty(list)
+        @test collect(list) == [3, 2, 1]
+
+        @test delete!(list, 2) === list
+        @test !isempty(list)
+        @test collect(list) == [3, 1]
+
+        @test delete!(list, 3) === list
+        @test !isempty(list)
+        @test collect(list) == [1]
+
+        @test popfirst!(list) == 1       
+        @test isempty(list)
+        @test collect(list) == []
+    end
+end
+
+
+@testset "representation" begin
+    @test isa(repr("text/plain", MCS()), String)
+    @test isa(repr("text/plain", RCM()), String)
+    @test isa(repr("text/plain", AMD()), String)
+    @test isa(repr("text/plain", SymAMD()), String)
+    @test isa(repr("text/plain", MMD()), String)
+    @test isa(repr("text/plain", NodeND()), String)
+    @test isa(repr("text/plain", BT()), String)
+
+    list = SinglyLinkedList(ones(Int), [2, 0])
+    @test isa(repr("text/plain", list), String)
+    list = LinkedList(ones(Int), [2, 0], [0, 1])
+    @test isa(repr("text/plain", list), String)
+
+    matrix = spzeros(2, 2)
+    label, tree = eliminationtree(matrix)
+    @test isa(repr("text/plain", tree), String)
+    label, tree = supernodetree(matrix)
+    @test isa(repr("text/plain", tree), String)
+    label, tree = junctiontree(matrix)
+    @test isa(repr("text/plain", tree), String)
+end
+
+
+@testset "null graph" begin
+    matrix = spzeros(0, 0)
     @test ischordal(matrix)
+    @test isfilled(matrix)
     @test iszero(treewidth(matrix))
 
-    @test permutation(matrix, MCS())                 == ([1], [1])
-    @test permutation(matrix, RCM())                 == ([1], [1])
-    @test permutation(matrix, AMD())                 == ([1], [1])
-    @test permutation(matrix, SymAMD())              == ([1], [1])
-    @test permutation(matrix, MMD())                 == ([1], [1])
-    @test permutation(matrix, NodeND())              == ([1], [1])
-    # @test permutation(matrix, FlowCutter(; time=10)) == ([1], [1])
-    @test permutation(matrix, Spectral())            == ([1], [1])
-    @test permutation(matrix, BT())                  == ([1], [1])
+    @test permutation(matrix; alg=MCS())      == ([], [])
+    @test permutation(matrix; alg=AMD())      == ([], [])
+    @test permutation(matrix; alg=SymAMD())   == ([], [])
+    @test permutation(matrix; alg=MMD())      == ([], []) skip=true
+    @test permutation(matrix; alg=NodeND())   == ([], []) skip=true
+    @test permutation(matrix; alg=BT())       == ([], [])
+
+    label, tree = junctiontree(matrix; snd=Nodal())
+    @test iszero(length(tree))
+    @test isnothing(rootindex(tree))
+    @test iszero(treewidth(tree))
+    @test iszero(nnz(tree))
+
+    label, tree = junctiontree(matrix; snd=Maximal())
+    @test iszero(length(tree))
+    @test isnothing(rootindex(tree))
+    @test iszero(treewidth(tree))
+    @test iszero(nnz(tree))
+
+    label, tree = junctiontree(matrix; snd=Fundamental())
+    @test iszero(length(tree))
+    @test isnothing(rootindex(tree))
+    @test iszero(treewidth(tree))
+    @test iszero(nnz(tree))
+end
+
+
+@testset "singleton graph" begin
+    matrix = spzeros(1, 1)
+    @test ischordal(matrix)
+    @test isfilled(matrix)
+    @test iszero(treewidth(matrix))
+
+    @test permutation(matrix; alg=MCS())      == ([1], [1])
+    @test permutation(matrix; alg=RCM())      == ([1], [1])
+    @test permutation(matrix; alg=AMD())      == ([1], [1])
+    @test permutation(matrix; alg=SymAMD())   == ([1], [1])
+    @test permutation(matrix; alg=MMD())      == ([1], [1])
+    @test permutation(matrix; alg=NodeND())   == ([1], [1])
+    @test permutation(matrix; alg=Spectral()) == ([1], [1]) skip=true
+    @test permutation(matrix; alg=BT())       == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())
     @test isone(length(tree))
@@ -33,6 +158,7 @@ using Test
     @test isone(only(tree[1]))
 
     label, tree = junctiontree(matrix; snd=Maximal())
+    @test isone(length(tree))
     @test isone(length(tree))
     @test isone(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -61,7 +187,7 @@ end
 @testset "vandenberghe and andersen" begin
     # Chordal Graphs and Semidefinite Optimization
     # Vandenberghe and Andersen
-    matrix = [
+    matrix = sparse([
         0  0  1  1  1  0  0  0  0  0  0  0  0  0  1  0  0
         0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0
         1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
@@ -79,10 +205,10 @@ end
         1  0  0  0  0  0  1  0  0  0  0  0  0  0  0  0  1
         0  0  0  0  1  1  0  0  0  0  0  1  0  0  0  0  0
         0  0  0  0  0  0  0  0  0  1  0  1  0  0  1  0  0
-    ]
+    ])
 
     # Figure 4.2
-    extension = [
+    chordal = sparse([
         0  0  1  1  1  0  0  0  0  0  0  0  0  0  1  0  0
         0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0
         1  1  0  1  1  0  0  0  0  0  0  0  0  0  1  0  0
@@ -100,46 +226,63 @@ end
         1  0  1  1  1  0  1  1  1  0  0  0  0  0  0  1  1
         0  0  0  0  1  1  0  0  1  0  0  1  1  1  1  0  1
         0  0  0  0  0  0  0  0  0  1  1  1  1  1  1  1  0
-    ]
+    ])
 
     @test !ischordal(matrix)
-    @test ischordal(extension)
+    @test ischordal(chordal)
+    @test isfilled(chordal)
     @test treewidth(matrix; alg=1:17) == 4
-    @test treewidth(extension; alg=1:17) == 4
+    @test treewidth(chordal; alg=1:17) == 4
 
-    order, index = permutation(matrix, MCS())
+    label, filled = eliminationgraph(matrix; alg=1:17)
+    @test isfilled(filled)
+    @test filled == tril(chordal[label, label])
+
+    order, index = permutation(matrix; alg=MCS())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, RCM())
+    order, index = permutation(matrix; alg=RCM())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, AMD())
+    order, index = permutation(matrix; alg=AMD())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, SymAMD())
+    order, index = permutation(matrix; alg=SymAMD())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, MMD())
+    order, index = permutation(matrix; alg=MMD())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, NodeND())
+    order, index = permutation(matrix; alg=NodeND())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    # order, index = permutation(matrix, FlowCutter(; time=10))
-    # @test length(order) == 17
-    # @test order[index] == 1:17
-
-    order, index = permutation(matrix, Spectral())
+    order, index = permutation(matrix; alg=Spectral())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
-    order, index = permutation(matrix, BT())
+    order, index = permutation(matrix; alg=BT())
+    @test isa(order, Vector{Int})
+    @test isa(index, Vector{Int})
     @test length(order) == 17
     @test order[index] == 1:17
 
@@ -148,8 +291,8 @@ end
     @test length(tree) == 17
     @test rootindex(tree) == 17
     @test treewidth(tree) == 4
-    @test nnz(tree) == sum(extension) ÷ 2
-    @test chordalgraph(tree) == tril(extension[label, label])
+    @test nnz(tree) == sum(chordal) ÷ 2
+    @test eliminationgraph(tree) == tril(chordal[label, label])
 
     @test map(i -> parentindex(tree, i), 1:17)  == [
         2,
@@ -248,8 +391,8 @@ end
     @test length(tree) == 8
     @test rootindex(tree) == 8
     @test treewidth(tree) == 4
-    @test nnz(tree) == sum(extension) ÷ 2
-    @test chordalgraph(tree) == tril(extension[label, label])
+    @test nnz(tree) == sum(chordal) ÷ 2
+    @test eliminationgraph(tree) == tril(chordal[label, label])
 
     @test map(i -> parentindex(tree, i), 1:8)  == [
         8,
@@ -312,8 +455,8 @@ end
     @test length(tree) == 12
     @test rootindex(tree) == 12
     @test treewidth(tree) == 4
-    @test nnz(tree) == sum(extension) ÷ 2
-    @test chordalgraph(tree) == tril(extension[label, label])
+    @test nnz(tree) == sum(chordal) ÷ 2
+    @test eliminationgraph(tree) == tril(chordal[label, label])
 
     @test map(i -> parentindex(tree, i), 1:12)  == [
         3,

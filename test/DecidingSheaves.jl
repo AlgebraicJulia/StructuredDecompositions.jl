@@ -1,18 +1,23 @@
 module TestDecidingSheaves
 
-using Test
-using PartialFunctions
-using MLStyle
 
+using Catlab
+using MLStyle
+using PartialFunctions
 using StructuredDecompositions.Decompositions
 using StructuredDecompositions.DecidingSheaves
 using StructuredDecompositions.FunctorUtils
 using StructuredDecompositions.JunctionTrees
+using Test
 
-using Catlab.Graphs
-using Catlab.ACSetInterface
-using Catlab.CategoricalAlgebra
-using Catlab.Graphics
+
+# fixing bug upstream
+function Catlab.WiringDiagramAlgebras.make_homomorphism(row::AbstractVector{T}, X::StructACSet{S}, Y::StructACSet{S}) where {T, S}
+  components = let i = 0
+    NamedTuple{ob(S)}(T[row[i+=1] for _ in parts(X,c)] for c in ob(S))
+  end
+  ACSetTransformation(components, X, Y)
+end
 
 
 function K(n::Integer)
@@ -26,7 +31,7 @@ end
 
 
 function (coloring::Coloring)(graph::Graph)
-    FinSet(homomorphisms(graph, K(coloring.n)))
+    FinSet(homomorphisms(graph, K(coloring.n); alg=HomomorphismQuery()))
 end
 
 

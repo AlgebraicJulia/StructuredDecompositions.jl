@@ -1,16 +1,19 @@
-# A doubly linked list.
-struct LinkedList{Init <: AbstractScalar{Int}, Prev <: AbstractVector{Int}, Next <: AbstractVector{Int}}
+# A doubly linked list of distinct integers.
+struct LinkedList{I <: Integer, Init <: AbstractScalar{I}, Prev <: AbstractVector{I}, Next <: AbstractVector{I}}
     head::Init
     prev::Prev
     next::Next
 end
 
 
+# Evaluate whether a linked list is empty.
 function Base.isempty(list::LinkedList)
     iszero(list.head[])
 end
 
 
+# Append an element `v` to the front of a linked list.
+# If `v` ∈ `list`, the behavior of this function is undefined.
 function Base.pushfirst!(list::LinkedList, v::Integer)
     n = list.head[]
     list.head[] = v
@@ -25,6 +28,7 @@ function Base.pushfirst!(list::LinkedList, v::Integer)
 end
 
 
+# Remove the first element of a linked list.
 function Base.popfirst!(list::LinkedList)
     v = list.head[]
     n = list.next[v]
@@ -38,6 +42,8 @@ function Base.popfirst!(list::LinkedList)
 end
 
 
+# Delete an element `v` from a linked list.
+# If `v` ∉ `list`, the behavior of this function is undefined.
 function Base.delete!(list::LinkedList, v::Integer)
     p = list.prev[v]
     n = list.next[v]
@@ -56,51 +62,59 @@ function Base.delete!(list::LinkedList, v::Integer)
 end
 
 
+function mcs(matrix::SparseMatrixCSC{<:Any, I}) where I
+    # validate arguments
+    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
+
+    # run algorithm
+    vertices::OneTo{I} = axes(matrix, 2)
+
+    mcs(vertices) do j
+        @view rowvals(matrix)[nzrange(matrix, j)]
+    end
+end
+
+
 # Simple Linear-Time Algorithms to Test Chordality of Graphs, Test Acyclicity of Hypergraphs, and Selectively Reduce Acyclic Hypergraphs
 # Tarjan and Yannakakis
 # Maximum Cardinality Search
 #
-# Construct a fill-reducing permutation of a simple graph, represented by its adjacency matrix.
+# Construct a fill-reducing permutation of a simple graph.
 # The complexity is O(m + n), where m = |E| and n = |V|.
-function mcs(matrix::SparseMatrixCSC)
-    # validate arguments
-    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
-    
+function mcs(neighbors::Function, vertices::AbstractVector{I}) where I 
     # construct disjoint sets data structure
-    head = zeros(Int, size(matrix, 2) + 1)
-    prev = Vector{Int}(undef, size(matrix, 2) + 1)
-    next = Vector{Int}(undef, size(matrix, 2) + 1)
+    head = zeros(I, length(vertices) + 1)
+    prev = Vector{I}(undef, length(vertices) + 1)
+    next = Vector{I}(undef, length(vertices) + 1)
     
     function set(i)
         LinkedList(view(head, i), prev, next)
     end
     
     # run algorithm
-    order = Vector{Int}(undef, size(matrix, 2))
-    number = Vector{Int}(undef, size(matrix, 2))
+    alpha = Vector{I}(undef, length(vertices))
+    size = Vector{I}(undef, length(vertices))
 
-    for v in axes(matrix, 2)
-        number[v] = 1
-        pushfirst!(set(1), v)
+    for v in reverse(vertices)
+        size[v] = one(I)
+        pushfirst!(set(one(I)), v)
     end
 
-    i = size(matrix, 2)
     j = 1
 
-    while i >= 1
+    for i in reverse(vertices)
         v = popfirst!(set(j))
-        order[i] = v
-        number[v] = 0
+        alpha[v] = i
+        size[v] = 0
 
-        for w in @view rowvals(matrix)[nzrange(matrix, v)]
-            if number[w] >= 1
-                delete!(set(number[w]), w)
-                number[w] += 1
-                pushfirst!(set(number[w]), w)
+        for w in neighbors(v)
+            if size[w] >= 1
+                delete!(set(size[w]), w)
+                size[w] += 1
+                pushfirst!(set(size[w]), w)
             end
         end
 
-        i -= 1
         j += 1
 
         while j >= 1 && isempty(set(j))
@@ -108,36 +122,37 @@ function mcs(matrix::SparseMatrixCSC)
         end
     end
 
-    order
+    alpha
 end
 
 
-function Base.show(io::IO, list::T) where T <: LinkedList
+function Base.show(io::IO, ::MIME"text/plain", list::L) where L <: LinkedList
     items = pushfirst!(map(string, take(list, MAX_ITEMS_PRINTED)), "head")
 
     if MAX_ITEMS_PRINTED < length(items)
         items[end] = "..."
     end
 
-    print(io, "$T:\n$(join(items, " ↔ "))")
+    println(io, L)
+    println(io, join(items, " ↔ "))
 end
 
 
-######################
-# Iterator Interface #
-######################
+#######################
+# Iteration Interface #
+#######################
 
 
-function Base.iterate(list::LinkedList, i::Integer=list.head[])
+function Base.iterate(list::LinkedList{I}, i::I=list.head[]) where I
     iszero(i) ? nothing : (i, list.next[i])
 end
 
 
-function Base.IteratorSize(::Type{T}) where T <: LinkedList
+function Base.IteratorSize(::Type{<:LinkedList})
     Base.SizeUnknown()
 end
 
 
-function Base.eltype(::Type{T}) where T <: LinkedList
-    Int
+function Base.eltype(::Type{<:LinkedList{I}}) where I
+    I
 end

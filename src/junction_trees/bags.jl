@@ -1,11 +1,11 @@
 """
-    Bag <: AbstractVector{Int}
+    Bag{I} <: AbstractVector{I}
 
 A bag of a junction tree.
 """
-struct Bag <: AbstractVector{Int}
-    residual::UnitRange{Int}
-    separator::SubArray{Int, 1, Vector{Int}, Tuple{UnitRange{Int}}, true}
+struct Bag{I <: Integer} <: AbstractVector{I}
+    residual::UnitRange{I}
+    separator::SubArray{I, 1, Vector{I}, Tuple{UnitRange{I}}, true}
 end
 
 

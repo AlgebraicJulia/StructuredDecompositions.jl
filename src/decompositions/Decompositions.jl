@@ -16,13 +16,15 @@ using Base.Threads
 using Catlab
 using Catlab.CategoricalAlgebra
 using Catlab.Graphs
+using Catlab.Graphs: add_edges!
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra.Diagrams
+using SparseArrays: getcolptr
 using SparseArrays
 
 import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map, colimit, limit
 
-include("decompositions/str_decomps.jl")
-include("decompositions/junction_trees.jl")
+include("str_decomps.jl")
+include("junction_trees.jl")
 
 end

@@ -6,6 +6,9 @@
 # We will first benchmark the coloring algorithm in graphs.jl
 
 
+colors = (2, 3)
+
+
 struct Coloring
     n::Int    
 end
@@ -17,7 +20,7 @@ end
 
 
 function (coloring::Coloring)(graph::Graph)
-    FinSet(homomorphisms(graph, K(coloring.n)))
+    FinSet(homomorphisms(graph, K(coloring.n); alg=HomomorphismQuery()))
 end
 
 
@@ -40,22 +43,35 @@ graph = @acset Graph begin
           22, 23, 23, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 32, 33, 33, 34, 35, 35, 36, 36, 37, 38, 38, 39, 39, 40]
 end
 
-for i in (2, 3, 4)
-    SUITE["graph coloring fixed"]["$i coloring"]["HomSearch"] = @benchmarkable is_homomorphic($graph, $(K(i)))
+matrix = copy(transpose(adjacency_matrix(graph)))
+simple = SimpleGraphs.UndirectedGraph(matrix)
+graphs = GraphsPkg.Graph(matrix)
+config = GenericTensorNetworks.SingleConfigMin()
+
+
+function vertex_color(simple, i)
+    try
+        SimpleGraphAlgorithms.vertex_color(deepcopy(simple), i)
+    catch
+        nothing
+    end
 end
+
+
+for i in colors
+    target = K(i)
+    network = GenericTensorNetworks.GenericTensorNetwork(GenericTensorNetworks.Coloring{i}(graphs))
+    SUITE["graph coloring fixed"]["$i coloring"]["Catlab"] = @benchmarkable is_homomorphic($graph, $target)
+    SUITE["graph coloring fixed"]["$i coloring"]["SimpleGraphAlgorithms"] = @benchmarkable vertex_color($simple, $i)
+    SUITE["graph coloring fixed"]["$i coloring"]["GenericTensorNetworks"] = @benchmarkable GenericTensorNetworks.solve($network, $config)
+end
+
 
 # 1 bag case
 # 40 nodes, no adhesions
 
 # bag 1
-H01 = @acset Graph begin
-    V = 40
-    E = 63
-    src = [1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 7, 7, 8, 8, 9, 10, 10, 10, 10, 10, 10, 11, 11, 12, 13, 13, 14, 14, 15, 16, 16, 17, 17, 18, 19,
-          21, 21, 22, 23, 23, 24, 24, 25, 26, 26, 27, 27, 28, 29, 31, 31, 32, 33, 33, 34, 34, 35, 36, 36, 37, 37, 38, 39]
-    tgt = [2, 3, 3, 4, 4, 5, 6, 6, 7, 7, 8, 9, 9, 10, 10, 11, 12, 21, 22, 31, 32, 12, 13, 13, 14, 15, 15, 16, 16, 17, 18, 18, 19, 19, 20,
-          22, 23, 23, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 32, 33, 33, 34, 35, 35, 36, 36, 37, 38, 38, 39, 39, 40]
-end
+H01 = graph
 
 H02 = @acset Graph begin
     V = 1
@@ -89,8 +105,8 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3)
-    SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["1 bag"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
+for i in colors
+    SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["1 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
 # 2 bag case 
@@ -135,7 +151,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3)
+for i in colors
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["2 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -212,7 +228,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3, 4)
+for i in colors
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["4 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -348,7 +364,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3, 4)
+for i in colors
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["8 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 
@@ -544,7 +560,7 @@ end
 
 decomp = StrDecomp(G, Γ)
 
-for i in (2, 3, 4)
+for i in colors
     SUITE["graph coloring fixed"]["$i coloring"]["StructuredDecompositions"]["12 bags"] = @benchmarkable decide_sheaf_tree_shape($(skeletal_coloring(i)), $decomp)
 end
 

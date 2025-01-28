@@ -1,12 +1,17 @@
+names = ("mycielskian4", "dwt_59", "can_292", "lshp3466", "wing", "144", "333SP")
 ssmc = ssmc_db()
 
-names = ("598a", "144", "m14b", "auto")
-paths = fetch_ssmc(ssmc[in.(ssmc.name, (names,)), :], format="MM")
-
 for name in names
-    path = only(fetch_ssmc(ssmc[ssmc.name .== name, :], format="MM"))
-    matrix = mmread(joinpath(path, "$(name).mtx"))
-    SUITE["junction trees"]["nodal"][name] = @benchmarkable junctiontree($matrix; snd=Nodal())
-    SUITE["junction trees"]["fundamental"][name] = @benchmarkable junctiontree($matrix; snd=Fundamental())
-    SUITE["junction trees"]["maximal"][name] = @benchmarkable junctiontree($matrix; snd=Maximal())
+    # download graph
+    graph = mmread(joinpath(fetch_ssmc(ssmc[ssmc.name .== name, :], format="MM")[1], "$(name).mtx"))
+
+    # remove self loops
+    fkeep!((i, j, v) -> i != j, graph)
+
+    # construct permutation
+    order, index = permutation(graph, AMD())
+
+    # construct benchmarks
+    SUITE["junction trees"][name]["StructuredDecompositions"] = @benchmarkable eliminationgraph($graph; alg=$order)
+    SUITE["junction trees"][name]["QDLDL"] = @benchmarkable QDLDL.qdldl($(graph + (1.0)I); perm=$order, logical=true)
 end

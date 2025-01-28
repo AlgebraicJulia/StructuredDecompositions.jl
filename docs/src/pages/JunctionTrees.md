@@ -3,9 +3,9 @@
 JunctionTrees.jl is a Julia package for constructing [tree decompositions](https://en.wikipedia.org/wiki/Tree_decomposition) of simple graphs. You can use it as follows.
 
 ```julia
-julia> using StructuredDecompositions.JunctionTrees
+julia> using SparseArrays, StructuredDecompositions
 
-julia> graph = [
+julia> graph = sparse([
            0 1 1 0 0 0 0 0
            1 0 1 0 0 1 0 0
            1 1 0 1 1 0 0 0
@@ -14,12 +14,12 @@ julia> graph = [
            0 1 0 0 0 0 1 0
            0 0 0 0 1 1 0 1
            0 0 0 0 1 0 1 0
-       ];
+       ]);
 
 julia> label, tree = junctiontree(graph);
 
 julia> tree
-6-element JunctionTree:
+6-element JunctionTree{Int64}:
 [6, 7, 8]
 ├─ [1, 6, 7]
 ├─ [4, 6, 8]
@@ -31,7 +31,7 @@ julia> tree
 A junction tree is vector of bags, so you can retrieve the bag at node 3 by typing `tree[3]`.
 ```julia
 julia> bag = tree[3]
-3-element Bag:
+3-element Bag{Int64}:
  3
  4
  6
@@ -50,32 +50,4 @@ The width of a junction tree is computed by the function `treewidth`.
 ```julia
 julia> treewidth(tree)
 2
-```
-
-Every junction tree has an [intersection graph](https://en.wikipedia.org/wiki/Intersection_graph).
-```julia
-julia> using LinearAlgebra
-
-julia> intersection = Symmetric(chordalgraph(tree), :L)
-8×8 Symmetric{Bool, SparseMatrixCSC{Bool, Int64}}:
- ⋅  ⋅  ⋅  ⋅  ⋅  1  1  ⋅
- ⋅  ⋅  1  ⋅  ⋅  1  ⋅  ⋅
- ⋅  1  ⋅  1  ⋅  1  ⋅  ⋅
- ⋅  ⋅  1  ⋅  ⋅  1  ⋅  1
- ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  1  1
- 1  1  1  1  ⋅  ⋅  1  1
- 1  ⋅  ⋅  ⋅  1  1  ⋅  1
- ⋅  ⋅  ⋅  1  1  1  1  ⋅
-```
-
-The intersection graph `intersection` is a [chordal completion](https://en.wikipedia.org/wiki/Chordal_completion) of `graph`.
-```julia
-julia> ischordal(graph)
-false
-
-julia> ischordal(intersection)
-true
-
-julia> all(graph[label, label] .<= intersection)
-true
 ```
