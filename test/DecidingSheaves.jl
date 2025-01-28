@@ -7,6 +7,7 @@ using PartialFunctions
 using StructuredDecompositions.Decompositions
 using StructuredDecompositions.DecidingSheaves
 using StructuredDecompositions.FunctorUtils
+using StructuredDecompositions.JunctionTrees
 using Test
 
 
@@ -55,7 +56,7 @@ end
     ############################
     #     EXAMPLE INSTANCE 1 str decomp
     ############################
-    # 7 node cycle
+    # 5 node cycle
 
     # bag 1
     H1 = @acset Graph begin
@@ -90,7 +91,7 @@ end
         Dict(1 => H1, 2 => H2, 3 => H12),
         Dict(
             1 => ACSetTransformation(H12, H1, V=[1, 3]),
-            2 => ACSetTransformation(H12, H2, V=[4, 1])),
+            2 => ACSetTransformation(H12, H2, V=[1, 4])),
         ∫(G))
 
     manual = StrDecomp(G, Γ)
@@ -99,11 +100,96 @@ end
     # evaluates if decomp1 2 coloring is possible
     @test decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
     @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
+    @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
+    @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic)[1] == true
 
-    # evaluate possible 1 thorugh 3 colorings
+    # evaluate possible 1 through 3 colorings
     @test all(test_colorability(n, manual) for n ∈ range(1, 3))
     @test_broken all(test_colorability(n, automatic) for n ∈ range(1, 3))
+
+    graph = ob(colimit(manual))
+
+    print(ob(colimit(automatic)))
+
+    automatic = StrDecomp(graph; alg=BT())
+
+    print(automatic)
+
 end
+
+@testset "Test 1 Automatic as Manual" begin
+    # bag 1
+    H1 = @acset Graph begin
+        V = 3
+        E = 2
+        src = [1, 1]
+        tgt = [2, 3]
+    end
+
+    # adhesion 1, 2
+    H12 = @acset Graph begin
+        V = 2
+    end
+
+    # bag 2
+    H2 = @acset Graph begin
+        V = 3
+        E = 1
+        src = [1]
+        tgt = [3]
+    end
+
+    H23 = @acset Graph begin
+        V = 2
+    end
+
+    H3 = @acset Graph begin
+        V = 3
+        E = 2
+        src = [3, 3]
+        tgt = [1, 2]
+    end
+
+    G = @acset Graph begin
+        V = 3
+        E = 2
+        src = [2, 2]
+        tgt = [1, 3]
+    end
+
+    # transformations
+    Γ = FinDomFunctor(
+        Dict(1 => H1, 2 => H2, 3 => H3, 4 => H12, 5 => H23),
+        Dict(
+            1 => ACSetTransformation(H12, H1, V=[2, 3]),
+            2 => ACSetTransformation(H12, H2, V=[2, 1]),
+            3 => ACSetTransformation(H23, H2, V=[2, 3]),
+            4 => ACSetTransformation(H23, H3, V=[2, 1])),
+        ∫(G))
+
+    manual = StrDecomp(G, Γ)
+    automatic1 = StrDecomp(ob(colimit(manual)))
+
+    # evaluates if decomp1 2 coloring is possible
+    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
+    @test_broken old_decide_sheaf_tree_shape(skeletal_coloring(2), automatic1)[1] == false
+    @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
+    @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic)[1] == true
+
+    # evaluate possible 1 thorugh 3 colorings
+    @test_broken all(test_colorability(n, manual) for n ∈ range(1, 3))
+    @test_broken all(test_colorability(n, automatic1) for n ∈ range(1, 3))
+
+    graph = ob(colimit(manual))
+
+    print(ob(colimit(automatic1)))
+
+    automatic = StrDecomp(graph; alg=BT())
+
+    print(automatic1)
+end
+end
+
 
 @testset "Test 2" begin
     ############################
@@ -121,7 +207,7 @@ end
 
     # adhesion 1, 2
     H12 = @acset Graph begin
-        V = 2
+        V = 1
     end
 
     # bag 2
@@ -143,8 +229,8 @@ end
     Γ = FinDomFunctor(
         Dict(1 => H1, 2 => H2, 3 => H12),
         Dict(
-            1 => ACSetTransformation(H12, H1, V=[1, 3]),
-            2 => ACSetTransformation(H12, H2, V=[2, 1])),
+            1 => ACSetTransformation(H12, H1, V=[1]),
+            2 => ACSetTransformation(H12, H2, V=[1])),
         ∫(G))
 
     manual = StrDecomp(G, Γ)
@@ -153,12 +239,12 @@ end
     # evaluate if decomp2 2 and 3 colorings are possible
     @test decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
-    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
+    @test decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic)[1] == true
 
     # evaluate possible 1 through 3 colorings
     @test all(test_colorability(n, manual) for n ∈ range(1, 3))
-    @test_broken all(test_colorability(n, automatic) for n ∈ range(1, 3))
+    @test all(test_colorability(n, automatic) for n ∈ range(1, 3))
 end
 
 @testset "Test 3" begin
@@ -457,15 +543,15 @@ end
 
     # bag 1
     H1 = @acset Graph begin
-        V = 11
-        E = 11
-        src = [1, 2, 3, 4, 5, 1, 2, 2, 3, 4, 5]
-        tgt = [2, 3, 4, 5, 1, 6, 7, 8, 9, 10, 11]
+        V = 9
+        E = 9
+        src = [1, 2, 3, 4, 1, 2, 2, 3, 4]
+        tgt = [2, 3, 4, 1, 5, 6, 7, 8, 9]
     end
 
     # adhesion 1, 2
     H12 = @acset Graph begin
-        V = 6
+        V = 5
     end
 
     # bag 2
@@ -487,8 +573,8 @@ end
     Γ = FinDomFunctor(
         Dict(1 => H1, 2 => H2, 3 => H12),
         Dict(
-            1 => ACSetTransformation(H12, H1, V=[6, 7, 8, 9, 10, 11]),
-            2 => ACSetTransformation(H12, H2, V=[1, 2, 5, 8, 7, 6])),
+            1 => ACSetTransformation(H12, H1, V=[5, 6, 7, 8, 9]),
+            2 => ACSetTransformation(H12, H2, V=[1, 2, 5, 8, 6])),
         ∫(G))
 
     manual = StrDecomp(G, Γ)
@@ -503,6 +589,14 @@ end
     # evaluate possible 1 through 3 colorings
     @test all(test_colorability(n, manual) for n ∈ range(1, 3))
     @test_broken all(test_colorability(n, automatic) for n ∈ range(1, 3))
+
+    graph = ob(colimit(manual))
+
+    print(ob(colimit(automatic)))
+
+    automatic = StrDecomp(graph; alg=BT())
+
+    print(automatic)
 end
 
 @testset "Test 9" begin
