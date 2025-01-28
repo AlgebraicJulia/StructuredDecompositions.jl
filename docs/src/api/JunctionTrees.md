@@ -4,42 +4,6 @@
 CurrentModule = StructuredDecompositions.JunctionTrees
 ```
 
-## Trees
-```@docs
-Tree
-AbstractTree
-eliminationtree
-eliminationtree!
-rootindex
-parentindex
-firstchildindex
-nextsiblingindex
-rootindices
-childindices
-```
-
-## Junction Trees
-
-```@docs
-Bag
-JunctionTree
-junctiontree!
-junctiontree
-treewidth!
-treewidth
-separator
-residual
-relative
-```
-
-## Chordal Graphs
-```@docs
-eliminationgraph
-eliminationgraph!
-ischordal
-isfilled
-isperfect
-```
 
 ## Elimination Algorithms
 
@@ -59,10 +23,46 @@ permutation
 ```
 
 ## Supernodes
+
 ```@docs
 SupernodeType
 DEFAULT_SUPERNODE_TYPE
 Nodal
 Maximal
 Fundamental
+```
+
+## Trees
+
+```@docs
+AbstractTree
+Tree
+SupernodeTree
+JunctionTree
+eliminationtree
+supernodetree
+supernodetree!
+junctiontree
+junctiontree!
+treewidth!
+treewidth
+separator
+residual
+relative
+rootindex
+rootindices
+parentindex
+firstchildindex
+nextsiblingindex
+childindices
+```
+
+## Chordal Graphs
+
+```@docs
+eliminationgraph
+eliminationgraph!
+ischordal
+isfilled
+isperfect
 ```

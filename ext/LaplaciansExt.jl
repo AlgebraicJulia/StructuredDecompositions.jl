@@ -1,15 +1,13 @@
 module LaplaciansExt
 
 
-import Laplacians
-
-
+using Laplacians
 using SparseArrays
 using StructuredDecompositions.JunctionTrees
 
 
-function JunctionTrees.permutation(matrix::SparseMatrixCSC, alg::Spectral)
-    order = spectralorder(matrix; tol=alg.tol)
+function JunctionTrees.permutation(matrix::SparseMatrixCSC{<:Any, I}, alg::Spectral) where I
+    order::Vector{I} = spectralorder(matrix; tol=alg.tol)
     order, invperm(order)
 end
 
@@ -23,7 +21,7 @@ function spectralorder(matrix::SparseMatrixCSC; tol=0.0)
     matrix = SparseMatrixCSC{Float64, Int}(matrix)
     fill!(nonzeros(matrix), 1)
     fkeep!((i, j, v) -> i != j, matrix)
-    value, vector = Laplacians.fiedler(matrix; tol)
+    value, vector = fiedler(matrix; tol)
     sortperm(reshape(vector, size(matrix, 2)))
 end
 

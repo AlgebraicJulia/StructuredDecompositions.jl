@@ -1,15 +1,13 @@
 module MetisExt
 
 
-import Metis
-
-
+using Metis
 using SparseArrays
 using StructuredDecompositions.JunctionTrees
 
 
-function JunctionTrees.permutation(matrix::SparseMatrixCSC, alg::NodeND)
-    order::Vector{Int}, index::Vector{Int} = Metis.permutation(matrix)
+function JunctionTrees.permutation(matrix::SparseMatrixCSC{T, I}, alg::NodeND) where {T, I}
+    order::Vector{I}, index::Vector{I} = Metis.permutation(matrix)
     order, index
 end
 

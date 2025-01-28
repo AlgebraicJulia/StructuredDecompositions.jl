@@ -2,17 +2,17 @@ module JunctionTrees
 
 
 using AbstractTrees
+using Base: OneTo
 using Base.Order
 using Base.Iterators: filter as ifilter, take
 using DataStructures: IntDisjointSets, find_root!, root_union!
 using LinearAlgebra
 using SparseArrays
-using SparseArrays: getcolptr
+using SparseArrays: getcolptr, indtype
 using Sparspak: SpkMmd
 
 
 import AMD as AMDPkg
-import SymRCM
 
 
 const AbstractScalar{T} = AbstractArray{T, 0}
@@ -25,15 +25,15 @@ export SinglyLinkedList
 
 
 # Elimination Algorithms
-export EliminationAlgorithm, MCS, RCM, AMD, SymAMD, MMD, NodeND, Spectral, BT, permutation
+export MCS, RCM, AMD, SymAMD, MMD, NodeND, Spectral, BT, permutation
 
 
 # Trees
-export Tree, eliminationtree, eliminationtree!, setrootindex!, rootindex, firstchildindex, nextsiblingindex, parentindex, rootindices, childindices
+export Tree, eliminationtree, setrootindex!, rootindex, firstchildindex, nextsiblingindex, parentindex, rootindices, childindices, ancestorindices
 
 
 # Supernode Types
-export SupernodeType, Nodal, Maximal, Fundamental 
+export Nodal, Maximal, Fundamental 
 
 
 # Bags
@@ -60,6 +60,7 @@ include("supernode_types.jl")
 include("bags.jl")
 include("supernode_trees.jl")
 include("junction_trees.jl")
+include("abstract_trees.jl")
 include("chordal_graphs.jl")
 include("utils.jl")
 

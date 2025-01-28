@@ -1,5 +1,5 @@
 # A doubly linked list of distinct integers.
-struct SinglyLinkedList{Init <: AbstractScalar{Int}, Next <: AbstractVector{Int}}
+struct SinglyLinkedList{I <: Integer, Init <: AbstractScalar{I}, Next <: AbstractVector{I}}
     head::Init
     next::Next
 end
@@ -28,14 +28,14 @@ function Base.popfirst!(list::SinglyLinkedList)
 end
 
 
-function Base.show(io::IO, ::MIME"text/plain", list::T) where T <: SinglyLinkedList
+function Base.show(io::IO, ::MIME"text/plain", list::L) where L <: SinglyLinkedList
     items = pushfirst!(map(string, take(list, MAX_ITEMS_PRINTED)), "head")
 
     if MAX_ITEMS_PRINTED < length(items)
         items[end] = "..."
     end
 
-    println(io, T)
+    println(io, L)
     println(io, join(items, " → "))
 end
 
@@ -45,17 +45,17 @@ end
 #######################
 
 
-function Base.iterate(list::SinglyLinkedList, i::Integer=list.head[])
+function Base.iterate(list::SinglyLinkedList{I}, i::I=list.head[]) where I
     iszero(i) ? nothing : (i, list.next[i])
 end
 
 
-function Base.IteratorSize(::Type{T}) where T <: SinglyLinkedList
+function Base.IteratorSize(::Type{<:SinglyLinkedList})
     Base.SizeUnknown()
 end
 
 
-function Base.eltype(::Type{T}) where T <: SinglyLinkedList
-    Int
+function Base.eltype(::Type{<:SinglyLinkedList{I}}) where I
+    I
 end
 

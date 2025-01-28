@@ -1,38 +1,39 @@
-# See sympermute!.
-function sympermute(matrix::SparseMatrixCSC, index::AbstractVector, order::Ordering=ForwardOrdering())
-    sympermute!(similar(matrix), matrix, index, order)
-end
-
-
 # Direct Methods for Sparse Linear Systems §2.11
 # Davis
 # cs_symperm
 #
-# Permute the rows and columns of a symmetric matrix.
-# - `target`: overwritten by the permuted matrix
-# - `source`: upper / lower triangular part of the matrix to be permuted
-# - `index`: inverse permutation
-# - `order`: `ForwardOrdering()` if `matrix` is upper triangular, `ReverseOrdering()` if it is lower triangular
-function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::AbstractVector, order::Ordering=ForwardOrdering())
+# Permute an ordered graph.
+function sympermute(graph, index::AbstractVector{I}, order::Ordering) where I
+    target = spzeros(Nothing, I, length(index), length(index))
+    sympermute!(target, graph, index, order)
+end
+
+
+function sympermute!(target::SparseMatrixCSC, matrix::SparseMatrixCSC, index::AbstractVector, order::Ordering)
+    # validate arguments
+    size(target) != size(matrix) && throw(ArgumentError("size(target) != size(matrix)"))
+
+    # run algorithm
+    sympermute!(target, index, order) do j
+        @view rowvals(matrix)[nzrange(matrix, j)]
+    end
+end
+
+
+function sympermute!(neighbors::Function, target::SparseMatrixCSC{Nothing, I}, index::AbstractVector{I}, order::Ordering) where I
     # validate arguments
     eachindex(index) != axes(target, 1) && throw(ArgumentError("eachindex(index) != axes(target, 1)"))
     eachindex(index) != axes(target, 2) && throw(ArgumentError("eachindex(index) != axes(target, 2)"))
-    size(target) != size(source) && throw(ArgumentError("size(target) != size(source)"))
 
-    # resize target array
-    resize!(rowvals(target), nnz(source))
-    resize!(nonzeros(target), nnz(source))
-    
-    # run algorithm
-    count = similar(getcolptr(source))
+    # compute column counts
+    total::I = 0
+    count = Vector{I}(undef, size(target, 2) + 1)
     count[1] = 1
     count[2:end] .= 0
 
-    for j in axes(source, 2)
-        for p in nzrange(source, j)
-            i = rowvals(source)[p]
-
-            if lt(order, i, j) || isequal(i, j)
+    for j in axes(target, 2)
+        for i in neighbors(j)
+            if lt(order, i, j)
                 u = index[i]
                 v = index[j]
                 
@@ -40,19 +41,21 @@ function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::Ab
                     u, v = v, u
                 end
                 
+                total += 1
                 count[v + 1] += 1
             end
         end
     end
 
+    # resize target
+    resize!(rowvals(target), total)
+    resize!(nonzeros(target), total)
     copy!(count, cumsum!(getcolptr(target), count))
 
-    for j in axes(source, 2)
-        for p in nzrange(source, j)
-            i = rowvals(source)[p]
-            x = nonzeros(source)[p]
-
-            if lt(order, i, j) || isequal(i, j)
+    # permute graph
+    for j in axes(target, 2)
+        for i in neighbors(j)
+            if lt(order, i, j)
                 u = index[i]
                 v = index[j]
                 
@@ -60,15 +63,67 @@ function sympermute!(target::SparseMatrixCSC, source::SparseMatrixCSC, index::Ab
                     u, v = v, u
                 end
 
-                q = count[v]
-                rowvals(target)[q] = u
-                nonzeros(target)[q] = x
+                rowvals(target)[count[v]] = u
                 count[v] += 1
             end
         end
     end
 
     target
+end
+
+
+# Algorithms for Sparse Linear Systems
+# Scott and Tuma
+# Algorithm 8.3: CM and RCM algorithms for band and profile reduction
+#
+# Compute the reverse Cuthill-Mckee ordering of a connected simple graph.
+function rcm(matrix::SparseMatrixCSC)
+    rcm!(copy(matrix))
+end
+
+
+# Compute the reverse Cuthill-Mckee ordering of a connected simple graph.
+function rcm!(matrix::SparseMatrixCSC{<:Any, I}) where I
+    # validate argument
+    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
+    
+    # sort neighbors
+    degree = diff(getcolptr(matrix))
+    
+    function neighbors(j)
+        @view rowvals(matrix)[nzrange(matrix, j)]
+    end
+    
+    for j in eachindex(degree)
+        sort!(neighbors(j); by=i -> degree[i])
+    end
+    
+    # run algorithm
+    vertices::OneTo{I} = axes(matrix, 2)
+    root::I = argmin(degree)
+    reverse!(bfs(neighbors, vertices, root))
+end
+
+
+# Permform a breadth-first search of a connected simple graph.
+function bfs(neighbors::Function, vertices::AbstractVector{I}, root::I) where I
+    label = fill(false, length(vertices))
+    order = sizehint!(I[], length(vertices))
+
+    label[root] = true
+    push!(order, root)
+    
+    for v in order
+        for w in neighbors(v)
+            if !label[w]
+                label[w] = true
+                push!(order, w)
+            end
+        end
+    end
+    
+   order
 end
 
 
