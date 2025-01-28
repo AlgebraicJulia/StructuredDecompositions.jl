@@ -43,8 +43,9 @@ graph = @acset Graph begin
           22, 23, 23, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 32, 33, 33, 34, 35, 35, 36, 36, 37, 38, 38, 39, 39, 40]
 end
 
-simple = SimpleGraphs.UndirectedGraph(adjacency_matrix(graph))
-graphs = GraphsPkg.Graph(adjacency_matrix(graph))
+matrix = copy(transpose(adjacency_matrix(graph)))
+simple = SimpleGraphs.UndirectedGraph(matrix)
+graphs = GraphsPkg.Graph(matrix)
 config = GenericTensorNetworks.SingleConfigMin()
 
 

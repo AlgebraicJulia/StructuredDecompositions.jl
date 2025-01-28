@@ -12,8 +12,11 @@ const BAGS = (1, 2, 4, 8, 12)
 
 const GRAPHS = (
     (name="mycielskian4", nv=11,      ne=23),
+    (name="dwt_59",       nv=59,      ne=104),
     (name="can_292",      nv=292,     ne=1124),
+    (name="lshp3466",     nv=3466,    ne=10215),
     (name="wing",         nv=62032,   ne=121544),
+    (name="144",          nv=144649,  ne=1074393),
     (name="333SP",        nv=3712815, ne=11108633),)
 
 
@@ -31,24 +34,19 @@ function writemd(io::IO, group::BenchmarkGroup)
     println(io, "julia --project make.jl")
     println(io, "```")
     println(io)
-    println(io, "## Junction Tree Construction")
+    println(io, "## Chordal Completion")
     println(io)
-    println(io, "| library | supernode | name | edges | time | memory |")
-    println(io, "| :------ | :-------- | :----| :---- | :--- | :----- |")
+    println(io, "| library | name | vertices | edges | time | memory |")
+    println(io, "| :------ | :----| :------- | :---- | :--- | :----- |")
 
     for graph in GRAPHS
         name = graph[:name]
+        nv = graph[:nv]
         ne = graph[:ne]
-        library = "StructuredDecompositions"
 
-        for snd in SUPERNODES
-            trial = group["junction trees"][library][name][snd]
-            println(io, "| $library | $snd | $name | $ne | $(row(trial)) |")
-        end
-
-        for library in ("QDLDL",)
-            trial = group["junction trees"][library][name]
-            println(io, "| $library |      | $name | $ne | $(row(trial)) |")
+        for library in ("StructuredDecompositions", "QDLDL")
+            trial = group["junction trees"][name][library]
+            println(io, "| $library | $name | $nv | $ne | $(row(trial)) |")
         end
     end
 

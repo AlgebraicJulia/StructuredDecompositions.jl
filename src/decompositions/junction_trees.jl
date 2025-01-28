@@ -88,5 +88,7 @@ function adjacency_matrix(graph::AbstractSymmetricGraph)
         getcolptr(matrix)[v + 1] = length(rowvals(matrix)) + 1
     end
 
+    resize!(nonzeros(matrix), ne(graph))
+    fill!(nonzeros(matrix), true)
     matrix
 end
