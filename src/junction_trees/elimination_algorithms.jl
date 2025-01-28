@@ -3,18 +3,19 @@
 
 A graph elimination algorithm. The options are
 
-| type                 | name                              | complexity  |
-| :------------------- | :-------------------------------- | :---------- |
-| [`MCS`](@ref)        | maximum cardinality search        | O(m + n)    |
-| [`RCM`](@ref)        | reverse Cuthill-Mckee             | O(mΔ)       |
-| [`AMD`](@ref)        | approximate minimum degree        | O(mn)       |
-| [`SymAMD`](@ref)     | column approximate minimum degree | O(mn)       |
-| [`MMD`](@ref)        | multiple minimum degree           | O(mn²)      |
-| [`NodeND`](@ref)     | nested dissection                 |             |
-| [`Spectral`](@ref)   | spectral ordering                 |             |
-| [`BT`](@ref)         | Bouchitte-Todinca                 | O(2.6183ⁿ)  |
+| type                 | name                              | complexity  | connected |
+| :------------------- | :-------------------------------- | :---------- | :-------- |
+| [`MCS`](@ref)        | maximum cardinality search        | O(m + n)    | no        |
+| [`RCM`](@ref)        | reverse Cuthill-Mckee             | O(mΔ)       | yes       |
+| [`AMD`](@ref)        | approximate minimum degree        | O(mn)       | no        |
+| [`SymAMD`](@ref)     | column approximate minimum degree |             | no        |
+| [`MMD`](@ref)        | multiple minimum degree           | O(mn²)      | no        |
+| [`NodeND`](@ref)     | nested dissection                 |             | no        |
+| [`Spectral`](@ref)   | spectral ordering                 |             | yes       |
+| [`BT`](@ref)         | Bouchitte-Todinca                 | O(2.6183ⁿ)  | no        |
 
 for a graph with m edges, n vertices, and maximum degree Δ.
+The algorithms [`RCM`](@ref) and [`Spectral`](@ref) only work on connected graphs.
 """
 abstract type EliminationAlgorithm end
 
@@ -40,18 +41,10 @@ struct MCS <: EliminationAlgorithm end
 """
     RCM <: EliminationAlgorithm
 
-    RCM(; sortbydeg=true)
-
-The [reverse Cuthill-McKee algorithm](https://en.wikipedia.org/wiki/Cuthill–McKee_algorithm).
-- `sortbydeg`: whether to sort neighbor lists by degree
+The [reverse Cuthill-McKee algorithm](https://en.wikipedia.org/wiki/Cuthill–McKee_algorithm)
+only works on connected graphs.
 """
-struct RCM <: EliminationAlgorithm
-    sortbydeg::Bool
-
-    function RCM(; sortbydeg=true)
-        new(sortbydeg)
-    end
-end
+struct RCM <: EliminationAlgorithm end
 
 
 """
@@ -111,7 +104,7 @@ struct MMD <: EliminationAlgorithm end
     NodeND()
 
 The [nested dissection algorithm](https://en.wikipedia.org/wiki/Nested_dissection).
-In order to use this algorithm, import the package [Metis](https://github.com/JuliaSparse/Metis.jl).
+In order to use it, import the package [Metis](https://github.com/JuliaSparse/Metis.jl).
 """
 struct NodeND <: EliminationAlgorithm end
 
@@ -121,8 +114,8 @@ struct NodeND <: EliminationAlgorithm end
 
     Spectral(; tol=0.0)
 
-The spectral ordering algorithm.
-In order to use this algorithm, import the package [Laplacians](https://github.com/danspielman/Laplacians.jl).
+The spectral ordering algorithm only works on connected graphs.
+In order to use it, import the package [Laplacians](https://github.com/danspielman/Laplacians.jl).
 - `tol`: tolerance for convergence
 """
 struct Spectral <: EliminationAlgorithm
@@ -140,126 +133,95 @@ end
     BT()
 
 The Bouchitte-Todinca algorithm.
-In order to use this algorithm, import the package [TreeWidthSolver](https://github.com/ArrogantGao/TreeWidthSolver.jl).
+In order to use it, import the package [TreeWidthSolver](https://github.com/ArrogantGao/TreeWidthSolver.jl).
 """
 struct BT <: EliminationAlgorithm end
 
 
 
 """
-    permutation(matrix::AbstractMatrix;
+    permutation(graph;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
 Construct a fill-reducing permutation of the vertices of a simple graph.
 ```julia
-julia> using StructuredDecompositions
+julia> using SparseArrays, StructuredDecompositions
 
-julia> graph = [
-    0 1 1 0 0 0 0 0
-    1 0 1 0 0 1 0 0
-    1 1 0 1 1 0 0 0
-    0 0 1 0 1 0 0 0
-    0 0 1 1 0 0 1 1
-    0 1 0 0 0 0 1 0
-    0 0 0 0 1 1 0 1
-    0 0 0 0 1 0 1 0
-];
+julia> graph = sparse([
+           0 1 1 0 0 0 0 0
+           1 0 1 0 0 1 0 0
+           1 1 0 1 1 0 0 0
+           0 0 1 0 1 0 0 0
+           0 0 1 1 0 0 1 1
+           0 1 0 0 0 0 1 0
+           0 0 0 0 1 1 0 1
+           0 0 0 0 1 0 1 0
+       ]);
 
-julia> order, index = permutation(graph; alg=MCS());
+julia> order, index = permutation(graph);
 
 julia> order
 8-element Vector{Int64}:
- 1
- 6
- 2
- 3
  4
- 5
- 7
  8
+ 7
+ 6
+ 5
+ 1
+ 3
+ 2
 
 julia> index == invperm(order)
 true
 ```
 """
-function permutation(matrix::AbstractMatrix; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    permutation(matrix, alg)
+function permutation(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+    permutation(graph, alg)
 end
 
 
-function permutation(matrix::AbstractMatrix, alg::EliminationAlgorithm)
-    permutation(sparse(matrix), alg)
-end
-
-
-function permutation(matrix::SparseMatrixCSC, alg::T) where T <: Union{NodeND, Spectral, BT}
-    throwextension(T)
-end
-
-
-function permutation(matrix::AbstractMatrix, alg::AbstractVector)
-    order = Vector{Int}(alg)
+function permutation(matrix::SparseMatrixCSC{<:Any, I}, alg::AbstractVector) where I
+    order::Vector{I} = alg
     order, invperm(order)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::MCS)
-    index, size = mcs(matrix)
+function permutation(graph, alg::MCS)
+    index = mcs(graph)
     invperm(index), index
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::RCM)
-    order = SymRCM.symrcm(matrix)
+function permutation(matrix::SparseMatrixCSC{<:Any, I}, alg::RCM) where I
+    order = rcm(matrix)
     order, invperm(order)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::AMD)
+function permutation(matrix::SparseMatrixCSC{<:Any, I}, alg::AMD) where I
     meta = AMDPkg.Amd()
     meta.control[AMDPkg.AMD_DENSE] = alg.dense
     meta.control[AMDPkg.AMD_AGGRESSIVE] = alg.aggressive
-    order = AMDPkg.amd(matrix, meta)
+    order::Vector{I} = AMDPkg.amd(matrix, meta)
     order, invperm(order)
 end
 
 
-function permutation(matrix::SparseMatrixCSC{T, I}, alg::SymAMD) where {T, I}
+function permutation(matrix::SparseMatrixCSC{<:Any, I}, alg::SymAMD) where I
     meta = AMDPkg.Colamd{I}()
     meta.knobs[AMDPkg.COLAMD_DENSE_ROW] = alg.dense_row
     meta.knobs[AMDPkg.COLAMD_DENSE_COL] = alg.dense_col
     meta.knobs[AMDPkg.COLAMD_AGGRESSIVE] = alg.aggressive
-    order = AMDPkg.symamd(matrix, meta)
+    order::Vector{I} = AMDPkg.symamd(matrix, meta)
     order, invperm(order)
 end
 
 
-function permutation(matrix::SparseMatrixCSC, alg::MMD)
-    order = collect(axes(matrix, 2))
-    index = collect(axes(matrix, 2))
+function permutation(matrix::SparseMatrixCSC{<:Any, I}, alg::MMD) where I
+    order::Vector{I} = axes(matrix, 2)
+    index::Vector{I} = axes(matrix, 2)
     SpkMmd._generalmmd(size(matrix, 2), getcolptr(matrix), rowvals(matrix), order, index)
     order, index
-end
-
-
-function throwextension(::Type{NodeND})
-    throw(ArgumentError("In order to use the algorithm `NodeND`, you must import the package `Metis`."))
-end
-
-
-function throwextension(::Type{Spectral})
-    throw(ArgumentError("In order to use the algorithm `Spectral`, you must import the package `Laplacians`."))
-end
-
-
-function throwextension(::Type{BT})
-    throw(ArgumentError("In order to use the algorithm `BT`, you must import the package `TreeWidthSolver`."))
-end
-
-
-function Base.show(io::IO, ::MIME"text/plain", alg::RCM)
-    println(io, "RCM:")
-    println(io, "   sortbydeg: $(alg.sortbydeg)")
 end
 
 

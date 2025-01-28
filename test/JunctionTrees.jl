@@ -1,3 +1,8 @@
+import Laplacians
+import Metis
+import TreeWidthSolver
+
+
 using LinearAlgebra
 using SparseArrays
 using StructuredDecompositions
@@ -68,19 +73,6 @@ using Test
 end
 
 
-@testset "chordal" begin
-    matrix = zeros(0, 0)
-    @test_throws "Laplacians"      permutation(matrix; alg=Spectral())
-    @test_throws "Metis"           permutation(matrix; alg=NodeND())
-    @test_throws "TreeWidthSolver" permutation(matrix; alg=BT())
-end
-
-
-import Laplacians
-import Metis
-import TreeWidthSolver
-
-
 @testset "representation" begin
     @test isa(repr("text/plain", MCS()), String)
     @test isa(repr("text/plain", RCM()), String)
@@ -95,7 +87,7 @@ import TreeWidthSolver
     list = LinkedList(ones(Int), [2, 0], [0, 1])
     @test isa(repr("text/plain", list), String)
 
-    matrix = ones(2, 2)
+    matrix = spzeros(2, 2)
     label, tree = eliminationtree(matrix)
     @test isa(repr("text/plain", tree), String)
     label, tree = supernodetree(matrix)
@@ -106,18 +98,16 @@ end
 
 
 @testset "null graph" begin
-    matrix = zeros(0, 0)
+    matrix = spzeros(0, 0)
     @test ischordal(matrix)
     @test isfilled(matrix)
     @test iszero(treewidth(matrix))
 
     @test permutation(matrix; alg=MCS())      == ([], [])
-    @test permutation(matrix; alg=RCM())      == ([], [])
     @test permutation(matrix; alg=AMD())      == ([], [])
     @test permutation(matrix; alg=SymAMD())   == ([], [])
     @test permutation(matrix; alg=MMD())      == ([], []) skip=true
     @test permutation(matrix; alg=NodeND())   == ([], []) skip=true
-    @test permutation(matrix; alg=Spectral()) == ([], []) skip=true
     @test permutation(matrix; alg=BT())       == ([], [])
 
     label, tree = junctiontree(matrix; snd=Nodal())
@@ -141,7 +131,7 @@ end
 
 
 @testset "singleton graph" begin
-    matrix = zeros(1, 1)
+    matrix = spzeros(1, 1)
     @test ischordal(matrix)
     @test isfilled(matrix)
     @test iszero(treewidth(matrix))
@@ -197,7 +187,7 @@ end
 @testset "vandenberghe and andersen" begin
     # Chordal Graphs and Semidefinite Optimization
     # Vandenberghe and Andersen
-    matrix = [
+    matrix = sparse([
         0  0  1  1  1  0  0  0  0  0  0  0  0  0  1  0  0
         0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0
         1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
@@ -215,10 +205,10 @@ end
         1  0  0  0  0  0  1  0  0  0  0  0  0  0  0  0  1
         0  0  0  0  1  1  0  0  0  0  0  1  0  0  0  0  0
         0  0  0  0  0  0  0  0  0  1  0  1  0  0  1  0  0
-    ]
+    ])
 
     # Figure 4.2
-    chordal = [
+    chordal = sparse([
         0  0  1  1  1  0  0  0  0  0  0  0  0  0  1  0  0
         0  0  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0
         1  1  0  1  1  0  0  0  0  0  0  0  0  0  1  0  0
@@ -236,7 +226,7 @@ end
         1  0  1  1  1  0  1  1  1  0  0  0  0  0  0  1  1
         0  0  0  0  1  1  0  0  1  0  0  1  1  1  1  0  1
         0  0  0  0  0  0  0  0  0  1  1  1  1  1  1  1  0
-    ]
+    ])
 
     @test !ischordal(matrix)
     @test ischordal(chordal)
@@ -245,7 +235,6 @@ end
     @test treewidth(chordal; alg=1:17) == 4
 
     label, filled = eliminationgraph(matrix; alg=1:17)
-    fill!(nonzeros(filled), 1)
     @test isfilled(filled)
     @test filled == tril(chordal[label, label])
 

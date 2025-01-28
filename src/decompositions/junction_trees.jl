@@ -80,5 +80,13 @@ end
 
 
 function adjacency_matrix(graph::AbstractSymmetricGraph)
-    sparse(src(graph), tgt(graph), ones(Bool, ne(graph)), nv(graph), nv(graph))
+    matrix = spzeros(Bool, Int, nv(graph), nv(graph))
+    sizehint!(rowvals(matrix), ne(graph))
+
+    for v in vertices(graph)
+        append!(rowvals(matrix), neighbors(graph, v))
+        getcolptr(matrix)[v + 1] = length(rowvals(matrix)) + 1
+    end
+
+    matrix
 end

@@ -19,6 +19,7 @@ using Catlab.Graphs
 using Catlab.Graphs: add_edges!
 using Catlab.ACSetInterface
 using Catlab.CategoricalAlgebra.Diagrams
+using SparseArrays: getcolptr
 using SparseArrays
 
 import Catlab.CategoricalAlgebra.Diagrams: ob_map, hom_map, colimit, limit

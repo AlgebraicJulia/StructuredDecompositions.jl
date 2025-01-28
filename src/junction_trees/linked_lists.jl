@@ -1,5 +1,5 @@
 # A doubly linked list of distinct integers.
-struct LinkedList{Init <: AbstractScalar{Int}, Prev <: AbstractVector{Int}, Next <: AbstractVector{Int}}
+struct LinkedList{I <: Integer, Init <: AbstractScalar{I}, Prev <: AbstractVector{I}, Next <: AbstractVector{I}}
     head::Init
     prev::Prev
     next::Next
@@ -62,12 +62,14 @@ function Base.delete!(list::LinkedList, v::Integer)
 end
 
 
-function mcs(matrix::SparseMatrixCSC)
+function mcs(matrix::SparseMatrixCSC{<:Any, I}) where I
     # validate arguments
     size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
 
     # run algorithm
-    mcs(size(matrix, 2)) do j
+    vertices::OneTo{I} = axes(matrix, 2)
+
+    mcs(vertices) do j
         @view rowvals(matrix)[nzrange(matrix, j)]
     end
 end
@@ -79,37 +81,34 @@ end
 #
 # Construct a fill-reducing permutation of a simple graph.
 # The complexity is O(m + n), where m = |E| and n = |V|.
-function mcs(neighbors::Function, n::Integer) 
-    # validate arguments
-    n < 0 && throw(ArgumentError("n < 0"))
-
+function mcs(neighbors::Function, vertices::AbstractVector{I}) where I 
     # construct disjoint sets data structure
-    head = zeros(Int, n + 1)
-    prev = Vector{Int}(undef, n + 1)
-    next = Vector{Int}(undef, n + 1)
+    head = zeros(I, length(vertices) + 1)
+    prev = Vector{I}(undef, length(vertices) + 1)
+    next = Vector{I}(undef, length(vertices) + 1)
     
     function set(i)
         LinkedList(view(head, i), prev, next)
     end
     
     # run algorithm
-    alpha = Vector{Int}(undef, n)
-    size = Vector{Int}(undef, n)
+    alpha = Vector{I}(undef, length(vertices))
+    size = Vector{I}(undef, length(vertices))
 
-    for v in n:-1:1
-        size[v] = 1
-        pushfirst!(set(1), v)
+    for v in reverse(vertices)
+        size[v] = one(I)
+        pushfirst!(set(one(I)), v)
     end
 
     j = 1
 
-    for i in n:-1:1
+    for i in reverse(vertices)
         v = popfirst!(set(j))
         alpha[v] = i
-        size[v] = 1 - size[v]
+        size[v] = 0
 
         for w in neighbors(v)
-            if size[w] >= 1 && v != w
+            if size[w] >= 1
                 delete!(set(size[w]), w)
                 size[w] += 1
                 pushfirst!(set(size[w]), w)
@@ -123,18 +122,18 @@ function mcs(neighbors::Function, n::Integer)
         end
     end
 
-    alpha, size
+    alpha
 end
 
 
-function Base.show(io::IO, ::MIME"text/plain", list::T) where T <: LinkedList
+function Base.show(io::IO, ::MIME"text/plain", list::L) where L <: LinkedList
     items = pushfirst!(map(string, take(list, MAX_ITEMS_PRINTED)), "head")
 
     if MAX_ITEMS_PRINTED < length(items)
         items[end] = "..."
     end
 
-    println(io, T)
+    println(io, L)
     println(io, join(items, " ↔ "))
 end
 
@@ -144,16 +143,16 @@ end
 #######################
 
 
-function Base.iterate(list::LinkedList, i::Integer=list.head[])
+function Base.iterate(list::LinkedList{I}, i::I=list.head[]) where I
     iszero(i) ? nothing : (i, list.next[i])
 end
 
 
-function Base.IteratorSize(::Type{T}) where T <: LinkedList
+function Base.IteratorSize(::Type{<:LinkedList})
     Base.SizeUnknown()
 end
 
 
-function Base.eltype(::Type{T}) where T <: LinkedList
-    Int
+function Base.eltype(::Type{<:LinkedList{I}}) where I
+    I
 end
