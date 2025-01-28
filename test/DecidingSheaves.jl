@@ -148,8 +148,8 @@ end
     G = @acset Graph begin
         V = 3
         E = 2
-        src = [2, 2]
-        tgt = [1, 3]
+        src = [2, 3]
+        tgt = [1, 2]
     end
 
     # transformations
@@ -159,7 +159,7 @@ end
             1 => ACSetTransformation(H12, H1, V=[2, 3]),
             2 => ACSetTransformation(H12, H2, V=[2, 1]),
             3 => ACSetTransformation(H23, H2, V=[2, 3]),
-            4 => ACSetTransformation(H23, H3, V=[2, 1])),
+            4 => ACSetTransformation(H23, H3, V=[2, 3])),
         ∫(G))
 
     manual = StrDecomp(G, Γ)
@@ -167,13 +167,13 @@ end
 
     # evaluates if decomp1 2 coloring is possible
     @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
-    @test_broken old_decide_sheaf_tree_shape(skeletal_coloring(2), automatic1)[1] == false
+    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), automatic1)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
-    @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic)[1] == true
+    @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic1)[1] == true
 
     # evaluate possible 1 thorugh 3 colorings
-    @test_broken all(test_colorability(n, manual) for n ∈ range(1, 3))
-    @test_broken all(test_colorability(n, automatic1) for n ∈ range(1, 3))
+    @test all(test_colorability(n, manual) for n ∈ range(1, 3))
+    @test all(test_colorability(n, automatic1) for n ∈ range(1, 3))
 
     graph = ob(colimit(manual))
 
@@ -183,8 +183,6 @@ end
 
     print(automatic1)
 end
-end
-
 
 @testset "Test 2" begin
     ############################

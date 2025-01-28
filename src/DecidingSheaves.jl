@@ -97,19 +97,14 @@ function adhesion_filter(tup::Tuple, d::StructuredDecomposition)
   # the pullback cone dx₁ <-l₁-- p --l₂ --> dx₂ with legs l₁ and l₂
   p_cone = pullback(d_csp)
 
-  if isempty(p_cone)
-    d_dom = FinSet(0)
-  else
-    # for each leg lᵢ : p → xᵢ of the pullback cone, 
-    # compute its image ιᵢ : im lᵢ → dxᵢ
-    p_legs = legs(p_cone)
-    imgs = map(f->legs(image(f))[1], p_legs)
-    new_d_csp = map(t->compose(t...), zip(imgs, d_csp))
-  end
+  # for each leg lᵢ : p → xᵢ of the pullback cone, 
+  # compute its image ιᵢ : im lᵢ → dxᵢ
+  p_legs = legs(p_cone)
+  imgs = map(f->legs(image(f))[1], p_legs)
+  new_d_csp = map(t->compose(t...), zip(imgs, d_csp))
 
   # get the domain of d
   d_dom = dom(d.diagram)
-
 
   # now make the new decomposition, call it δ
   # us ob_replace and mor_replace
