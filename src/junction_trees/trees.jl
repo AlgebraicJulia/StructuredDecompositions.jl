@@ -287,17 +287,10 @@ end
 # Get the level of every vertex in a topologically ordered tree.
 function levels(tree::Tree{I}) where I
     level = Vector{I}(undef, length(tree))
-
-    for j in rootindices(tree)
-        level[j] = 0
-    end
-
-    for j in reverse(tree)
-        n = level[j]
-
-        for i in childindices(tree, j)
-            level[i] = n + 1
-        end
+    
+    for i in reverse(tree)
+        j = parentindex(tree, i)
+        level[i] = isnothing(j) ? 0 : level[j] + 1
     end
 
     level
