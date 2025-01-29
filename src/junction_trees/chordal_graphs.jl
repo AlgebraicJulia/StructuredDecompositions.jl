@@ -1,7 +1,7 @@
 """
     eliminationgraph([element=true,] tree::JunctionTree)
 
-See [`eliminationgraph!`]. The function returns a sparse matrix whose structural nonzeros are filled with `element`.
+See [`eliminationgraph!`](@ref). The function returns a sparse matrix whose structural nonzeros are filled with `element`.
 """
 function eliminationgraph(tree::JunctionTree)
     eliminationgraph(true, tree)
@@ -48,7 +48,7 @@ end
 
 
 """
-    eliminationgraph([element=true], graph;
+    eliminationgraph([element=true,] graph;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
 Construct the elimination graph of a simple graph.
@@ -84,6 +84,7 @@ true
 
 julia> ischordal(filled + filled')
 true
+```
 """
 function eliminationgraph(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
     eliminationgraph(true, graph, alg)
@@ -109,7 +110,7 @@ end
 
 
 """
-    eliminationgraph!([element=true], graph;
+    eliminationgraph!([element=true,] graph;
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
 A mutating version of [`eliminationgraph`](@ref).

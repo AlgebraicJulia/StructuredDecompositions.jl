@@ -204,6 +204,11 @@ function ancestorindices(tree::SupernodeTree, i::Integer)
 end
 
 
+function setrootindex!(tree::SupernodeTree, i::Integer)
+    setrootindex!(tree.tree, i) 
+end
+
+
 #############################
 # Abstract Vector Interface #
 #############################

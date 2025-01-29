@@ -238,6 +238,11 @@ function ancestorindices(tree::JunctionTree, i::Integer)
 end
 
 
+function setrootindex!(tree::JunctionTree, i::Integer)
+    setrootindex!(tree.tree, i) 
+end
+
+
 #############################
 # Abstract Vector Interface #
 #############################
