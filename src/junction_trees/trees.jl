@@ -340,24 +340,6 @@ function lcrs!(tree::Tree{I}) where I
 end
 
 
-# Make the node `j` a root.
-function setrootindex!(tree::Tree{I}, j::I) where I
-    # validate arguments
-    j ∉ tree && throw(ArgumentError("j ∉ tree"))
-
-    # run algorithm
-    i = zero(I)
-
-    while !iszero(j)
-        k = tree.parent[j]
-        tree.parent[j] = i
-        i, j = j, k
-    end
-
-    lcrs!(tree)
-end
-
-
 # Permute the vertices of a forest.
 function Base.invpermute!(tree::Tree{I}, index::AbstractVector{I}) where I
     # validate arguments
@@ -415,6 +397,24 @@ end
 function ancestorindices(tree::Tree, i::Integer)
     head = @view tree.parent[i]
     SinglyLinkedList(head, tree.parent)
+end
+
+
+function setrootindex!(tree::Tree{I}, i::Integer) where I
+    # validate arguments
+    i ∉ tree && throw(ArgumentError("i ∉ tree"))
+
+    # run algorithm
+    j::I = 0
+    k::I = i
+
+    for l in ancestorindices(tree, k)
+        tree.parent[k] = j
+        j, k = k, l
+    end
+
+    tree.parent[k] = j
+    lcrs!(tree)
 end
 
 

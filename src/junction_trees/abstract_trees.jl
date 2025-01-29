@@ -65,7 +65,7 @@ AbstractTrees.nextsiblingindex(tree::AbstractTree, i::Integer)
 
 Construct an iterator over the children of node `i`.
 """
-AbstractTrees.childindices(tree::AbstractTree)
+AbstractTrees.childindices(tree::AbstractTree, i::Integer)
 
 
 """
@@ -73,7 +73,15 @@ AbstractTrees.childindices(tree::AbstractTree)
 
 Construct an iterator over the ancestors of node `i`.
 """
-ancestorindices(tree::AbstractTree)
+ancestorindices(tree::AbstractTree, i::Integer)
+
+
+"""
+    setrootindex!(tree::AbstractTree, i::Integer)
+
+Make the node `i` a root.
+"""
+setrootindex!(tree::AbstractTree, i::Integer)
 
 
 function AbstractTrees.ParentLinks(::Type{IndexNode{T, I}}) where {I, T <: AbstractTree{I}}

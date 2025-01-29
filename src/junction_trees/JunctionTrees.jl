@@ -29,7 +29,7 @@ export MCS, RCM, AMD, SymAMD, MMD, NodeND, Spectral, BT, permutation
 
 
 # Trees
-export Tree, eliminationtree, setrootindex!, rootindex, firstchildindex, nextsiblingindex, parentindex, rootindices, childindices, ancestorindices
+export Tree, eliminationtree, rootindex, firstchildindex, nextsiblingindex, parentindex, rootindices, childindices, ancestorindices, setrootindex!
 
 
 # Supernode Types
