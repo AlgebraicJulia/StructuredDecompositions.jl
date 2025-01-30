@@ -4,7 +4,7 @@
 #
 # Permute an ordered graph.
 function sympermute(graph, index::AbstractVector{I}, order::Ordering) where I
-    target = spzeros(Nothing, I, length(index), length(index))
+    target = spzeros(Bool, I, length(index), length(index))
     sympermute!(target, graph, index, order)
 end
 
@@ -20,7 +20,7 @@ function sympermute!(target::SparseMatrixCSC, matrix::SparseMatrixCSC, index::Ab
 end
 
 
-function sympermute!(neighbors::Function, target::SparseMatrixCSC{Nothing, I}, index::AbstractVector{I}, order::Ordering) where I
+function sympermute!(neighbors::Function, target::SparseMatrixCSC{Bool, I}, index::AbstractVector{I}, order::Ordering) where I
     # validate arguments
     eachindex(index) != axes(target, 1) && throw(ArgumentError("eachindex(index) != axes(target, 1)"))
     eachindex(index) != axes(target, 2) && throw(ArgumentError("eachindex(index) != axes(target, 2)"))
@@ -130,7 +130,9 @@ end
 # Compute the union of sorted sets `source1` and `source2`.
 # The result is written to `target`.
 function mergesorted!(target::AbstractVector{I}, source1::AbstractVector{I}, source2::AbstractVector{I}, order::Ordering=ForwardOrdering()) where I
-    s1 = s2 = t = 1
+    s1 = firstindex(source1)
+    s2 = firstindex(source2)
+    t  = firstindex(target)
 
     while s1 in eachindex(source1) && s2 in eachindex(source2)
         x1 = source1[s1]
@@ -163,5 +165,25 @@ function mergesorted!(target::AbstractVector{I}, source1::AbstractVector{I}, sou
         t += 1
     end
    
-    @view target[1:t - 1]
+    @view target[begin:t - 1]
+end
+
+
+function indexinsorted!(target::AbstractVector{I}, source1::AbstractVector{I}, source2::AbstractVector{I}, order::Ordering=ForwardOrdering()) where I
+    s1 = firstindex(source1)
+    s2 = firstindex(source2)
+
+    while s1 in eachindex(source1)
+        x1 = source1[s1]
+        x2 = source2[s2]
+
+        if !lt(order, x2, x1)
+            target[s1] = s2
+            s1 += 1
+        end
+
+        s2 += 1
+    end
+
+    target
 end

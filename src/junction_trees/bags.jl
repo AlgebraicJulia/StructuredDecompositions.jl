@@ -29,38 +29,6 @@ function separator(bag::Bag)
 end
 
 
-function indexinsorted!(target::AbstractVector{I}, source1::Bag{I}, source2::AbstractVector{I}) where I
-    res = residual(source1)
-    sep = separator(source1)
-    s1 = s2 = 1
-
-    while s2 in eachindex(source2)
-        x2 = source2[s2]
-
-        if x2 in res
-            target[s2] = x2 - res[begin] + 1
-            s2 += 1
-        else
-            break
-        end
-    end
-
-    while s2 in eachindex(source2)
-        x1 = sep[s1]
-        x2 = source2[s2]
-
-        if x1 >= x2
-            target[s2] = s1 + length(res)
-            s2 += 1
-        end
-
-        s1 += 1
-    end
-
-    target
-end
-
-
 #############################
 # Abstract Vector Interface #
 #############################

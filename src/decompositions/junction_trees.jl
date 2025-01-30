@@ -6,7 +6,7 @@
 Construct a structured decomposition of a simple graph. See [`junctiontree`](@ref) for the meaning of `alg` and `snd`.
 """
 function StrDecomp(graph::HasGraph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    label, tree = junctiontree!(adjacency_matrix(graph); alg, snd)
+    label, tree = junctiontree(adjacency_matrix(graph); alg, snd)
     relative!(tree)
     n = length(tree)
     shape = Graph(n)

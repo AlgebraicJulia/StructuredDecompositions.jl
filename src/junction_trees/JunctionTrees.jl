@@ -41,15 +41,15 @@ export Bag, separator, residual
 
 
 # Supernode Trees
-export SupernodeTree, supernodetree, supernodetree!
+export SupernodeTree, supernodetree
 
 
 # Junction Trees
-export JunctionTree, junctiontree, junctiontree!, treewidth, treewidth!, relative, relative!
+export JunctionTree, junctiontree, treewidth, relative, relative!
 
 
 # Chordal Graphs
-export eliminationgraph, eliminationgraph!, ischordal, isfilled, isperfect
+export eliminationgraph, ischordal, isfilled, isperfect
 
 
 include("singly_linked_lists.jl")

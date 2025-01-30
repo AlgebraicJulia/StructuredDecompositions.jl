@@ -77,31 +77,9 @@ end
 
 
 function junctiontree(graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
-    junctiontree!(supernodetree(graph, alg, snd)...)
-end
-
-
-"""
-    junctiontree!(graph;
-        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
-        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-
-A mutating version of [`junctiontree`](@ref).
-"""
-function junctiontree!(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    label, tree, lower, cache = junctiontree!(graph, alg, snd)
-    label, tree
-end
-
-
-function junctiontree!(graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
-    junctiontree!(supernodetree!(graph, alg, snd)...)
-end
-
-
-function junctiontree!(label::Vector{I}, tree::SupernodeTree{I}, index::Vector{I}, sepptr::Vector{I}, lower::SparseMatrixCSC{Nothing, I}, cache::SparseMatrixCSC{Nothing, I}) where I
-    lower = sympermute!(cache, lower, index, ReverseOrdering())
-    label, JunctionTree(tree, sepptr, sepvals(lower, tree, sepptr)), cache, lower
+    label, tree, index, sepptr, lower, upper = supernodetree(graph, alg, snd)
+    lower = sympermute!(upper, lower, index, ReverseOrdering())
+    label, JunctionTree(tree, sepptr, sepvals(lower, tree, sepptr))
 end
 
 
@@ -110,9 +88,8 @@ end
 
 Compute the width of a junction tree.
 """
-function treewidth(tree::JunctionTree{I}) where I
-    width::I = maximum(length, tree; init=1) - 1
-    width
+function treewidth(tree::JunctionTree)
+    maximum(length, tree; init=1) - 1
 end
 
 
@@ -130,33 +107,8 @@ end
 
 function treewidth(graph, alg::PermutationOrAlgorithm)
     label, tree, upper = eliminationtree(graph, alg)
-    cache = spzeros(Nothing, indtype(upper), size(upper))
-    treewidth!(tree, upper, cache)
-end
-
-
-"""
-    treewidth!(graph;
-        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-
-A mutating version of [`treewidth`](@ref).
-"""
-function treewidth!(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    treewidth!(graph, alg)
-end
-
-
-function treewidth!(matrix::SparseMatrixCSC{<:Any, I}, alg::PermutationOrAlgorithm) where I
-    label, tree, upper = eliminationtree(matrix, alg)
-    cache = SparseMatrixCSC{Nothing, I}(size(matrix)..., getcolptr(matrix), rowvals(matrix), Vector{Nothing}(undef, nnz(matrix)))
-    treewidth!(tree, upper, cache)
-end
-
-
-function treewidth!(tree::Tree{I}, upper::SparseMatrixCSC{Nothing, I}, cache::SparseMatrixCSC{Nothing, I}) where I
-    lower = transpose!(cache, upper)
-    rowcount, colcount = supcnt(lower, tree)
-    maximum(colcount; init=one(I)) - 1
+    rowcount, colcount = supcnt(copy(transpose(upper)), tree)
+    maximum(colcount; init=1) - 1
 end
 
 
@@ -201,7 +153,7 @@ function relative!(tree::JunctionTree)
 
     for (j, bag) in enumerate(tree)
         for i in childindices(tree, j)
-            indexinsorted!(relative(tree, i), bag, separator(tree, i))
+            indexinsorted!(relative(tree, i), separator(tree, i), bag)
         end
     end
 

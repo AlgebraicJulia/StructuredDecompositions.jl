@@ -41,10 +41,7 @@ SupernodeTree
 JunctionTree
 eliminationtree
 supernodetree
-supernodetree!
 junctiontree
-junctiontree!
-treewidth!
 treewidth
 separator
 residual
@@ -61,7 +58,6 @@ childindices
 
 ```@docs
 eliminationgraph
-eliminationgraph!
 ischordal
 isfilled
 isperfect

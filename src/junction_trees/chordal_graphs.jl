@@ -105,52 +105,16 @@ end
 
 
 function eliminationgraph(T::Type, graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
-    label, tree, lower, cache = junctiontree(graph, alg, snd)
+    label, tree = junctiontree(graph, alg, snd)
     label, eliminationgraph(T, tree)
 end
 
 
 function eliminationgraph(T::Type, graph, alg::PermutationOrAlgorithm, snd::Nodal)
-    label, tree, lower, cache = junctiontree(graph, alg, snd)
+    label, tree = junctiontree(graph, alg, snd)
+    I = eltype(eltype(tree))
     nzval = Vector{T}(undef, length(tree.sepval))
-    label, SparseMatrixCSC{T, indtype(lower)}(length(tree), length(tree), tree.sepptr, tree.sepval, nzval)
-end
-
-
-"""
-    eliminationgraph!([element=true,] graph;
-        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
-        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-
-A mutating version of [`eliminationgraph`](@ref).
-"""
-function eliminationgraph!(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    eliminationgraph!(true, graph, alg, snd)
-end
-
-
-function eliminationgraph!(element, graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    eliminationgraph!(element, graph, alg, snd)
-end
-
-
-function eliminationgraph!(element::T, graph, alg::PermutationOrAlgorithm, snd::SupernodeType) where T
-    label, matrix = eliminationgraph!(T, graph, alg, snd)
-    fill!(nonzeros(matrix), element)
-    label, matrix
-end
-
-
-function eliminationgraph!(T::Type, graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
-    label, tree, lower, cache = junctiontree!(graph, alg, snd)
-    label, eliminationgraph(T, tree)
-end
-
-
-function eliminationgraph!(T::Type, graph, alg::PermutationOrAlgorithm, snd::Nodal)
-    label, tree, lower, cache = junctiontree!(graph, alg, snd)
-    nzval = Vector{T}(undef, length(tree.sepval))
-    label, SparseMatrixCSC{T, indtype(lower)}(length(tree), length(tree), tree.sepptr, tree.sepval, nzval)
+    label, SparseMatrixCSC{T, I}(length(tree), length(tree), tree.sepptr, tree.sepval, nzval)
 end
 
 
