@@ -5,7 +5,6 @@ using Base.Order
 using Graphs
 using SparseArrays
 using StructuredDecompositions.JunctionTrees
-using StructuredDecompositions.JunctionTrees: PermutationOrAlgorithm, SupernodeType
 
 
 function JunctionTrees.permutation(graph::AbstractGraph{I}, alg::Union{RCM, AMD, SymAMD, NodeND, Spectral, BT}) where I

@@ -4,7 +4,7 @@ module JunctionTrees
 using AbstractTrees
 using Base: OneTo
 using Base.Order
-using Base.Iterators: filter as ifilter, take
+using Base.Iterators: take, takewhile
 using DataStructures: IntDisjointSets, find_root!, root_union!
 using LinearAlgebra
 using SparseArrays
@@ -45,7 +45,7 @@ export SupernodeTree, supernodetree, supernodetree!
 
 
 # Junction Trees
-export JunctionTree, junctiontree, junctiontree!, treewidth, treewidth!, relative
+export JunctionTree, junctiontree, junctiontree!, treewidth, treewidth!, relative, relative!
 
 
 # Chordal Graphs

@@ -10,21 +10,20 @@ struct JunctionTree{I} <: AbstractVector{Bag{I}}
     sepval::Vector{I}
     relval::Vector{I}
 
-    function JunctionTree{I}(tree::SupernodeTree, sepptr::AbstractVector, sepval::AbstractVector, relval::AbstractVector) where I
+    function JunctionTree{I}(tree::SupernodeTree, sepptr::AbstractVector, sepval::AbstractVector) where I
         # validate arguments
         length(tree) != length(sepptr) - 1 && throw(ArgumentError("length(tree) != length(sepptr) - 1"))
         sepptr[1] != 1 && throw(ArgumentError("sepptr[1] != 1"))
         sepptr[end] != length(sepval) + 1 && throw(ArgumentError("sepptr[end] != length(sepval) + 1"))
-        sepptr[end] != length(relval) + 1 && throw(ArgumentError("sepptr[end] != length(relval) + 1"))
 
         # construct tree
-        new{I}(tree, sepptr, sepval, relval)
+        tree = new{I}(tree, sepptr, sepval, I[])
     end
 end
 
 
-function JunctionTree(tree::SupernodeTree{I}, sepptr::AbstractVector{I}, sepval::AbstractVector{I}, relval::AbstractVector{I}) where I
-    JunctionTree{I}(tree, sepptr, sepval, relval)
+function JunctionTree(tree::SupernodeTree{I}, sepptr::AbstractVector{I}, sepval::AbstractVector{I}) where I
+    JunctionTree{I}(tree, sepptr, sepval)
 end
 
 
@@ -102,9 +101,7 @@ end
 
 function junctiontree!(label::Vector{I}, tree::SupernodeTree{I}, index::Vector{I}, sepptr::Vector{I}, lower::SparseMatrixCSC{Nothing, I}, cache::SparseMatrixCSC{Nothing, I}) where I
     lower = sympermute!(cache, lower, index, ReverseOrdering())
-    sepval = sepvals(lower, tree, sepptr)
-    relval = relvals(tree, sepptr, sepval)
-    label, JunctionTree(tree, sepptr, sepval, relval), cache, lower
+    label, JunctionTree(tree, sepptr, sepvals(lower, tree, sepptr)), cache, lower
 end
 
 
@@ -192,9 +189,23 @@ end
     relative(tree::JunctionTree, i::Integer)
 
 Get the relative indices at node `i`.
+These are not cached by default; compute them by running `relative!(tree)`.
 """
 function relative(tree::JunctionTree, i::Integer)
     @view tree.relval[seprange(tree, i)]
+end
+
+
+function relative!(tree::JunctionTree)
+    resize!(tree.relval, length(tree.sepval))
+
+    for (j, bag) in enumerate(tree)
+        for i in childindices(tree, j)
+            indexinsorted!(relative(tree, i), bag, separator(tree, i))
+        end
+    end
+
+    tree
 end
 
 
@@ -235,11 +246,6 @@ end
 
 function ancestorindices(tree::JunctionTree, i::Integer)
     ancestorindices(tree.tree, i)
-end
-
-
-function setrootindex!(tree::JunctionTree, i::Integer)
-    setrootindex!(tree.tree, i) 
 end
 
 
