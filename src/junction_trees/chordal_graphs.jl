@@ -49,7 +49,8 @@ end
 
 """
     eliminationgraph([element=true,] graph;
-        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
+        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
 Construct the elimination graph of a simple graph.
 ```julia
@@ -66,7 +67,7 @@ julia> graph = sparse([
            0 0 0 0 1 0 1 0
        ]);
 
-julia> label, filled = label, filled = eliminationgraph(graph);
+julia> label, filled = eliminationgraph(graph);
 
 julia> filled
 8×8 SparseMatrixCSC{Int64, Int64} with 13 stored entries:
@@ -86,61 +87,70 @@ julia> ischordal(filled + filled')
 true
 ```
 """
-function eliminationgraph(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    eliminationgraph(true, graph, alg)
+function eliminationgraph(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    eliminationgraph(true, graph, alg, snd)
 end
 
 
-function eliminationgraph(element, graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    eliminationgraph(element, graph, alg)
+function eliminationgraph(element, graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    eliminationgraph(element, graph, alg, snd)
 end
 
 
-function eliminationgraph(element::T, graph, alg::PermutationOrAlgorithm) where T
-    label, matrix = eliminationgraph(T, graph, alg)
+function eliminationgraph(element::T, graph, alg::PermutationOrAlgorithm, snd::SupernodeType) where T
+    label, matrix = eliminationgraph(T, graph, alg, snd)
     fill!(nonzeros(matrix), element)
     label, matrix
 end
 
 
-function eliminationgraph(T::Type, graph, alg::PermutationOrAlgorithm)
-    label, tree, lower, cache = junctiontree(graph, alg, Maximal())
-    eliminationgraph!(T, label, tree, lower)
+function eliminationgraph(T::Type, graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
+    label, tree, lower, cache = junctiontree(graph, alg, snd)
+    label, eliminationgraph(T, tree)
+end
+
+
+function eliminationgraph(T::Type, graph, alg::PermutationOrAlgorithm, snd::Nodal)
+    label, tree, lower, cache = junctiontree(graph, alg, snd)
+    nzval = Vector{T}(undef, length(tree.sepval))
+    label, SparseMatrixCSC{T, indtype(lower)}(length(tree), length(tree), tree.sepptr, tree.sepval, nzval)
 end
 
 
 """
     eliminationgraph!([element=true,] graph;
-        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
+        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
+        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
 A mutating version of [`eliminationgraph`](@ref).
 """
-function eliminationgraph!(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    eliminationgraph!(true, graph, alg)
+function eliminationgraph!(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    eliminationgraph!(true, graph, alg, snd)
 end
 
 
-function eliminationgraph!(element, graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
-    eliminationgraph!(element, graph, alg)
+function eliminationgraph!(element, graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
+    eliminationgraph!(element, graph, alg, snd)
 end
 
 
-function eliminationgraph!(element::T, graph, alg::PermutationOrAlgorithm) where T
-    label, matrix = eliminationgraph!(T, graph, alg)
+function eliminationgraph!(element::T, graph, alg::PermutationOrAlgorithm, snd::SupernodeType) where T
+    label, matrix = eliminationgraph!(T, graph, alg, snd)
     fill!(nonzeros(matrix), element)
     label, matrix
 end
 
 
-function eliminationgraph!(T::Type, graph, alg::PermutationOrAlgorithm)
-    label, tree, lower, cache = junctiontree!(graph, alg, Maximal())
-    eliminationgraph!(T, label, tree, lower)
+function eliminationgraph!(T::Type, graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
+    label, tree, lower, cache = junctiontree!(graph, alg, snd)
+    label, eliminationgraph(T, tree)
 end
 
 
-function eliminationgraph!(T::Type, label::Vector{I}, tree::JunctionTree{I}, lower::SparseMatrixCSC{Nothing, I}) where I
-    matrix = SparseMatrixCSC{T, I}(size(lower)..., getcolptr(lower), rowvals(lower), Vector{T}(undef, nnz(lower)))
-    label, eliminationgraph!(matrix, tree)
+function eliminationgraph!(T::Type, graph, alg::PermutationOrAlgorithm, snd::Nodal)
+    label, tree, lower, cache = junctiontree!(graph, alg, snd)
+    nzval = Vector{T}(undef, length(tree.sepval))
+    label, SparseMatrixCSC{T, indtype(lower)}(length(tree), length(tree), tree.sepptr, tree.sepval, nzval)
 end
 
 

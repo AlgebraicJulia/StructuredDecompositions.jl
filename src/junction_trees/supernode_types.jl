@@ -122,17 +122,6 @@ function stree(tree::Tree{I}, colcount::AbstractVector{I}, snd::Fundamental) whe
 end
 
 
-# Compute the nodal supernode partition of the montone transitive extension of an ordered graph.
-# The complexity is O(1).
-function stree(tree::Tree, colcount::AbstractVector, snd::Nodal)
-    # validate arguments
-    tree != eachindex(colcount) && throw(ArgumentError("tree != eachindex(colcount)"))
-
-    # run algorithm
-    tree, tree.parent, tree
-end
-
-
 """ 
     DEFAULT_SUPERNODE_TYPE = Maximal()
 

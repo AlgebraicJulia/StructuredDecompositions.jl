@@ -128,40 +128,40 @@ end
 
 
 # Compute the union of sorted sets `source1` and `source2`.
-# The result is appended to `target`.
-function mergesorted!(target, source1, source2, order::Ordering=ForwardOrdering())
-    i1 = iterate(source1)
-    i2 = iterate(source2)
-   
-    while !isnothing(i1) && !isnothing(i2)
-        x1, s1 = i1
-        x2, s2 = i2
+# The result is written to `target`.
+function mergesorted!(target::AbstractVector{I}, source1::AbstractVector{I}, source2::AbstractVector{I}, order::Ordering=ForwardOrdering()) where I
+    s1 = s2 = t = 1
+
+    while s1 in eachindex(source1) && s2 in eachindex(source2)
+        x1 = source1[s1]
+        x2 = source2[s2]
 
         if isequal(x1, x2)
-            push!(target, x1)
-            i1 = iterate(source1, s1)
-            i2 = iterate(source2, s2)
+            target[t] = x1
+            s1 += 1
+            s2 += 1
         elseif lt(order, x1, x2)
-            push!(target, x1)
-            i1 = iterate(source1, s1)
+            target[t] = x1
+            s1 += 1
         else
-            push!(target, x2)
-            i2 = iterate(source2, s2)
+            target[t] = x2
+            s2 += 1
         end
-       
+
+        t += 1
     end
    
-    while !isnothing(i1)
-        x1, s1 = i1
-        push!(target, x1)
-        i1 = iterate(source1, s1)
+    while s1 in eachindex(source1)
+        target[t] = source1[s1]
+        s1 += 1
+        t += 1
     end
 
-    while !isnothing(i2)
-        x2, s2 = i2
-        push!(target, x2)
-        i2 = iterate(source2, s2)
+    while s2 in eachindex(source2)
+        target[t] = source2[s2]
+        s2 += 1
+        t += 1
     end
    
-    target
+    @view target[1:t - 1]
 end

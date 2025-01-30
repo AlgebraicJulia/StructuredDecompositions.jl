@@ -80,87 +80,83 @@ function supernodetree!(label::Vector{I}, etree::Tree{I}, upper::SparseMatrixCSC
     index = postorder(tree)
 
     eindex = Vector{I}(undef, size(lower, 2))
-    sepptr = sizehint!(I[], length(tree) + 1)
-    sndptr = sizehint!(I[], length(tree) + 1)
-    push!(sndptr, 1)
-    push!(sepptr, 1)
+    sepptr = Vector{I}(undef, length(tree) + 1)
+    sndptr = Vector{I}(undef, length(tree) + 1)
+    sepptr[1] = sndptr[1] = 1
 
-    for j in invperm(index)
+    for (i, j) in enumerate(invperm(index))
         u = new[j]
-        w = ancestor[j]
-        p = eindex[u] = sndptr[end]
+        p = eindex[u] = sndptr[i]
 
-        for v in ancestorindices(etree, u)
-            if v != w
-                p += 1
-                eindex[v] = p
-            else
-                break
-            end
+        for v in takewhile(v -> v != ancestor[j], ancestorindices(etree, u))
+            eindex[v] = p += 1
         end
 
-        push!(sepptr, sndptr[end] + sepptr[end] + colcount[u] - p - 1)
-        push!(sndptr, p + 1)
+        sepptr[i + 1] = sndptr[i] + sepptr[i] + colcount[u] - p - 1
+        sndptr[i + 1] = p + 1
     end
 
     invpermute!(label, eindex), SupernodeTree(invpermute!(tree, index), sndptr), eindex, sepptr, lower, upper
 end
 
 
+function supernodetree!(label::Vector{I}, etree::Tree{I}, upper::SparseMatrixCSC{Nothing, I}, cache::SparseMatrixCSC{Nothing, I}, snd::Nodal) where I
+    lower = transpose!(cache, upper)
+    rowcount, colcount = supcnt(lower, etree)
+    eindex = postorder(etree)
+
+    sepptr = Vector{I}(undef, length(etree) + 1)
+    sndptr = Vector{I}(undef, length(etree) + 1)
+    sepptr[1] = sndptr[1] = 1
+
+    for (i, j) in enumerate(invperm(eindex))
+        sepptr[i + 1] = sepptr[i] + colcount[j] - 1
+        sndptr[i + 1] = sndptr[i] + 1
+    end
+
+    invpermute!(label, eindex), SupernodeTree(invpermute!(etree, eindex), sndptr), eindex, sepptr, lower, upper
+end
+
+
 function sepdiff(column::AbstractVector{I}, residual::AbstractVector{I}) where I
-    vertex = residual[begin]
-    @view column[searchsortedlast(column, vertex; by=v -> v ∉ residual) + 1:end]
+    i = 1
+
+    for v in takewhile(v -> v in residual, column)
+        i += 1
+    end
+
+    # i = searchsortedlast(column, residual[begin]; by=v -> v ∉ residual) + 1
+    @view column[i:end]
 end
 
 
 # Get the separators of every node of a supernodal elimination tree.
 function sepvals(lower::SparseMatrixCSC{Nothing, I}, tree::SupernodeTree{I}, sepptr::Vector{I}) where I
-    cache = sizehint!(I[], maximum(i -> sepptr[i + 1] - sepptr[i], eachindex(tree); init=zero(I)))
-    sepval = sizehint!(I[], sepptr[end] - 1)
+    sepval = Vector{I}(undef, sepptr[end] - 1)
+
+    function neighbors(j)
+        @view rowvals(lower)[nzrange(lower, j)]
+    end
+
+    function separator(j)
+        @view sepval[sepptr[j]:sepptr[j + 1] - 1]
+    end
+
+    stack = Vector{I}(undef, maximum(length ∘ separator, eachindex(tree); init=0))
 
     for (j, residual) in enumerate(tree)
-        vertex = residual[begin]
-        column = @view rowvals(lower)[nzrange(lower, vertex)]
-        append!(sepval, sepdiff(column, residual))
+        column = sepdiff(neighbors(residual[begin]), residual)
+        state = @view separator(j)[eachindex(column)]
+        copy!(state, column)
 
         for i in childindices(tree, j)
-            state = @view sepval[sepptr[j]:end]
-            child = @view sepval[sepptr[i]:sepptr[i + 1] - 1]
-            mergesorted!(empty!(cache), state, sepdiff(child, residual))
-            append!(resize!(sepval, sepptr[j] - 1), cache)
+            child = mergesorted!(stack, state, sepdiff(separator(i), residual))
+            state = @view separator(j)[eachindex(child)]
+            copy!(state, child)
         end
     end
 
     sepval
-end
-
-
-# Get the relative indices of every node of a supernodal elimination tree.
-function relvals(tree::SupernodeTree{I}, sepptr::Vector{I}, sepval::Vector{I}) where I
-    relval = Vector{I}(undef, length(sepval))
-
-    for (j, residual) in enumerate(tree)
-        for i in childindices(tree, j)
-            p = sepptr[i]
-            q = sepptr[j]
-
-            while p < sepptr[i + 1] && sepval[p] in residual
-                relval[p] = sepval[p] - residual[begin] + 1
-                p += 1
-            end
-
-            while p < sepptr[i + 1] && q < sepptr[j + 1]
-                if sepval[p] <= sepval[q]
-                    relval[p] = length(residual) + q - sepptr[j] + 1
-                    p += 1
-                end
-
-                q += 1
-            end
-        end
-    end
-
-    relval
 end
 
 
@@ -206,6 +202,7 @@ end
 
 function setrootindex!(tree::SupernodeTree, i::Integer)
     setrootindex!(tree.tree, i) 
+    tree
 end
 
 

@@ -111,18 +111,21 @@ end
     @test permutation(matrix; alg=BT())       == ([], [])
 
     label, tree = junctiontree(matrix; snd=Nodal())
+    relative!(tree)
     @test iszero(length(tree))
     @test isnothing(rootindex(tree))
     @test iszero(treewidth(tree))
     @test iszero(nnz(tree))
 
     label, tree = junctiontree(matrix; snd=Maximal())
+    relative!(tree)
     @test iszero(length(tree))
     @test isnothing(rootindex(tree))
     @test iszero(treewidth(tree))
     @test iszero(nnz(tree))
 
     label, tree = junctiontree(matrix; snd=Fundamental())
+    relative!(tree)
     @test iszero(length(tree))
     @test isnothing(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -146,6 +149,7 @@ end
     @test permutation(matrix; alg=BT())       == ([1], [1])
 
     label, tree = junctiontree(matrix; snd=Nodal())
+    relative!(tree)
     @test isone(length(tree))
     @test isone(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -158,6 +162,7 @@ end
     @test isone(only(tree[1]))
 
     label, tree = junctiontree(matrix; snd=Maximal())
+    relative!(tree)
     @test isone(length(tree))
     @test isone(length(tree))
     @test isone(rootindex(tree))
@@ -171,6 +176,7 @@ end
     @test isone(only(tree[1]))
 
     label, tree = junctiontree(matrix; snd=Fundamental())
+    relative!(tree)
     @test isone(length(tree))
     @test isone(rootindex(tree))
     @test iszero(treewidth(tree))
@@ -288,6 +294,7 @@ end
 
     # Figure 4.3
     label, tree = junctiontree(matrix; alg=1:17, snd=Nodal())
+    relative!(tree)
     @test length(tree) == 17
     @test rootindex(tree) == 17
     @test treewidth(tree) == 4
@@ -388,6 +395,7 @@ end
 
     # Figure 4.7 (left)
     label, tree = junctiontree(matrix; alg=1:17, snd=Maximal())
+    relative!(tree)
     @test length(tree) == 8
     @test rootindex(tree) == 8
     @test treewidth(tree) == 4
@@ -452,6 +460,7 @@ end
 
     # Figure 4.9
     label, tree = junctiontree(matrix; alg=1:17, snd=Fundamental())
+    relative!(tree)
     @test length(tree) == 12
     @test rootindex(tree) == 12
     @test treewidth(tree) == 4
