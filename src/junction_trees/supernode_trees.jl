@@ -47,38 +47,13 @@ end
 
 
 function supernodetree(graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
-    label, tree, upper = eliminationtree(graph, alg)
-    cache = spzeros(Nothing, indtype(upper), size(upper))
-    supernodetree!(label, tree, upper, cache, snd)
-end
-
-
-"""
-    suoernodetree!(graph;
-        alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
-        snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-
-A mutating version of [`supernodetree!`](@ref).
-"""
-function supernodetree!(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    label, tree, index, sepptr, lower, cache = supernodetree!(graph, alg, snd)
-    label, tree
-end
-
-
-function supernodetree!(matrix::SparseMatrixCSC{<:Any, I}, alg::PermutationOrAlgorithm, snd::SupernodeType) where I
-    label, tree, upper = eliminationtree(matrix, alg)
-    cache = SparseMatrixCSC{Nothing, I}(size(matrix)..., getcolptr(matrix), rowvals(matrix), Vector{Nothing}(undef, nnz(matrix)))
-    supernodetree!(label, tree, upper, cache, snd)
-end
-
-
-function supernodetree!(label::Vector{I}, etree::Tree{I}, upper::SparseMatrixCSC{Nothing, I}, cache::SparseMatrixCSC{Nothing, I}, snd::SupernodeType) where I
-    lower = transpose!(cache, upper)
+    label, etree, upper = eliminationtree(graph, alg)
+    lower = copy(transpose(upper))
     rowcount, colcount = supcnt(lower, etree)
     new, ancestor, tree = stree(etree, colcount, snd)
     index = postorder(tree)
 
+    I = indtype(upper)
     eindex = Vector{I}(undef, size(lower, 2))
     sepptr = Vector{I}(undef, length(tree) + 1)
     sndptr = Vector{I}(undef, length(tree) + 1)
@@ -100,11 +75,13 @@ function supernodetree!(label::Vector{I}, etree::Tree{I}, upper::SparseMatrixCSC
 end
 
 
-function supernodetree!(label::Vector{I}, etree::Tree{I}, upper::SparseMatrixCSC{Nothing, I}, cache::SparseMatrixCSC{Nothing, I}, snd::Nodal) where I
-    lower = transpose!(cache, upper)
+function supernodetree(graph, alg::PermutationOrAlgorithm, snd::Nodal)
+    label, etree, upper = eliminationtree(graph, alg)
+    lower = copy(transpose(upper))
     rowcount, colcount = supcnt(lower, etree)
     eindex = postorder(etree)
 
+    I = indtype(upper)
     sepptr = Vector{I}(undef, length(etree) + 1)
     sndptr = Vector{I}(undef, length(etree) + 1)
     sepptr[1] = sndptr[1] = 1
@@ -131,7 +108,7 @@ end
 
 
 # Get the separators of every node of a supernodal elimination tree.
-function sepvals(lower::SparseMatrixCSC{Nothing, I}, tree::SupernodeTree{I}, sepptr::Vector{I}) where I
+function sepvals(lower::SparseMatrixCSC{Bool, I}, tree::SupernodeTree{I}, sepptr::Vector{I}) where I
     sepval = Vector{I}(undef, sepptr[end] - 1)
 
     function neighbors(j)
