@@ -53,7 +53,7 @@ function supernodetree(graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
     new, ancestor, tree = stree(etree, colcount, snd)
     index = postorder(tree)
 
-    I = indtype(upper)
+    I = indtype(lower)
     eindex = Vector{I}(undef, size(lower, 2))
     sepptr = Vector{I}(undef, length(tree) + 1)
     sndptr = Vector{I}(undef, length(tree) + 1)
@@ -81,7 +81,7 @@ function supernodetree(graph, alg::PermutationOrAlgorithm, snd::Nodal)
     rowcount, colcount = supcnt(lower, etree)
     eindex = postorder(etree)
 
-    I = indtype(upper)
+    I = indtype(lower)
     sepptr = Vector{I}(undef, length(etree) + 1)
     sndptr = Vector{I}(undef, length(etree) + 1)
     sepptr[1] = sndptr[1] = 1
@@ -108,18 +108,21 @@ end
 
 
 # Get the separators of every node of a supernodal elimination tree.
-function sepvals(lower::SparseMatrixCSC{Bool, I}, tree::SupernodeTree{I}, sepptr::Vector{I}) where I
-    sepval = Vector{I}(undef, sepptr[end] - 1)
+function sepval(lower::SparseMatrixCSC{Bool, I}, tree::SupernodeTree{I}, sepptr::Vector{I}) where I
+    function seprange(j)
+        sepptr[j]:sepptr[j + 1] - one(I)
+    end
 
     function neighbors(j)
         @view rowvals(lower)[nzrange(lower, j)]
     end
 
-    function separator(j)
-        @view sepval[sepptr[j]:sepptr[j + 1] - 1]
-    end
+    stack = Vector{I}(undef, maximum(length ∘ seprange, eachindex(tree); init=0))
+    sepval = Vector{I}(undef, sepptr[end] - 1)
 
-    stack = Vector{I}(undef, maximum(length ∘ separator, eachindex(tree); init=0))
+    function separator(j)
+        @view sepval[seprange(j)]
+    end
 
     for (j, residual) in enumerate(tree)
         column = sepdiff(neighbors(residual[begin]), residual)
@@ -193,7 +196,7 @@ function Base.getindex(tree::SupernodeTree{I}, i::Integer) where I
 end
 
 
-function Base.IndexStyle(::Type{SupernodeTree})
+function Base.IndexStyle(::Type{<:SupernodeTree})
     IndexLinear()
 end
 

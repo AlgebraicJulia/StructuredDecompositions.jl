@@ -79,7 +79,7 @@ end
 function junctiontree(graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
     label, tree, index, sepptr, lower, upper = supernodetree(graph, alg, snd)
     lower = sympermute!(upper, lower, index, ReverseOrdering())
-    label, JunctionTree(tree, sepptr, sepvals(lower, tree, sepptr))
+    label, JunctionTree(tree, sepptr, sepval(lower, tree, sepptr))
 end
 
 
@@ -211,7 +211,7 @@ function Base.getindex(tree::JunctionTree, i::Integer)
 end
 
 
-function Base.IndexStyle(::Type{JunctionTree})
+function Base.IndexStyle(::Type{<:JunctionTree})
     IndexLinear()
 end
 

@@ -60,7 +60,6 @@ end
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM)
 
 Construct a [tree-depth decomposition](https://en.wikipedia.org/wiki/Trémaux_tree) of a simple graph.
-See [`junctiontree!`](@ref) for the meaning of `alg`.
 ```julia
 julia> using SparseArrays, StructuredDecompositions
 

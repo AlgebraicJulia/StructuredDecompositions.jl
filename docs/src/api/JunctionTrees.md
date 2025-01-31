@@ -58,6 +58,7 @@ childindices
 
 ```@docs
 eliminationgraph
+eliminationgraph!
 ischordal
 isfilled
 isperfect
