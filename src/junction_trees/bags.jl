@@ -41,7 +41,7 @@ function Base.getindex(bag::Bag, i::Integer)
 end
 
 
-function Base.IndexStyle(::Type{Bag})
+function Base.IndexStyle(::Type{<:Bag})
     IndexLinear()
 end
 
@@ -56,7 +56,7 @@ function Base.in(v, bag::Bag)
 end
 
 
-function Base.hasfastin(::Type{Bag})
+function Base.hasfastin(::Type{<:Bag})
     true
 end
 

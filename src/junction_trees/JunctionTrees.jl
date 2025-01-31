@@ -49,7 +49,7 @@ export JunctionTree, junctiontree, treewidth, relative, relative!
 
 
 # Chordal Graphs
-export eliminationgraph, ischordal, isfilled, isperfect
+export eliminationgraph, eliminationgraph!, ischordal, isfilled, isperfect
 
 
 include("singly_linked_lists.jl")
