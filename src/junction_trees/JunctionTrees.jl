@@ -54,6 +54,7 @@ export eliminationgraph, eliminationgraph!, ischordal, isfilled, isperfect
 
 include("singly_linked_lists.jl")
 include("linked_lists.jl")
+include("graphs.jl")
 include("elimination_algorithms.jl")
 include("trees.jl")
 include("supernode_types.jl")
@@ -63,5 +64,6 @@ include("junction_trees.jl")
 include("abstract_trees.jl")
 include("chordal_graphs.jl")
 include("utils.jl")
+
 
 end

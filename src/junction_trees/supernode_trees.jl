@@ -1,26 +1,26 @@
 """
-    SupernodeTree{I} <: AbstractVector{UnitRange{I}}
+    SupernodeTree{V} <: AbstractVector{UnitRange{V}}
 
 A supernodal elimination tree.
 This type implements the [indexed tree interface](https://juliacollections.github.io/AbstractTrees.jl/stable/#The-Indexed-Tree-Interface).
 """
-struct SupernodeTree{I} <: AbstractVector{UnitRange{I}}
-    tree::Tree{I}
-    sndptr::Vector{I}
+struct SupernodeTree{V} <: AbstractVector{UnitRange{V}}
+    tree::Tree{V}
+    sndptr::Vector{V}
 
-    function SupernodeTree{I}(tree::Tree, sndptr::AbstractVector) where I
+    function SupernodeTree{V}(tree::Tree, sndptr::AbstractVector) where {V}
         # validate parameters
         tree != eachindex(sndptr)[1:end - 1] && throw(ArgumentError("tree != eachindex(sndptr)[1:end - 1]"))
         sndptr[1] != 1 && throw(ArgumentError("sndptr[1] != 1"))
 
         # construct tree
-        new{I}(tree, sndptr)
+        new{V}(tree, sndptr)
     end
 end
 
 
-function SupernodeTree(tree::Tree{I}, sndptr::AbstractVector{I}) where I
-    SupernodeTree{I}(tree, sndptr)
+function SupernodeTree(tree::Tree{V}, sndptr::AbstractVector{V}) where V
+    SupernodeTree{V}(tree, sndptr)
 end
 
 
@@ -29,8 +29,8 @@ function Tree(tree::SupernodeTree)
 end
 
 
-function Tree{I}(tree::SupernodeTree) where I
-    Tree{I}(tree.tree)
+function Tree{V}(tree::SupernodeTree) where V
+    Tree{V}(tree.tree)
 end
 
 
@@ -48,16 +48,17 @@ end
 
 function supernodetree(graph, alg::PermutationOrAlgorithm, snd::SupernodeType)
     label, etree, upper = eliminationtree(graph, alg)
-    lower = copy(transpose(upper))
+    lower = reverse(upper)
     rowcount, colcount = supcnt(lower, etree)
     new, ancestor, tree = stree(etree, colcount, snd)
     index = postorder(tree)
 
-    I = indtype(lower)
-    eindex = Vector{I}(undef, size(lower, 2))
-    sepptr = Vector{I}(undef, length(tree) + 1)
-    sndptr = Vector{I}(undef, length(tree) + 1)
-    sepptr[1] = sndptr[1] = 1
+    V = vtype(lower)
+    E = etype(lower)
+    eindex = Vector{V}(undef, length(etree))
+    sndptr = Vector{V}(undef, length(tree) + 1)
+    sepptr = Vector{E}(undef, length(tree) + 1)
+    sndptr[1] = sepptr[1] = 1
 
     for (i, j) in enumerate(invperm(index))
         u = new[j]
@@ -77,14 +78,15 @@ end
 
 function supernodetree(graph, alg::PermutationOrAlgorithm, snd::Nodal)
     label, etree, upper = eliminationtree(graph, alg)
-    lower = copy(transpose(upper))
+    lower = reverse(upper)
     rowcount, colcount = supcnt(lower, etree)
     eindex = postorder(etree)
 
-    I = indtype(lower)
-    sepptr = Vector{I}(undef, length(etree) + 1)
-    sndptr = Vector{I}(undef, length(etree) + 1)
-    sepptr[1] = sndptr[1] = 1
+    V = vtype(lower)
+    E = etype(lower)
+    sndptr = Vector{V}(undef, length(etree) + 1)
+    sepptr = Vector{E}(undef, length(etree) + 1)
+    sndptr[1] = sepptr[1] = 1
 
     for (i, j) in enumerate(invperm(eindex))
         sepptr[i + 1] = sepptr[i] + colcount[j] - 1
@@ -95,7 +97,7 @@ function supernodetree(graph, alg::PermutationOrAlgorithm, snd::Nodal)
 end
 
 
-function sepdiff(column::AbstractVector{I}, residual::AbstractVector{I}) where I
+function sepdiff(column::AbstractVector{V}, residual::UnitRange{V}) where V
     i = 1
 
     for v in takewhile(v -> v in residual, column)
@@ -108,24 +110,21 @@ end
 
 
 # Get the separators of every node of a supernodal elimination tree.
-function sepval(lower::SparseMatrixCSC{Bool, I}, tree::SupernodeTree{I}, sepptr::Vector{I}) where I
+function sepval(lower::Graph{V, E}, tree::SupernodeTree{V}, sepptr::Vector{E}) where {V, E}
     function seprange(j)
-        sepptr[j]:sepptr[j + 1] - one(I)
+        sepptr[j]:sepptr[j + 1] - one(E)
     end
 
-    function neighbors(j)
-        @view rowvals(lower)[nzrange(lower, j)]
-    end
-
-    stack = Vector{I}(undef, maximum(length ∘ seprange, eachindex(tree); init=0))
-    sepval = Vector{I}(undef, sepptr[end] - 1)
+    stack = Vector{V}(undef, maximum(length ∘ seprange, eachindex(tree); init=0))
+    sepval = Vector{V}(undef, sepptr[end] - 1)
 
     function separator(j)
         @view sepval[seprange(j)]
     end
 
     for (j, residual) in enumerate(tree)
-        column = sepdiff(neighbors(residual[begin]), residual)
+        vertex = residual[begin]
+        column = sepdiff(neighbors(lower, vertex), residual)
         state = @view separator(j)[eachindex(column)]
         copy!(state, column)
 
@@ -180,19 +179,13 @@ function ancestorindices(tree::SupernodeTree, i::Integer)
 end
 
 
-function setrootindex!(tree::SupernodeTree, i::Integer)
-    setrootindex!(tree.tree, i) 
-    tree
-end
-
-
 #############################
 # Abstract Vector Interface #
 #############################
 
 
-function Base.getindex(tree::SupernodeTree{I}, i::Integer) where I
-    tree.sndptr[i]:tree.sndptr[i + 1] - one(I)
+function Base.getindex(tree::SupernodeTree{V}, i::Integer) where V
+    tree.sndptr[i]:tree.sndptr[i + 1] - one(V)
 end
 
 

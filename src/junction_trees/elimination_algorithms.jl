@@ -180,21 +180,38 @@ function permutation(graph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGO
 end
 
 
-function permutation(matrix::SparseMatrixCSC{<:Any, I}, alg::AbstractVector) where I
+function permutation(graph, alg::PermutationOrAlgorithm)
+    permutation(Graph(graph), alg)
+end
+
+
+function permutation(graph::Graph{V}, alg::AbstractVector) where V
+    order::Vector{V} = alg
+    order, invperm(order)
+end
+
+
+function permutation(graph::SparseMatrixCSC{<:Any, I}, alg::AbstractVector) where I
     order::Vector{I} = alg
     order, invperm(order)
 end
 
 
-function permutation(graph, alg::MCS)
+function permutation(graph::Graph, alg::MCS)
     index = mcs(graph)
     invperm(index), index
 end
 
 
-function permutation(matrix::SparseMatrixCSC{<:Any, I}, alg::RCM) where I
-    order = rcm(matrix)
+function permutation(graph::Graph, alg::RCM)
+    order = rcm(graph)
     order, invperm(order)
+end
+
+
+function permutation(graph::Graph, alg::Union{AMD, SymAMD, MMD, NodeND, Spectral, BT})
+    matrix = SparseMatrixCSC{Bool}(graph)
+    permutation(matrix, alg)
 end
 
 

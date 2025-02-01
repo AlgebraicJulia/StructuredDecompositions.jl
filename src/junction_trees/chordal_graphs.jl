@@ -15,9 +15,9 @@ function eliminationgraph(element::T, tree::JunctionTree) where T
 end
 
 
-function eliminationgraph(T::Type, tree::JunctionTree{I}) where I
+function eliminationgraph(T::Type, tree::JunctionTree{<:Any, E}) where E
     n = residual(tree[end])[end]
-    eliminationgraph!(spzeros(T, I, n, n), tree)
+    eliminationgraph!(spzeros(T, E, n, n), tree)
 end
 
 
@@ -112,7 +112,7 @@ end
 
 function eliminationgraph(T::Type, graph, alg::PermutationOrAlgorithm, snd::Nodal)
     label, tree = junctiontree(graph, alg, snd)
-    I = eltype(eltype(tree))
+    I = promote_type(vtype(tree), etype(tree))
     nzval = Vector{T}(undef, length(tree.sepval))
     label, SparseMatrixCSC{T, I}(length(tree), length(tree), tree.sepptr, tree.sepval, nzval)
 end
@@ -137,22 +137,14 @@ end
 
 Determine whether a simple graph is [chordal](https://en.wikipedia.org/wiki/Chordal_graph).
 """
-function ischordal(matrix::SparseMatrixCSC{<:Any, I}) where I
-    # validate arguments
-    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
-
-    # run algorithm
-    vertices::OneTo{I} = axes(matrix, 2)
-
-    ischordal(vertices) do j
-        @view rowvals(matrix)[nzrange(matrix, j)]
-    end
+function ischordal(graph)
+    ischordal(Graph(graph))
 end
 
 
-function ischordal(neighbors::Function, vertices::AbstractVector)
-    index = mcs(neighbors, vertices)
-    isperfect(neighbors, invperm(index), index)
+function ischordal(graph::Graph)
+    index = mcs(graph)
+    isperfect(graph, invperm(index), index)
 end
 
 
@@ -161,21 +153,13 @@ end
 
 Determine whether a directed graph is filled.
 """
-function isfilled(matrix::SparseMatrixCSC{<:Any, I}) where I
-    # validate arguments
-    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
-
-    # run algorithm
-    vertices::OneTo{I} = axes(matrix, 2)
-
-    isfilled(vertices) do j
-        @view rowvals(matrix)[nzrange(matrix, j)]
-    end
+function isfilled(graph)
+    isfilled(Graph(graph))
 end
 
 
-function isfilled(neighbors::Function, vertices::AbstractVector)
-    isperfect(neighbors, vertices, vertices)
+function isfilled(graph::Graph)
+    isperfect(graph, vertices(graph), vertices(graph))
 end
 
 
@@ -184,20 +168,8 @@ end
 
 Determine whether an fill-reducing permutation is perfect.
 """
-function isperfect(graph, order::AbstractVector)
-    isperfect(graph, order, invperm(order))
-end
-
-
-function isperfect(matrix::SparseMatrixCSC{<:Any, I}, order::AbstractVector{I}, index::AbstractVector{I}) where I
-    # validate arguments
-    size(matrix, 1) != size(matrix, 2) && throw(ArgumentError("size(matrix, 1) != size(matrix, 2)"))
-    axes(matrix, 2) != eachindex(order) && throw(ArgumentError("axes(matrix, 2) != eachindex(order)"))
-
-    # run algorithm
-    isperfect(order, index) do j
-        @view rowvals(matrix)[nzrange(matrix, j)]
-    end
+function isperfect(graph, order::AbstractVector, index::AbstractVector=invperm(order))
+    isperfect(Graph(graph), order, index)
 end
 
 
@@ -206,19 +178,20 @@ end
 # Test for Zero Fill-In.
 #
 # Determine whether a fill-reducing permutation is perfect.
-function isperfect(neighbors::Function, order::AbstractVector{I}, index::AbstractVector{I}) where I
+function isperfect(graph::Graph{V}, order::AbstractVector{V}, index::AbstractVector{V}) where V
     # validate arguments
+    vertices(graph) != eachindex(index) && throw(ArgumentError("vertices(graph) != eachindex(index)"))
     eachindex(order) != eachindex(index) && throw(ArgumentError("eachindex(order) != eachindex(index)"))
 
     # run algorithm
-    f = Vector{I}(undef, length(order))
-    findex = Vector{I}(undef, length(order))
+    f = Vector{V}(undef, nv(graph))
+    findex = Vector{V}(undef, nv(graph))
 
     for (i, w) in enumerate(order)
         f[w] = w
         findex[w] = i
 
-        for v in neighbors(w)
+        for v in neighbors(graph, w)
             if index[v] < i
                 findex[v] = i
 
@@ -228,7 +201,7 @@ function isperfect(neighbors::Function, order::AbstractVector{I}, index::Abstrac
             end
         end
 
-        for v in neighbors(w)
+        for v in neighbors(graph, w)
             if index[v] < i && findex[f[v]] < i
                 return false
             end

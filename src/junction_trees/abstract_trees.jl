@@ -76,14 +76,6 @@ Construct an iterator over the ancestors of node `i`.
 ancestorindices(tree::AbstractTree, i::Integer)
 
 
-"""
-    setrootindex!(tree::AbstractTree, i::Integer)
-
-Make the node `i` a root.
-"""
-setrootindex!(tree::AbstractTree, i::Integer)
-
-
 function AbstractTrees.ParentLinks(::Type{IndexNode{T, I}}) where {I, T <: AbstractTree{I}}
     StoredParents()
 end
