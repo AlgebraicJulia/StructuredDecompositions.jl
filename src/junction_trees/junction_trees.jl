@@ -1,29 +1,29 @@
 """
-    JunctionTree{I} <: AbstractVector{Bag{I}}
+    JunctionTree{V, E} <: AbstractVector{Bag{V, E}}
 
 A [junction tree](https://en.wikipedia.org/wiki/Tree_decomposition).
 This type implements the [indexed tree interface](https://juliacollections.github.io/AbstractTrees.jl/stable/#The-Indexed-Tree-Interface).
 """
-struct JunctionTree{I} <: AbstractVector{Bag{I}}
-    tree::SupernodeTree{I}
-    sepptr::Vector{I}
-    sepval::Vector{I}
-    relval::Vector{I}
+struct JunctionTree{V, E} <: AbstractVector{Bag{V, E}}
+    tree::SupernodeTree{V}
+    sepptr::Vector{E}
+    sepval::Vector{V}
+    relval::Vector{V}
 
-    function JunctionTree{I}(tree::SupernodeTree, sepptr::AbstractVector, sepval::AbstractVector) where I
+    function JunctionTree{V, E}(tree::SupernodeTree, sepptr::AbstractVector, sepval::AbstractVector) where {V, E}
         # validate arguments
         length(tree) != length(sepptr) - 1 && throw(ArgumentError("length(tree) != length(sepptr) - 1"))
         sepptr[1] != 1 && throw(ArgumentError("sepptr[1] != 1"))
         sepptr[end] != length(sepval) + 1 && throw(ArgumentError("sepptr[end] != length(sepval) + 1"))
 
         # construct tree
-        tree = new{I}(tree, sepptr, sepval, I[])
+        tree = new{V, E}(tree, sepptr, sepval, V[])
     end
 end
 
 
-function JunctionTree(tree::SupernodeTree{I}, sepptr::AbstractVector{I}, sepval::AbstractVector{I}) where I
-    JunctionTree{I}(tree, sepptr, sepval)
+function JunctionTree(tree::SupernodeTree{V}, sepptr::AbstractVector{E}, sepval::AbstractVector{V}) where {V, E}
+    JunctionTree{V, E}(tree, sepptr, sepval)
 end
 
 
@@ -32,8 +32,8 @@ function Tree(tree::JunctionTree)
 end
 
 
-function Tree{I}(tree::JunctionTree) where I
-    Tree{I}(tree.tree)
+function Tree{V}(tree::JunctionTree) where V
+    Tree{V}(tree.tree)
 end
 
 
@@ -107,7 +107,7 @@ end
 
 function treewidth(graph, alg::PermutationOrAlgorithm)
     label, tree, upper = eliminationtree(graph, alg)
-    rowcount, colcount = supcnt(copy(transpose(upper)), tree)
+    rowcount, colcount = supcnt(reverse(upper), tree)
     maximum(colcount; init=1) - 1
 end
 
@@ -122,8 +122,8 @@ function residual(tree::JunctionTree, i::Integer)
 end
 
 
-function seprange(tree::JunctionTree{I}, i::Integer) where I
-    tree.sepptr[i]:tree.sepptr[i + 1] - one(I)
+function seprange(tree::JunctionTree{<:Any, E}, i::Integer) where E
+    tree.sepptr[i]:tree.sepptr[i + 1] - one(E)
 end
 
 
@@ -158,6 +158,16 @@ function relative!(tree::JunctionTree)
     end
 
     tree
+end
+
+
+function vtype(tree::JunctionTree{V}) where V
+    V
+end
+
+
+function etype(tree::JunctionTree{<:Any, E}) where E
+    E
 end
 
 

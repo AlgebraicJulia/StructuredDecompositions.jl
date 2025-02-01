@@ -1,11 +1,11 @@
 """
-    Bag{I} <: AbstractVector{I}
+    Bag{V, E} <: AbstractVector{V}
 
 A bag of a junction tree.
 """
-struct Bag{I <: Integer} <: AbstractVector{I}
-    residual::UnitRange{I}
-    separator::SubArray{I, 1, Vector{I}, Tuple{UnitRange{I}}, true}
+struct Bag{V <: Integer, E <: Integer} <: AbstractVector{V}
+    residual::UnitRange{V}
+    separator::SubArray{V, 1, Vector{V}, Tuple{UnitRange{E}}, true}
 end
 
 
@@ -35,9 +35,14 @@ end
 
 
 function Base.getindex(bag::Bag, i::Integer)
-    r = residual(bag)
-    s = separator(bag)
-    i in eachindex(r) ? r[i] : s[i - length(r)]
+    res = residual(bag)
+    sep = separator(bag)
+
+    if i in eachindex(res)
+        res[i]
+    else
+        sep[i - length(res)]
+    end
 end
 
 
