@@ -54,7 +54,6 @@ function test_colorability(n::Integer, decomp::StrDecomp)
     isequal(left, right)
 end
 
-
 @testset "Test 1" begin
     ############################
     #     EXAMPLE INSTANCE 1 str decomp
@@ -109,15 +108,6 @@ end
     # evaluate possible 1 through 3 colorings
     @test all(test_colorability(n, manual) for n ∈ range(1, 3))
     @test_broken all(test_colorability(n, automatic) for n ∈ range(1, 3))
-
-    graph = ob(colimit(manual))
-
-    #print(ob(colimit(automatic)))
-
-    automatic = StrDecomp(graph; alg=BT())
-
-    #print(automatic)
-
 end
 
 @testset "Test 1 Automatic as Manual" begin
@@ -175,23 +165,14 @@ end
 
     # evaluates if decomp1 2 coloring is possible
     @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
-    @test_broken old_decide_sheaf_tree_shape(skeletal_coloring(2), automatic1)[1] == false
+    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), automatic1)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
-    # @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic)[1] == true
+    @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic1)[1] == true
 
     # evaluate possible 1 thorugh 3 colorings
     @test_broken all(test_colorability(n, manual) for n ∈ range(1, 3))
     @test_broken all(test_colorability(n, automatic1) for n ∈ range(1, 3))
-
-    graph = ob(colimit(manual))
-
-    #print(ob(colimit(automatic1)))
-
-    automatic = StrDecomp(graph; alg=BT())
-
-    #print(automatic1)
 end
-
 
 @testset "Test 2" begin
     ############################
