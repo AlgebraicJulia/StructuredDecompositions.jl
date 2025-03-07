@@ -7,11 +7,7 @@ using PartialFunctions
 using StructuredDecompositions.Decompositions
 using StructuredDecompositions.DecidingSheaves
 using StructuredDecompositions.FunctorUtils
-using StructuredDecompositions.JunctionTrees
 using Test
-
-
-import TreeWidthSolver
 
 
 # fixing bug upstream
@@ -160,7 +156,7 @@ end
             4 => ACSetTransformation(H23, H3, V=[2, 1])),
         ∫(G))
 
-    #manual = StrDecomp(G, Γ) # codomains don't match up
+    manual = StrDecomp(G, Γ) # codomains don't match up
     automatic1 = StrDecomp(ob(colimit(manual)))
 
     # evaluates if decomp1 2 coloring is possible
@@ -577,7 +573,7 @@ end
 
     #print(ob(colimit(automatic)))
 
-    automatic = StrDecomp(graph; alg=BT())
+    #automatic = StrDecomp(graph; alg=BT())
 
     #print(automatic)
 end

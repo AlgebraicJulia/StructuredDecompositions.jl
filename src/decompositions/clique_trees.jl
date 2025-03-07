@@ -3,16 +3,19 @@
         alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM,
         snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
 
-Construct a structured decomposition of a simple graph. See [`junctiontree`](@ref) for the meaning of `alg` and `snd`.
+Construct a structured decomposition of a simple graph. See [`cliquetree`](@ref) for the meaning of `alg` and `snd`.
 """
 function StrDecomp(graph::HasGraph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINATION_ALGORITHM, snd::SupernodeType=DEFAULT_SUPERNODE_TYPE)
-    label, tree = junctiontree(adjacency_matrix(graph); alg, snd)
-    relative!(tree)
+    label, tree = cliquetree(symmetrize(graph); alg, snd)
     n = length(tree)
     shape = Graph(n)
     
-    for i in 1:n - 1
-        add_edge!(shape, parentindex(tree, i), i)
+    for i in 1:n
+        j = parentindex(tree, i)
+        
+        if !isnothing(j)
+            add_edge!(shape, j, i)
+        end
     end
 
     diagram = FinDomFunctor(homomorphisms(graph, label, tree)..., ∫(shape))
@@ -20,9 +23,10 @@ function StrDecomp(graph::HasGraph; alg::PermutationOrAlgorithm=DEFAULT_ELIMINAT
 end
 
 
-function homomorphisms(graph::HasGraph, label::AbstractVector, tree::JunctionTree)
+function homomorphisms(graph::HasGraph, label::AbstractVector, tree::CliqueTree)
     m = length(collect(rootindices(tree)))
     n = length(tree)
+    relative = relatives(tree)
     subgraph = Vector{Any}(undef, 2n - m)
     homomorphism = Vector{Any}(undef, 2n - 2m)
     
@@ -43,7 +47,7 @@ function homomorphisms(graph::HasGraph, label::AbstractVector, tree::JunctionTre
             subgraph[n + k] = induced_subgraph(graph, view(label, separator(tree, i)))
 
             # separator(i) → bag(j)
-            homomorphism[k] = induced_homomorphism(subgraph[n + k], subgraph[j], relative(tree, i))
+            homomorphism[k] = induced_homomorphism(subgraph[n + k], subgraph[j], CliqueTrees.neighbors(relative, i))
 
             # separator(i) → bag(i)
             homomorphism[n - m + k] = induced_homomorphism(subgraph[n + k], subgraph[i], length(residual(tree, i)) .+ eachindex(separator(tree, i)))
@@ -72,24 +76,13 @@ function induced_homomorphism(domain::HasGraph, codomain::HasGraph, V::AbstractV
 end
 
 
-# Construct the adjacency matrix of an undirected graph.
-function adjacency_matrix(graph::HasGraph)
-    symmetric = SymmetricGraph(nv(graph))
-    add_edges!(symmetric, src(graph), tgt(graph))
-    adjacency_matrix(symmetric)
+function symmetrize(graph::AbstractSymmetricGraph)
+    graph
 end
 
 
-function adjacency_matrix(graph::AbstractSymmetricGraph)
-    matrix = spzeros(Bool, Int, nv(graph), nv(graph))
-    sizehint!(rowvals(matrix), ne(graph))
-
-    for v in vertices(graph)
-        append!(rowvals(matrix), neighbors(graph, v))
-        getcolptr(matrix)[v + 1] = length(rowvals(matrix)) + 1
-    end
-
-    resize!(nonzeros(matrix), ne(graph))
-    fill!(nonzeros(matrix), true)
-    matrix
+function symmetrize(graph::HasGraph)
+    symmetric = SymmetricGraph(nv(graph))
+    add_edges!(symmetric, src(graph), tgt(graph))
+    symmetric
 end
