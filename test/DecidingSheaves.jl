@@ -101,13 +101,13 @@ end
 
     # evaluates if decomp1 2 coloring is possible
     @test decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
-    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
+    @test decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
     @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic)[1] == true
 
     # evaluate possible 1 through 3 colorings
     @test all(test_colorability(n, manual) for n ∈ range(1, 3))
-    @test_broken all(test_colorability(n, automatic) for n ∈ range(1, 3))
+    @test all(test_colorability(n, automatic) for n ∈ range(1, 3))
 end
 
 @testset "Test 1 Automatic as Manual" begin
@@ -160,18 +160,18 @@ end
             4 => ACSetTransformation(H23, H3, V=[2, 1])),
         ∫(G))
 
-    manual = StrDecomp(G, Γ)
+    #manual = StrDecomp(G, Γ) # codomains don't match up
     automatic1 = StrDecomp(ob(colimit(manual)))
 
     # evaluates if decomp1 2 coloring is possible
-    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
-    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), automatic1)[1] == false
-    @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
+    #@test decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
+    @test decide_sheaf_tree_shape(skeletal_coloring(2), automatic1)[1] == false
+    #@test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
     @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic1)[1] == true
 
     # evaluate possible 1 thorugh 3 colorings
-    @test_broken all(test_colorability(n, manual) for n ∈ range(1, 3))
-    @test_broken all(test_colorability(n, automatic1) for n ∈ range(1, 3))
+    #@test all(test_colorability(n, manual) for n ∈ range(1, 3))
+    @test all(test_colorability(n, automatic1) for n ∈ range(1, 3))
 end
 
 @testset "Test 2" begin
@@ -336,12 +336,12 @@ end
     # evaluate if decomp4 2 and 3 colorings are possible 
     @test decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
-    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
+    @test decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic)[1] == true
 
     # evaluate possible 1 through 3 colorings
     @test all(test_colorability(n, manual) for n ∈ range(1, 3))
-    @test_broken all(test_colorability(n, automatic) for n ∈ range(1, 3))
+    @test all(test_colorability(n, automatic) for n ∈ range(1, 3))
 end
 
 @testset "Test 5" begin
@@ -394,12 +394,12 @@ end
     # evaluate if decomp5 2 and 3 colorings are possible
     @test decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
-    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
+    @test decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic)[1] == true
 
     # evaluate possible 1 through 3 colorings
     @test all(test_colorability(n, manual) for n ∈ range(1, 3))
-    @test_broken all(test_colorability(n, automatic) for n ∈ range(1, 3))
+    @test all(test_colorability(n, automatic) for n ∈ range(1, 3))
 end
 
 @testset "Test 6" begin
@@ -566,12 +566,12 @@ end
     # evaluate if decomp8 2 and 3 colorings are possible
     @test decide_sheaf_tree_shape(skeletal_coloring(2), manual)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), manual)[1] == true
-    @test_broken decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
+    @test decide_sheaf_tree_shape(skeletal_coloring(2), automatic)[1] == false
     @test decide_sheaf_tree_shape(skeletal_coloring(3), automatic)[1] == true
 
     # evaluate possible 1 through 3 colorings
     @test all(test_colorability(n, manual) for n ∈ range(1, 3))
-    @test_broken all(test_colorability(n, automatic) for n ∈ range(1, 3))
+    @test all(test_colorability(n, automatic) for n ∈ range(1, 3))
 
     graph = ob(colimit(manual))
 

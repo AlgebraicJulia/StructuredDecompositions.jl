@@ -22,10 +22,12 @@ OUTPUT: a structured decomposition obtained by replacing the span de in d
         by the span obtained by projecting the pullback of de (i.e. taking images)
 """
 
-function adhesion_filter(tup::Tuple, d::StructuredDecomposition)
+function adhesion_filter(i::Integer, d::StructuredDecomposition)
   if d.decomp_type == Decomposition
     error("expecting ", CoDecomposition, " given ", Decomposition)
   end
+  # fetch the cospan
+  tup = adhesionSpans(d, true)[i]
   # d_csp is the cospan dx₁ -> de <- dx₂ corresp to some edge e = x₁x₂ in shape(d)
   (csp, d_csp)      = tup  #unpack the tuple
   # the pullback cone dx₁ <-l₁-- p --l₂ --> dx₂ with legs l₁ and l₂
@@ -55,12 +57,16 @@ function adhesion_filter(tup::Tuple, d::StructuredDecomposition)
   # now do the same thing with the morphism map
   function mor_replace(f) 
     if f == csp[1]
-      return new_d_csp[1]
+      new_d_csp[1]
     elseif f == csp[2]
-      return new_d_csp[2]
+      new_d_csp[2]
+    elseif dom(d_dom, f) == dom(d_dom, csp[1])
+      compose(imgs[1], hom_map(d, f)) |> force
+    elseif dom(d_dom, f) == dom(d_dom, csp[2])
+      compose(imgs[2], hom_map(d, f)) |> force
     else
-      return hom_map(d,f)
-    end 
+      hom_map(d, f)
+    end
   end
 
   δ₀ = Dict( x => ob_replace(x) for x ∈ ob_generators(d_dom) )
@@ -86,8 +92,8 @@ The algorithm is as follows:
 function decide_sheaf_tree_shape(f, d::StructuredDecomposition, solution_space_decomp::StructuredDecomposition = 𝐃(f, d, CoDecomposition))
   witness = solution_space_decomp
   adhesion_spans = adhesionSpans(solution_space_decomp, true)
-  for adhesion in adhesion_spans
-    witness = adhesion_filter(adhesion, witness)
+  for i in eachindex(adhesion_spans)
+    witness = adhesion_filter(i, witness)
     if any(isempty, bags(witness))
       return (false, witness)
     end
